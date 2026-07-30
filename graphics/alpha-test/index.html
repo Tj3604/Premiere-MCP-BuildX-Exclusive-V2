@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        /* Transparent so the WebM render carries a real alpha channel. */
+        background: transparent;
+      }
+      body {
+        font-family: "Helvetica Neue", Arial, sans-serif;
+      }
+
+      #lower-third {
+        position: absolute;
+        left: 140px;
+        bottom: 180px;
+        display: flex;
+        align-items: stretch;
+      }
+
+      #accent-bar {
+        width: 12px;
+        background: #ffb703;
+        transform-origin: bottom center;
+      }
+
+      #text-block {
+        background: rgba(12, 12, 14, 0.92);
+        padding: 28px 56px 30px 36px;
+        overflow: hidden;
+      }
+
+      #name {
+        font-size: 76px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.5px;
+        line-height: 1;
+      }
+
+      #role {
+        margin-top: 14px;
+        font-size: 34px;
+        font-weight: 500;
+        color: #ffb703;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        line-height: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="5"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div
+        id="lower-third"
+        class="clip"
+        data-start="0"
+        data-duration="5"
+        data-track-index="1"
+      >
+        <div id="accent-bar"></div>
+        <div id="text-block">
+          <div id="name">Tom Martell</div>
+          <div id="role">Project Manager · BuildX</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Bar wipes up, panel unrolls from the left, text rises in behind it.
+      tl.fromTo("#accent-bar", { scaleY: 0 }, { scaleY: 1, duration: 0.45, ease: "power3.out" }, 0)
+        .fromTo("#text-block", { width: 0 }, { width: "auto", duration: 0.6, ease: "power3.out" }, 0.15)
+        .fromTo("#name", { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }, 0.45)
+        .fromTo("#role", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }, 0.6)
+        // Hold, then retract so the overlay can sit over footage and leave cleanly.
+        .to("#lower-third", { opacity: 0, x: -40, duration: 0.4, ease: "power2.in" }, 4.4);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

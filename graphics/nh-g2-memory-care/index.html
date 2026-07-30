@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.84);--red:#D64A4A;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:transparent}
+#root{position:relative;width:1920px;height:1080px;font-family:'Archivo',Arial,sans-serif}
+.card{position:absolute;left:90px;bottom:92px;max-width:1240px;
+  background:var(--panel);border-left:10px solid var(--red);border-radius:14px;padding:32px 46px 36px}
+.eyebrow{color:var(--red);font-weight:700;font-size:28px;letter-spacing:8px;text-transform:uppercase;margin-bottom:20px}
+.amts{display:flex;align-items:center;gap:24px}
+.amt{font-family:'Anton','Arial Black',sans-serif;color:var(--gold);font-size:92px;line-height:1}
+.arrow{color:rgba(255,255,255,.45);font-size:50px;font-weight:700;line-height:1}
+.per{color:rgba(255,255,255,.82);font-weight:700;font-size:34px;letter-spacing:6px;text-transform:uppercase;margin-top:18px}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1920" data-height="1080" data-duration="6.0">
+  <div class="card" id="card">
+    <div class="eyebrow" id="eyebrow">IF YOU NEED MEMORY CARE</div>
+    <div class="amts">
+      <div class="amt" id="a1">$15K</div><div class="arrow" id="x1">&rarr;</div>
+      <div class="amt" id="a2">$18K</div><div class="arrow" id="x2">&rarr;</div>
+      <div class="amt" id="a3">$20K</div>
+    </div>
+    <div class="per" id="per">A month</div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+/* figures spoken at +0.18, +0.74, +1.30; "a month" at +2.50 */
+tl.fromTo("#card",{opacity:0,x:-46},{opacity:1,x:0,duration:.5,ease:E},0.00)
+  .fromTo("#eyebrow",{opacity:0,y:14},{opacity:1,y:0,duration:.4,ease:E},0.12)
+  .set(["#a1","#a2","#a3","#x1","#x2","#per"],{opacity:0},0)
+  .to("#a1",{opacity:1,duration:.24,ease:E},0.50)
+  .to("#x1",{opacity:1,duration:.18,ease:E},0.98)
+  .to("#a2",{opacity:1,duration:.24,ease:E},1.05)
+  .to("#x2",{opacity:1,duration:.18,ease:E},1.54)
+  .to("#a3",{opacity:1,duration:.24,ease:E},1.60)
+  .fromTo("#per",{opacity:0,y:14},{opacity:1,y:0,duration:.4,ease:E},2.80)
+  .to("#card",{opacity:0,x:-34,duration:.42,ease:"power2.in"},5.45)
+  .set("#card",{opacity:0,visibility:"hidden"},5.90);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

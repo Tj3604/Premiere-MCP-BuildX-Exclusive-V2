@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.84);--red:#D64A4A;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:transparent}
+#root{position:relative;width:1920px;height:1080px;font-family:'Archivo',Arial,sans-serif}
+.card{position:absolute;left:90px;bottom:92px;max-width:1180px;
+  background:var(--panel);border-left:10px solid var(--red);border-radius:14px;padding:32px 46px 36px}
+.eyebrow{color:var(--red);font-weight:700;font-size:28px;letter-spacing:8px;text-transform:uppercase}
+.headline{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:96px;line-height:1;
+  text-transform:uppercase;margin-top:12px}
+.headline em{font-style:normal;color:var(--gold)}
+.sub{color:rgba(255,255,255,.78);font-weight:700;font-size:30px;letter-spacing:3px;text-transform:uppercase;margin-top:14px}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1920" data-height="1080" data-duration="5.0">
+  <div class="card" id="card">
+    <div class="eyebrow" id="eyebrow">PRIVATE PAY NURSING HOME</div>
+    <div class="headline" id="headline"><em>$577</em> a day</div>
+    <div class="sub" id="sub">Minimum &mdash; and it only goes up</div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#card",{opacity:0,x:-46},{opacity:1,x:0,duration:.5,ease:E},0.00)
+  .fromTo("#eyebrow",{opacity:0,y:14},{opacity:1,y:0,duration:.4,ease:E},0.14)
+  .fromTo("#headline",{opacity:0,y:22},{opacity:1,y:0,duration:.5,ease:E},0.40)
+  /* "and it only goes up from there" lands at +2.2 */
+  .fromTo("#sub",{opacity:0,y:16},{opacity:1,y:0,duration:.42,ease:E},2.30)
+  .to("#card",{opacity:0,x:-34,duration:.42,ease:"power2.in"},4.45)
+  .set("#card",{opacity:0,visibility:"hidden"},4.90);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

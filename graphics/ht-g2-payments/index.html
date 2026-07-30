@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.82);}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1728px;height:3072px;overflow:hidden;background:transparent}
+#root{position:relative;width:1728px;height:3072px;font-family:'Archivo',Arial,sans-serif}
+.card{position:absolute;left:82px;right:82px;top:430px;
+  background:var(--panel);border:3px solid rgba(217,164,65,.35);border-radius:42px;
+  padding:58px 70px 64px}
+.eyebrow{color:var(--gold);font-weight:700;font-size:46px;letter-spacing:13px;text-transform:uppercase;text-align:center;margin-bottom:40px}
+.row{display:flex;align-items:baseline;gap:34px;margin-top:30px}
+.amt{font-family:'Anton','Arial Black',sans-serif;color:var(--gold);font-size:130px;line-height:1;min-width:340px}
+.lbl{color:rgba(255,255,255,.9);font-weight:700;font-size:46px;letter-spacing:4px;text-transform:uppercase;line-height:1.2}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1728" data-height="3072" data-duration="12.5">
+  <div class="card" id="card">
+    <div class="eyebrow" id="eyebrow">TO GET STARTED</div>
+    <div class="row" id="r1"><div class="amt">$20K</div><div class="lbl">Gets you to a<br>building permit</div></div>
+    <div class="row" id="r2"><div class="amt">$25K</div><div class="lbl">At contract<br>signing</div></div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#card",{opacity:0,y:44},{opacity:1,y:0,duration:.55,ease:E},0.00)
+  .fromTo("#eyebrow",{opacity:0,y:20},{opacity:1,y:0,duration:.5,ease:E},0.14)
+  .fromTo("#r1",{opacity:0,x:-40},{opacity:1,x:0,duration:.55,ease:E},0.34)
+  /* $25,000 is spoken 6.53s after the card starts */
+  .fromTo("#r2",{opacity:0,x:-40},{opacity:1,x:0,duration:.55,ease:E},6.53)
+  .to("#card",{opacity:0,y:-26,duration:.42,ease:"power2.in"},11.95)
+  .set("#card",{opacity:0,visibility:"hidden"},12.40);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

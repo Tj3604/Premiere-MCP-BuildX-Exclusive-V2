@@ -1,0 +1,33 @@
+{
+  "builtAt": "2026-07-27",
+  "sequenceId": "71f7820f-0c8f-477a-8355-e6cbcc3b8668",
+  "sequenceName": "FAQ Shorts TEST",
+  "sequenceFormat": "1080x1920 @ 30fps (Premiere ignored the requested 3840x2160/23.976 and used its default preset)",
+  "totalSeconds": 340.0,
+  "verified": {
+    "clipDurations": "all exactly 750f (25.000s) or 1650f (55.000s)",
+    "gaps": 0,
+    "markers": 10,
+    "audioClips": 10
+  },
+  "prerollSeconds": 0.15,
+  "note": "sourceIn = transcript question start minus preroll. sourceOut = sourceIn + target. Clips placed with insertMode=overwrite, which trims the one-frame overhang caused by the 23.976fps source grid.",
+  "shorts": [
+    { "n": 1,  "t": 0,   "target": 25, "title": "What's included in the price?",    "file": "MVI_6850", "sourceIn": 357.85, "sourceOut": 382.85, "topic": "pricing" },
+    { "n": 2,  "t": 25,  "target": 55, "title": "The 900 sq ft ADU size rule",      "file": "MVI_6850", "sourceIn": 185.37, "sourceOut": 240.37, "topic": "size / zoning" },
+    { "n": 3,  "t": 80,  "target": 25, "title": "Should you ask your town first?",  "file": "MVI_6837", "sourceIn": 100.80, "sourceOut": 125.80, "topic": "permitting" },
+    { "n": 4,  "t": 105, "target": 25, "title": "Do you need a frost foundation?",  "file": "MVI_6850", "sourceIn": 72.83,  "sourceOut": 97.83,  "topic": "foundation" },
+    { "n": 5,  "t": 130, "target": 55, "title": "Can I tie an ADU into my septic?", "file": "MVI_6845", "sourceIn": 306.75, "sourceOut": 361.75, "topic": "septic" },
+    { "n": 6,  "t": 185, "target": 25, "title": "Can the ADU plans be modified?",   "file": "MVI_6850", "sourceIn": 104.88, "sourceOut": 129.88, "topic": "customization" },
+    { "n": 7,  "t": 210, "target": 25, "title": "Are these built in a factory?",    "file": "MVI_6852", "sourceIn": 135.88, "sourceOut": 160.88, "topic": "modular vs stick" },
+    { "n": 8,  "t": 235, "target": 25, "title": "How long does an ADU take?",       "file": "MVI_6852", "sourceIn": 90.88,  "sourceOut": 115.88, "topic": "timeline" },
+    { "n": 9,  "t": 260, "target": 25, "title": "Can you finance a small ADU?",     "file": "MVI_6836", "sourceIn": 204.15, "sourceOut": 229.15, "topic": "financing" },
+    { "n": 10, "t": 285, "target": 55, "title": "Will an ADU raise your taxes?",    "file": "MVI_6850", "sourceIn": 269.88, "sourceOut": 324.88, "topic": "taxes" }
+  ],
+  "rejected": [
+    {
+      "title": "What does a 900 sq ft ADU cost? (MVI_6831 @ 0.03)",
+      "reason": "The $450k answer lands at 25.5-32.3s, so a 25s window from the question ends right before the number. Would need a jump cut to work."
+    }
+  ]
+}

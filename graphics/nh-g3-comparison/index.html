@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.88);--red:#D64A4A;--black:#0B0B0B;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:transparent}
+#root{position:relative;width:1920px;height:1080px;font-family:'Archivo',Arial,sans-serif}
+
+.card{position:absolute;left:90px;right:90px;bottom:70px;
+  background:var(--panel);border-radius:16px;padding:26px 40px 32px}
+.eyebrow{color:var(--gold);font-weight:700;font-size:26px;letter-spacing:9px;text-transform:uppercase;
+  text-align:center;margin-bottom:20px}
+
+.cols{display:flex;align-items:stretch}
+.col{flex:1;padding:0 34px}
+.col.left{border-right:3px solid rgba(255,255,255,.16)}
+.lab{font-weight:700;font-size:28px;letter-spacing:5px;text-transform:uppercase;margin-bottom:8px}
+.lab.nh{color:var(--red)} .lab.adu{color:var(--gold)}
+.fig{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:96px;line-height:1}
+.per{font-weight:700;font-size:30px;letter-spacing:3px;text-transform:uppercase;margin-top:8px}
+.per.nh{color:var(--red)} .per.adu{color:rgba(255,255,255,.72)}
+.note{color:rgba(255,255,255,.55);font-weight:500;font-size:22px;margin-top:6px}
+
+.payoff{margin:24px auto 0;display:table;background:var(--gold);border-radius:10px;padding:12px 30px 16px}
+.payoff span{font-family:'Anton','Arial Black',sans-serif;color:var(--black);font-size:54px;
+  text-transform:uppercase;line-height:1}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1920" data-height="1080" data-duration="8.0">
+  <div class="card" id="card">
+    <div class="eyebrow" id="eyebrow">WHAT IT ACTUALLY COSTS</div>
+    <div class="cols">
+      <div class="col left" id="cnh">
+        <div class="lab nh">Nursing Home</div>
+        <div class="fig">$250&ndash;260K</div>
+        <div class="per nh">Every single year</div>
+        <div class="note">Memory care level &middot; from $577/day minimum</div>
+      </div>
+      <div class="col" id="cadu">
+        <div class="lab adu">BuildX ADU</div>
+        <div class="fig">$400K</div>
+        <div class="per adu">One time</div>
+        <div class="note">And the property is still yours</div>
+      </div>
+    </div>
+    <div class="payoff" id="payoff"><span>Under 2 years of care</span></div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+/* he lands the annual figure at +0.0 and "$400 on an ADU" at +2.66 */
+tl.fromTo("#card",{opacity:0,y:38},{opacity:1,y:0,duration:.5,ease:E},0.00)
+  .fromTo("#eyebrow",{opacity:0,y:14},{opacity:1,y:0,duration:.4,ease:E},0.14)
+  .set(["#cnh","#cadu","#payoff"],{opacity:0},0)
+  .fromTo("#cnh",{opacity:0,x:-30},{opacity:1,x:0,duration:.5,ease:E},0.50)
+  .fromTo("#cadu",{opacity:0,x:30},{opacity:1,x:0,duration:.5,ease:E},3.00)
+  .fromTo("#payoff",{opacity:0,scale:.9},{opacity:1,scale:1,duration:.5,ease:"back.out(1.9)"},4.60)
+  .to("#card",{opacity:0,y:-24,duration:.42,ease:"power2.in"},7.45)
+  .set("#card",{opacity:0,visibility:"hidden"},7.90);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

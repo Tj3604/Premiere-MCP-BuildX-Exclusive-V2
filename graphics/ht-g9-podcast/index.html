@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.86);}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1728px;height:3072px;overflow:hidden;background:transparent}
+#root{position:relative;width:1728px;height:3072px;font-family:'Archivo',Arial,sans-serif}
+
+.card{position:absolute;left:82px;right:82px;top:430px;
+  background:var(--panel);border:3px solid rgba(217,164,65,.35);border-radius:42px;
+  padding:58px 64px 62px;text-align:center}
+.eyebrow{color:var(--gold);font-weight:700;font-size:42px;letter-spacing:12px;text-transform:uppercase}
+.headline{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:150px;line-height:1.02;
+  text-transform:uppercase;margin-top:22px}
+.headline em{font-style:normal;color:var(--gold)}
+
+.watch{margin-top:44px;display:flex;align-items:center;justify-content:center;gap:30px}
+.play{width:112px;height:112px;flex:0 0 112px;border-radius:50%;background:var(--gold);
+  display:flex;align-items:center;justify-content:center}
+.play div{width:0;height:0;margin-left:12px;
+  border-left:44px solid #0B0B0B;border-top:27px solid transparent;border-bottom:27px solid transparent}
+.watchtxt{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:74px;
+  text-transform:uppercase;line-height:1.1;text-align:left}
+.watchtxt span{color:var(--gold)}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1728" data-height="3072" data-duration="5.6">
+  <div class="card" id="card">
+    <div class="eyebrow" id="eyebrow">HEAR THE FULL CONVERSATION</div>
+    <div class="headline" id="headline">THE <em>BUILDX</em><br>PODCAST</div>
+    <div class="watch" id="watch">
+      <div class="play"><div></div></div>
+      <div class="watchtxt">On our<br><span>YouTube channel</span></div>
+    </div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#card",{opacity:0,y:44},{opacity:1,y:0,duration:.55,ease:E},0.00)
+  .fromTo("#eyebrow",{opacity:0,y:20},{opacity:1,y:0,duration:.5,ease:E},0.14)
+  /* "podcast" is spoken at +0.00, so the headline may land from +0.32 */
+  .fromTo("#headline",{opacity:0,y:30},{opacity:1,y:0,duration:.55,ease:E},0.32)
+  /* "YouTube channel" is spoken at +0.93 — hold this until after */
+  .fromTo("#watch",{opacity:0,y:24},{opacity:1,y:0,duration:.5,ease:E},1.05)
+  .fromTo(".play",{scale:.7},{scale:1,duration:.45,ease:"back.out(2)"},1.05)
+  .to("#card",{opacity:0,y:-26,duration:.45,ease:"power2.in"},5.05)
+  .set("#card",{opacity:0,visibility:"hidden"},5.50);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:transparent}
+body{width:1080px;height:1920px;overflow:hidden}
+#root{position:relative;width:1080px;height:1920px}
+.cta{position:absolute;left:60px;right:60px;bottom:120px;opacity:0;
+  background:rgba(12,12,14,0.92);border-radius:14px;padding:30px 40px 34px;text-align:center}
+.bar{position:absolute;left:0;top:0;bottom:0;width:12px;background:#FFB703;
+  border-top-left-radius:14px;border-bottom-left-radius:14px}
+.head{font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;font-weight:900;
+  font-size:82px;line-height:1;color:#fff;text-transform:uppercase;letter-spacing:-2px}
+.sub{margin-top:16px;line-height:1.25;font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;font-weight:900;
+  font-size:44px;line-height:1;color:#fff;text-transform:uppercase;letter-spacing:2px}
+.hl{color:#FFB703}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1080" data-height="1920" data-duration="340.0">
+<div class="cta" id="cta-0">
+  <div class="bar"></div>
+  <div class="head">ADU HOME TOURS</div>
+  <div class="sub">SATURDAYS &amp; SUNDAYS<br><span class="hl">11AM &ndash; 1PM</span></div>
+</div>
+<div class="cta" id="cta-1">
+  <div class="bar"></div>
+  <div class="head">ADU HOME TOURS</div>
+  <div class="sub">SATURDAYS &amp; SUNDAYS<br><span class="hl">11AM &ndash; 1PM</span></div>
+</div>
+<div class="cta" id="cta-2">
+  <div class="bar"></div>
+  <div class="head">ADU HOME TOURS</div>
+  <div class="sub">SATURDAYS &amp; SUNDAYS<br><span class="hl">11AM &ndash; 1PM</span></div>
+</div>
+<div class="cta" id="cta-3">
+  <div class="bar"></div>
+  <div class="head">ADU HOME TOURS</div>
+  <div class="sub">SATURDAYS &amp; SUNDAYS<br><span class="hl">11AM &ndash; 1PM</span></div>
+</div>
+<div class="cta" id="cta-4">
+  <div class="bar"></div>
+  <div class="head">ADU HOME TOURS</div>
+  <div class="sub">SATURDAYS &amp; SUNDAYS<br><span class="hl">11AM &ndash; 1PM</span></div>
+</div>
+<div class="cta" id="cta-5">
+  <div class="bar"></div>
+  <div class="head">ADU HOME TOURS</div>
+  <div class="sub">SATURDAYS &amp; SUNDAYS<br><span class="hl">11AM &ndash; 1PM</span></div>
+</div>
+<div class="cta" id="cta-6">
+  <div class="bar"></div>
+  <div class="head">ADU HOME TOURS</div>
+  <div class="sub">SATURDAYS &amp; SUNDAYS<br><span class="hl">11AM &ndash; 1PM</span></div>
+</div>
+<div class="cta" id="cta-7">
+  <div class="bar"></div>
+  <div class="head">ADU HOME TOURS</div>
+  <div class="sub">SATURDAYS &amp; SUNDAYS<br><span class="hl">11AM &ndash; 1PM</span></div>
+</div>
+<div class="cta" id="cta-8">
+  <div class="bar"></div>
+  <div class="head">ADU HOME TOURS</div>
+  <div class="sub">SATURDAYS &amp; SUNDAYS<br><span class="hl">11AM &ndash; 1PM</span></div>
+</div>
+<div class="cta" id="cta-9">
+  <div class="bar"></div>
+  <div class="head">ADU HOME TOURS</div>
+  <div class="sub">SATURDAYS &amp; SUNDAYS<br><span class="hl">11AM &ndash; 1PM</span></div>
+</div>
+<script>
+(function(){
+var G=[{i:0,s:21.0,e:24.95},{i:1,s:76.0,e:79.95},{i:2,s:101.0,e:104.95},{i:3,s:126.0,e:129.95},{i:4,s:181.0,e:184.95},{i:5,s:206.0,e:209.95},{i:6,s:231.0,e:234.95},{i:7,s:256.0,e:259.95},{i:8,s:281.0,e:284.95},{i:9,s:336.0,e:339.95}];
+var tl=gsap.timeline({paused:true});
+G.forEach(function(g){
+  var el=document.getElementById("cta-"+g.i); if(!el) return;
+  tl.set(el,{visibility:"visible"},g.s);
+  tl.fromTo(el,{opacity:0,y:70},{opacity:1,y:0,duration:0.42,ease:"power3.out"},g.s);
+  var ex=g.e-0.30;
+  tl.to(el,{opacity:0,y:40,duration:0.30,ease:"power2.in"},ex);
+  tl.set(el,{opacity:0,visibility:"hidden"},g.e);
+});
+window.__timelines=window.__timelines||{};
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+})();
+</script>
+</div></body></html>

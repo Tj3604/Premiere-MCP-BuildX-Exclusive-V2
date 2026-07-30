@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--black:#0B0B0B;--white:#FFFFFF;--panel:rgba(11,11,11,0.82);--danger:#E24B4A;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{position:relative;width:1080px;height:1920px;font-family:'Archivo',Arial,sans-serif}
+.scrim{position:absolute;inset:0;background:rgba(11,11,11,0.90);opacity:0}
+.wrap{position:absolute;left:51px;right:51px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;text-align:center}
+.eyebrow{color:var(--gold);font-weight:700;font-size:32px;letter-spacing:8px;text-transform:uppercase;margin-bottom:26px}
+.headline{font-family:'Anton','Arial Black',sans-serif;color:#fff;font-size:88px;line-height:1.05;text-transform:uppercase;text-shadow:0 4px 24px rgba(0,0,0,.55)}
+.headline em{font-style:normal;color:var(--gold)}
+.big{font-family:'Anton','Arial Black',sans-serif;color:var(--gold);font-size:280px;line-height:.9;text-transform:uppercase}
+.unit{font-family:'Anton','Arial Black',sans-serif;color:#fff;font-size:76px;letter-spacing:4px;text-transform:uppercase;margin-top:8px}
+.sub{color:rgba(255,255,255,.72);font-weight:500;font-size:36px;line-height:1.35;margin-top:28px}
+.track{height:26px;background:rgba(255,255,255,.14);border-radius:13px;margin:44px 0 0;overflow:hidden}
+.fill{height:100%;width:0;background:var(--gold);border-radius:13px}
+.cols{display:flex;gap:34px;margin-top:44px}
+.col{flex:1;background:var(--panel);border:2px solid rgba(217,164,65,.35);border-radius:26px;padding:36px 30px}
+.col.win{border-color:var(--gold)}
+.col h3{font-family:'Anton','Arial Black',sans-serif;font-size:46px;color:#fff;text-transform:uppercase;margin-bottom:14px}
+.col.win h3{color:var(--gold)}
+.col p{color:rgba(255,255,255,.7);font-size:29px;line-height:1.35}
+.rows{margin-top:40px;text-align:left}
+.row{display:flex;align-items:center;gap:24px;margin-bottom:26px}
+.tick{width:56px;height:56px;border-radius:50%;background:var(--gold);color:#0B0B0B;font-weight:800;font-size:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tick.no{background:var(--danger);color:#fff}
+.row span{color:#fff;font-size:38px;font-weight:700;line-height:1.25}
+.tag{position:absolute;left:0;right:0;bottom:150px;text-align:center;color:var(--gold);font-family:'Anton','Arial Black',sans-serif;font-size:36px;letter-spacing:3px;text-transform:uppercase}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1080" data-height="1920" data-duration="6">
+  <div class="scrim" id="scrim"></div>
+  <div class="wrap">
+    <div class="eyebrow" id="eyebrow">HOW IT'S BUILT</div>
+    <div class="headline" id="headline">FACTORY <em>VS</em> SITE</div>
+    <div class="cols">
+      <div class="col" id="colA"><h3>MODULAR</h3><p>Limited to boxes that fit on a truck</p></div>
+      <div class="col win" id="colB"><h3>STICK-BUILT</h3><p>Built on site, exactly the way you want it</p></div>
+    </div>
+    <div class="sub" id="sub">BuildX builds every ADU on site</div>
+  </div>
+  <div class="tag" id="tag">BuildX. Just build baby.</div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#scrim",{opacity:0},{opacity:1,duration:.5,ease:E},0)
+  .fromTo("#eyebrow",{opacity:0,y:30},{opacity:1,y:0,duration:.6,ease:E},.25)
+  .fromTo("#headline",{opacity:0,y:40},{opacity:1,y:0,duration:.7,ease:E},.45)
+  .fromTo("#colA",{opacity:0,y:50},{opacity:1,y:0,duration:.6,ease:E},.95)
+  .fromTo("#colB",{opacity:0,y:50},{opacity:1,y:0,duration:.6,ease:E},1.25)
+  .fromTo("#sub",{opacity:0,y:22},{opacity:1,y:0,duration:.5,ease:E},1.65)
+  .to(".wrap",{opacity:0,y:-24,duration:.45,ease:"power2.in"},5.35)
+  .to("#scrim",{opacity:0,duration:.45,ease:"power2.in"},5.4)
+  .set(".wrap",{opacity:0,visibility:"hidden"},5.85);
+tl.fromTo("#tag",{opacity:0,y:24},{opacity:1,y:0,duration:.6,ease:E},1.9)
+  .to("#tag",{opacity:0,duration:.4,ease:"power2.in"},5.4)
+  .set("#tag",{opacity:0,visibility:"hidden"},5.85);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

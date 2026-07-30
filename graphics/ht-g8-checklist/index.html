@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.86);}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1728px;height:3072px;overflow:hidden;background:transparent}
+#root{position:relative;width:1728px;height:3072px;font-family:'Archivo',Arial,sans-serif}
+
+.card{position:absolute;left:82px;right:82px;top:600px;
+  background:var(--panel);border:3px solid rgba(217,164,65,.35);border-radius:42px;
+  padding:52px 62px 56px}
+.eyebrow{color:var(--gold);font-weight:700;font-size:40px;letter-spacing:12px;text-transform:uppercase;text-align:center}
+.title{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:92px;line-height:1.05;
+  text-transform:uppercase;margin-top:14px;text-align:center}
+.title em{font-style:normal;color:var(--gold)}
+
+.list{margin-top:44px}
+.item{display:flex;align-items:center;gap:34px;padding:19px 0}
+.tick{width:78px;height:78px;flex:0 0 78px;border-radius:18px;
+  border:4px solid rgba(217,164,65,.55);position:relative}
+.tick svg{position:absolute;inset:0;width:100%;height:100%}
+.tick path{fill:none;stroke:var(--gold);stroke-width:9;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:64;stroke-dashoffset:64}
+.txt{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:78px;text-transform:uppercase;line-height:1}
+
+.payoff{margin-top:46px;background:var(--gold);border-radius:24px;padding:26px 30px;text-align:center}
+.payoff span{font-family:'Anton','Arial Black',sans-serif;color:#0B0B0B;font-size:76px;text-transform:uppercase;line-height:1.05}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1728" data-height="3072" data-duration="11.8">
+  <div class="card" id="card">
+    <div class="eyebrow" id="eyebrow">800 SQ FT OR 900 SQ FT</div>
+    <div class="title" id="title">YOU STILL PAY FOR<br><em>ALL OF THIS</em></div>
+
+    <div class="list">
+      <div class="item" id="i1"><div class="tick"><svg viewBox="0 0 78 78"><path d="M18 40 L33 55 L60 24"/></svg></div><div class="txt">Kitchen</div></div>
+      <div class="item" id="i2"><div class="tick"><svg viewBox="0 0 78 78"><path d="M18 40 L33 55 L60 24"/></svg></div><div class="txt">Septic System</div></div>
+      <div class="item" id="i3"><div class="tick"><svg viewBox="0 0 78 78"><path d="M18 40 L33 55 L60 24"/></svg></div><div class="txt">Survey</div></div>
+      <div class="item" id="i4"><div class="tick"><svg viewBox="0 0 78 78"><path d="M18 40 L33 55 L60 24"/></svg></div><div class="txt">Electrical</div></div>
+      <div class="item" id="i5"><div class="tick"><svg viewBox="0 0 78 78"><path d="M18 40 L33 55 L60 24"/></svg></div><div class="txt">Heating System</div></div>
+      <div class="item" id="i6"><div class="tick"><svg viewBox="0 0 78 78"><path d="M18 40 L33 55 L60 24"/></svg></div><div class="txt">Bathroom</div></div>
+    </div>
+
+    <div class="payoff" id="payoff"><span>A SLICE OF THE BUILDING</span></div>
+  </div>
+
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+
+// each item ticks on the word Buz says it — offsets measured from the transcript
+var BEATS=[0.64,1.78,2.76,3.83,5.12,6.59];
+
+tl.fromTo("#card",{opacity:0,y:44},{opacity:1,y:0,duration:.5,ease:E},0.00)
+  .fromTo("#eyebrow",{opacity:0,y:18},{opacity:1,y:0,duration:.42,ease:E},0.12)
+  .fromTo("#title",{opacity:0,y:24},{opacity:1,y:0,duration:.5,ease:E},0.24);
+
+for(var i=0;i<BEATS.length;i++){
+  var id="#i"+(i+1);
+  tl.set(id,{opacity:0},0);   // fully hidden until Buz says it
+  tl.to(id,{opacity:1,duration:.30,ease:E},BEATS[i]);
+  // native dash draw — DrawSVGPlugin is not in the free GSAP build
+  tl.fromTo(id+" .tick path",{strokeDasharray:64,strokeDashoffset:64},{strokeDashoffset:0,duration:.34,ease:"power2.out"},BEATS[i]);
+  tl.fromTo(id+" .tick",{borderColor:"rgba(217,164,65,.55)",scale:1},
+                        {borderColor:"rgba(217,164,65,1)",scale:1.07,duration:.18,yoyo:true,repeat:1,ease:"power2.out"},BEATS[i]);
+}
+
+// "you're really just paying for a slice of the building"
+tl.fromTo("#payoff",{opacity:0,scale:.9,transformOrigin:"50% 50%"},
+                    {opacity:1,scale:1,duration:.5,ease:"back.out(1.7)"},9.20)
+  .to("#card",{opacity:0,y:-26,duration:.45,ease:"power2.in"},11.25)
+  .set("#card",{opacity:0,visibility:"hidden"},11.70);
+
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

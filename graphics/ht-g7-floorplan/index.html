@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.88);}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1728px;height:3072px;overflow:hidden;background:transparent}
+#root{position:relative;width:1728px;height:3072px;font-family:'Archivo',Arial,sans-serif}
+
+.card{position:absolute;left:82px;right:82px;top:700px;
+  background:var(--panel);border:3px solid rgba(217,164,65,.35);border-radius:42px;
+  padding:46px 52px 52px;text-align:center}
+.eyebrow{color:var(--gold);font-weight:700;font-size:38px;letter-spacing:13px;text-transform:uppercase}
+.title{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:88px;line-height:1.04;
+  text-transform:uppercase;margin-top:16px}
+.title em{font-style:normal;color:var(--gold)}
+.planwrap{margin-top:30px;display:flex;justify-content:center}
+svg{width:960px;height:auto;overflow:visible}
+
+/* plan styling */
+.room{fill:rgba(217,164,65,0.13);stroke:var(--gold);stroke-width:0.16;stroke-linejoin:round}
+.room.outdoor{fill:rgba(255,255,255,0.05);stroke:rgba(217,164,65,0.55);stroke-dasharray:0.5 0.34}
+.shell{fill:none;stroke:var(--white);stroke-width:0.42;stroke-linejoin:round}
+.rlabel{font-family:'Anton','Arial Black',sans-serif;fill:var(--white);text-anchor:middle;text-transform:uppercase}
+.rdim{font-family:'Archivo',sans-serif;font-weight:700;fill:rgba(255,255,255,.72);text-anchor:middle}
+
+.stats{margin-top:32px;display:flex;justify-content:center;gap:0}
+.stat{padding:0 34px;border-right:3px solid rgba(217,164,65,.4)}
+.stat:last-child{border-right:none}
+.snum{font-family:'Anton','Arial Black',sans-serif;color:var(--gold);font-size:84px;line-height:1}
+.slab{color:rgba(255,255,255,.8);font-weight:700;font-size:26px;letter-spacing:4px;text-transform:uppercase;margin-top:8px}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1728" data-height="3072" data-duration="5.6">
+  <div class="card" id="card">
+    <div class="eyebrow" id="eyebrow">THE PLAN YOU'RE STANDING IN</div>
+    <div class="title" id="title">900 SQ FT &nbsp;·&nbsp; <em>1 BED</em> &nbsp;·&nbsp; <em>1 BATH</em></div>
+
+    <div class="planwrap">
+      <!-- 30' wide x 36' deep, plus the 5'-11" front porch below -->
+      <svg viewBox="-1 -1 32 44" xmlns="http://www.w3.org/2000/svg">
+        <!-- rooms, drawn back to front -->
+        <rect id="r-great"   class="room"          x="0"     y="20.9" width="30"    height="15.1"/>
+        <rect id="r-bed"     class="room"          x="14.75" y="0"    width="15.25" height="11.5"/>
+        <rect id="r-bath"    class="room"          x="19"    y="11.5" width="11"    height="9.4"/>
+        <rect id="r-mud"     class="room"          x="0"     y="11.5" width="9.7"   height="9.4"/>
+        <rect id="r-porch1"  class="room outdoor"  x="0"     y="0"    width="10"    height="11.5"/>
+        <rect id="r-porch2"  class="room outdoor"  x="8.6"   y="36"   width="12.75" height="5.9"/>
+
+        <!-- building shell drawn last so it sits on top -->
+        <rect id="shell" class="shell" x="0" y="0" width="30" height="36"/>
+
+        <g id="l-great">
+          <text class="rlabel" x="15"    y="27.6" font-size="2.15">GREAT ROOM</text>
+          <text class="rdim"   x="15"    y="29.9" font-size="1.25">29'-0" X 14'-7"</text>
+        </g>
+        <g id="l-bed">
+          <text class="rlabel" x="22.4"  y="5.4"  font-size="1.95">BEDROOM</text>
+          <text class="rdim"   x="22.4"  y="7.5"  font-size="1.15">14'-5" X 11'-0"</text>
+        </g>
+        <g id="l-bath">
+          <text class="rlabel" x="24.5"  y="16.4" font-size="1.7">BATH</text>
+        </g>
+        <g id="l-mud">
+          <text class="rlabel" x="4.85"  y="15.9" font-size="1.5">MUDROOM</text>
+          <text class="rdim"   x="4.85"  y="17.8" font-size="1.0">9'-8" X 4'-11"</text>
+        </g>
+        <g id="l-porch1">
+          <text class="rlabel" x="5"     y="5.6"  font-size="1.55" fill="rgba(255,255,255,.8)">PORCH</text>
+          <text class="rdim"   x="5"     y="7.4"  font-size="1.0">10'-0" X 11'-6"</text>
+        </g>
+        <g id="l-porch2">
+          <text class="rlabel" x="14.97" y="39.4" font-size="1.45" fill="rgba(255,255,255,.8)">PORCH</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="stats" id="stats">
+      <div class="stat"><div class="snum">30'</div><div class="slab">Wide</div></div>
+      <div class="stat"><div class="snum">36'</div><div class="slab">Deep</div></div>
+      <div class="stat"><div class="snum">900</div><div class="slab">Sq Ft</div></div>
+    </div>
+  </div>
+
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+
+// shell draws itself on
+var shell=document.getElementById("shell");
+var len=shell.getTotalLength ? shell.getTotalLength() : 132;
+
+tl.fromTo("#card",{opacity:0,y:46},{opacity:1,y:0,duration:.55,ease:E},0.00)
+  .fromTo("#eyebrow",{opacity:0,y:20},{opacity:1,y:0,duration:.45,ease:E},0.14)
+  .fromTo("#title",{opacity:0,y:26},{opacity:1,y:0,duration:.55,ease:E},0.26)
+  .fromTo("#shell",{strokeDasharray:len,strokeDashoffset:len,opacity:1},
+                   {strokeDashoffset:0,duration:1.05,ease:"power2.inOut"},0.46)
+  // rooms light up in the order you'd walk them
+  .fromTo("#r-great",{opacity:0,scale:.94,transformOrigin:"50% 50%"},{opacity:1,scale:1,duration:.42,ease:E},1.10)
+  .fromTo("#l-great",{opacity:0,y:1.2},{opacity:1,y:0,duration:.38,ease:E},1.26)
+  .fromTo("#r-bed",{opacity:0,scale:.94,transformOrigin:"50% 50%"},{opacity:1,scale:1,duration:.42,ease:E},1.58)
+  .fromTo("#l-bed",{opacity:0,y:1.2},{opacity:1,y:0,duration:.38,ease:E},1.74)
+  .fromTo("#r-bath",{opacity:0,scale:.94,transformOrigin:"50% 50%"},{opacity:1,scale:1,duration:.40,ease:E},2.02)
+  .fromTo("#l-bath",{opacity:0,y:1.0},{opacity:1,y:0,duration:.36,ease:E},2.16)
+  .fromTo("#r-mud",{opacity:0,scale:.94,transformOrigin:"50% 50%"},{opacity:1,scale:1,duration:.40,ease:E},2.36)
+  .fromTo("#l-mud",{opacity:0,y:1.0},{opacity:1,y:0,duration:.36,ease:E},2.50)
+  .fromTo(["#r-porch1","#r-porch2"],{opacity:0},{opacity:1,duration:.45,ease:E,stagger:.10},2.70)
+  .fromTo(["#l-porch1","#l-porch2"],{opacity:0},{opacity:1,duration:.40,ease:E,stagger:.10},2.86)
+  .fromTo("#stats",{opacity:0,y:22},{opacity:1,y:0,duration:.5,ease:E},3.30)
+  .to("#card",{opacity:0,y:-28,duration:.45,ease:"power2.in"},5.05)
+  .set("#card",{opacity:0,visibility:"hidden"},5.50);
+
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

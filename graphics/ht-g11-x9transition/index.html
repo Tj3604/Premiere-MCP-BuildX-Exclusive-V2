@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.88);}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1728px;height:3072px;overflow:hidden;background:transparent}
+#root{position:relative;width:1728px;height:3072px;font-family:'Archivo',Arial,sans-serif}
+
+.card{position:absolute;left:82px;right:82px;top:600px;
+  background:var(--panel);border:3px solid rgba(217,164,65,.35);border-radius:42px;
+  padding:46px 52px 50px;text-align:center}
+
+.tag{height:60px;position:relative}
+.tag div{position:absolute;left:0;right:0;color:var(--gold);font-weight:700;font-size:38px;
+  letter-spacing:12px;text-transform:uppercase}
+.title{height:112px;position:relative;margin-top:8px}
+.title div{position:absolute;left:0;right:0;font-family:'Anton','Arial Black',sans-serif;
+  color:var(--white);font-size:96px;line-height:1.04;text-transform:uppercase}
+.title em{font-style:normal;color:var(--gold)}
+
+.planwrap{margin-top:24px;position:relative;height:1300px}
+svg{position:absolute;left:50%;transform:translateX(-50%);width:920px;height:auto;overflow:visible}
+
+.room{fill:rgba(217,164,65,0.13);stroke:var(--gold);stroke-width:0.17;stroke-linejoin:round}
+.room.outdoor{fill:rgba(255,255,255,0.05);stroke:rgba(217,164,65,0.5);stroke-dasharray:0.5 0.34}
+.room.gone{fill:rgba(214,74,74,0.16);stroke:#D64A4A}
+.room.newly{fill:rgba(217,164,65,0.22);stroke:var(--gold);stroke-width:0.24}
+.shell{fill:none;stroke:var(--white);stroke-width:0.44;stroke-linejoin:round}
+.rlabel{font-family:'Anton','Arial Black',sans-serif;fill:var(--white);text-anchor:middle;text-transform:uppercase}
+.rsub{font-family:'Archivo',sans-serif;font-weight:700;fill:rgba(255,255,255,.7);text-anchor:middle}
+
+.foot{margin-top:14px;color:rgba(255,255,255,.85);font-weight:700;font-size:40px;
+  letter-spacing:5px;text-transform:uppercase}
+.foot em{font-style:normal;color:var(--gold)}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1728" data-height="3072" data-duration="7.6">
+  <div class="card" id="card">
+    <div class="tag">
+      <div id="tagA">The standard plan</div>
+      <div id="tagB" style="opacity:0">What they actually built</div>
+    </div>
+    <div class="title">
+      <div id="titleA">X9 &nbsp;·&nbsp; <em>2 Bed / 2 Bath</em></div>
+      <div id="titleB" style="opacity:0">As built &nbsp;·&nbsp; <em>1 Bed / 1 Bath</em></div>
+    </div>
+
+    <div class="planwrap">
+      <!-- ===== STANDARD X9 ===== -->
+      <svg id="planA" viewBox="-1 -1 32 43" xmlns="http://www.w3.org/2000/svg">
+        <rect class="room outdoor" x="0"    y="0"    width="10.4" height="11.4"/>
+        <rect class="room"         x="10.4" y="0"    width="13.6" height="11.4"/>
+        <rect class="room"         x="24"   y="0"    width="6"    height="8"/>
+        <rect class="room"         x="24"   y="8"    width="6"    height="6"/>
+        <rect class="room"         x="0"    y="11.4" width="10.4" height="12.6"/>
+        <rect class="room"         x="22"   y="14"   width="8"    height="6.4"/>
+        <rect class="room"         x="0"    y="24"   width="14.5" height="12"/>
+        <rect id="bed2" class="room" x="14.5" y="24" width="15.5" height="12"/>
+        <rect class="room outdoor" x="9"    y="36"   width="12"   height="4.4"/>
+        <rect class="shell" x="0" y="0" width="30" height="36"/>
+        <text class="rlabel" x="17.2" y="5.2"  font-size="1.75">Bedroom</text>
+        <text class="rsub"   x="17.2" y="7.0"  font-size="1.05">151 sq ft</text>
+        <text class="rlabel" x="27"   y="4.6"  font-size="1.15">M. Bath</text>
+        <text class="rlabel" x="27"   y="11.6" font-size="1.15">Closet</text>
+        <text class="rlabel" x="5.2"  y="17.4" font-size="1.7">Kitchen</text>
+        <text class="rsub"   x="5.2"  y="19.2" font-size="1.05">146 sq ft</text>
+        <text class="rlabel" x="26"   y="17.8" font-size="1.3">Bath</text>
+        <text class="rlabel" x="7.2"  y="30.4" font-size="1.7">Living</text>
+        <text class="rsub"   x="7.2"  y="32.2" font-size="1.05">176 sq ft</text>
+        <text class="rlabel" x="22.2" y="30.0" font-size="1.75">Bedroom</text>
+        <text class="rsub"   x="22.2" y="31.8" font-size="1.05">148 sq ft</text>
+        <text class="rlabel" x="15"   y="38.8" font-size="1.3" fill="rgba(255,255,255,.75)">Porch</text>
+      </svg>
+
+      <!-- ===== AS BUILT ===== -->
+      <svg id="planB" viewBox="-1 -1 32 43" xmlns="http://www.w3.org/2000/svg" style="opacity:0">
+        <rect class="room outdoor" x="0"     y="0"    width="10"    height="11.5"/>
+        <rect id="bedBig" class="room newly" x="14.75" y="0" width="15.25" height="11.5"/>
+        <rect class="room"         x="19"    y="11.5" width="11"    height="9.4"/>
+        <rect class="room"         x="0"     y="11.5" width="9.7"   height="9.4"/>
+        <rect id="great" class="room newly" x="0" y="20.9" width="30" height="15.1"/>
+        <rect class="room outdoor" x="8.6"   y="36"   width="12.75" height="5.9"/>
+        <rect class="shell" x="0" y="0" width="30" height="36"/>
+        <text class="rlabel" x="22.4" y="5.4"  font-size="1.85">Bedroom</text>
+        <text class="rsub"   x="22.4" y="7.3"  font-size="1.05">14'-5" x 11'-0"</text>
+        <text class="rlabel" x="24.5" y="16.4" font-size="1.5">Bath</text>
+        <text class="rlabel" x="4.85" y="15.9" font-size="1.35">Mudroom</text>
+        <text class="rlabel" x="15"   y="27.6" font-size="2.05">Great Room</text>
+        <text class="rsub"   x="15"   y="29.7" font-size="1.15">29'-0" x 14'-7"</text>
+        <text class="rlabel" x="15"   y="39.6" font-size="1.3" fill="rgba(255,255,255,.75)">Porch</text>
+      </svg>
+    </div>
+
+    <div class="foot" id="foot" style="opacity:0">Same <em>30' &times; 36'</em> footprint</div>
+  </div>
+
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+
+tl.fromTo("#card",{opacity:0,y:44},{opacity:1,y:0,duration:.5,ease:E},0.00)
+  .fromTo("#tagA",{opacity:0,y:16},{opacity:1,y:0,duration:.4,ease:E},0.14)
+  /* "standard X-9" is spoken at +0.24 */
+  .fromTo("#titleA",{opacity:0,y:22},{opacity:1,y:0,duration:.45,ease:E},0.32)
+  .fromTo("#planA",{opacity:0,scale:.95,transformOrigin:"50% 50%"},
+                   {opacity:1,scale:1,duration:.5,ease:E},0.50)
+  /* "two bedroom, two bath" completes at +2.58 — flag the second bedroom only after */
+  .fromTo("#bed2",{fill:"rgba(217,164,65,0.13)"},{fill:"rgba(217,164,65,0.30)",duration:.4},2.70)
+
+  /* --- the change --- */
+  .to("#tagA",{opacity:0,duration:.3,ease:"power2.in"},4.10)
+  .to("#titleA",{opacity:0,y:-16,duration:.3,ease:"power2.in"},4.10)
+  .to("#bed2",{attr:{class:"room gone"},duration:0},4.10)
+  .to("#planA",{opacity:0,duration:.55,ease:"power2.inOut"},4.30)
+  .fromTo("#planB",{opacity:0,scale:1.03,transformOrigin:"50% 50%"},
+                   {opacity:1,scale:1,duration:.55,ease:"power2.inOut"},4.35)
+  .fromTo("#tagB",{opacity:0,y:14},{opacity:1,y:0,duration:.4,ease:E},4.55)
+  .fromTo("#titleB",{opacity:0,y:20},{opacity:1,y:0,duration:.45,ease:E},4.70)
+  .fromTo("#foot",{opacity:0,y:16},{opacity:1,y:0,duration:.4,ease:E},5.90)
+
+  .to("#card",{opacity:0,y:-26,duration:.45,ease:"power2.in"},7.05)
+  .set("#card",{opacity:0,visibility:"hidden"},7.50);
+
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

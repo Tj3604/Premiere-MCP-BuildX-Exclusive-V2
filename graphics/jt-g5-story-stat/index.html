@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.84);--red:#D64A4A;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:transparent}
+#root{position:relative;width:1920px;height:1080px;font-family:'Archivo',Arial,sans-serif}
+.card{position:absolute;left:90px;bottom:92px;max-width:1180px;
+  background:var(--panel);border-left:10px solid var(--red);border-radius:14px;padding:32px 46px 36px}
+.eyebrow{color:var(--red);font-weight:700;font-size:28px;letter-spacing:8px;text-transform:uppercase;margin-bottom:20px}
+.row{display:flex;align-items:baseline;gap:24px;margin-top:14px}
+.k{font-family:'Anton','Arial Black',sans-serif;color:var(--gold);font-size:72px;line-height:1;min-width:230px}
+.v{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:52px;text-transform:uppercase;line-height:1.08}
+.v.bad{color:var(--red)}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1920" data-height="1080" data-duration="7.5">
+  <div class="card" id="card">
+    <div class="eyebrow" id="eyebrow">SHE PICKED THE CHEAPEST BID</div>
+    <div class="row" id="r1"><div class="k">$50,000</div><div class="v">Paid up front</div></div>
+    <div class="row" id="r2"><div class="k">1</div><div class="v">Foundation poured</div></div>
+    <div class="row" id="r3"><div class="k">0</div><div class="v bad">Times he came back</div></div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+/* "$50,000" at +0.06, "foundation" at +1.67, "never been back at all" ends +4.36 */
+tl.fromTo("#card",{opacity:0,x:-46},{opacity:1,x:0,duration:.5,ease:E},0.00)
+  .fromTo("#eyebrow",{opacity:0,y:14},{opacity:1,y:0,duration:.4,ease:E},0.14)
+  .set(["#r1","#r2","#r3"],{opacity:0},0)
+  .fromTo("#r1",{opacity:0,x:-24},{opacity:1,x:0,duration:.4,ease:E},0.50)
+  .fromTo("#r2",{opacity:0,x:-24},{opacity:1,x:0,duration:.4,ease:E},2.00)
+  .fromTo("#r3",{opacity:0,x:-24},{opacity:1,x:0,duration:.45,ease:E},4.60)
+  .to("#card",{opacity:0,x:-34,duration:.42,ease:"power2.in"},6.95)
+  .set("#card",{opacity:0,visibility:"hidden"},7.40);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

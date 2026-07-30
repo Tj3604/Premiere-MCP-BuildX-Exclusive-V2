@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:transparent}
+#root{position:relative;width:1920px;height:1080px;font-family:'Archivo',Arial,sans-serif}
+/* matches the Black Video layer Tom had on V4 at 86% */
+.wash{position:absolute;inset:0;background:rgba(0,0,0,0.86)}
+.stack{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center}
+.eyebrow{color:var(--gold);font-weight:700;font-size:36px;letter-spacing:8px;text-transform:uppercase}
+.headline{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:168px;line-height:1.05;
+  text-transform:uppercase;margin-top:28px;white-space:nowrap;text-shadow:0 6px 30px rgba(0,0,0,.5)}
+.headline em{font-style:normal;color:var(--gold)}
+.rule{height:5px;width:220px;background:var(--gold);border-radius:3px;margin:38px auto 0;transform-origin:center}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1920" data-height="1080" data-duration="4.05">
+  <div class="wash" id="wash"></div>
+  <div class="stack">
+    <div class="eyebrow" id="eyebrow">NORWELL ADU</div>
+    <div class="headline" id="headline"><em>$440K</em> TO <em>$460K</em></div>
+    <div class="rule" id="rule"></div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#wash",{opacity:0},{opacity:1,duration:.55,ease:"power2.out"},0.00)
+  .fromTo("#eyebrow",{opacity:0,y:26},{opacity:1,y:0,duration:.55,ease:E},0.22)
+  .fromTo("#headline",{opacity:0,y:38},{opacity:1,y:0,duration:.65,ease:E},0.40)
+  .fromTo("#rule",{scaleX:0,opacity:0},{scaleX:1,opacity:1,duration:.55,ease:E},0.75)
+  .to("#eyebrow",{opacity:0,duration:.35,ease:"power2.in"},3.45)
+  .to("#headline",{opacity:0,duration:.35,ease:"power2.in"},3.45)
+  .to("#rule",{opacity:0,duration:.35,ease:"power2.in"},3.45)
+  .to("#wash",{opacity:0,duration:.45,ease:"power2.in"},3.55);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

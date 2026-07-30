@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--black:#0B0B0B;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1728px;height:3072px;overflow:hidden;background:transparent}
+#root{position:relative;width:1728px;height:3072px;font-family:'Archivo',Arial,sans-serif}
+
+/* full frame — the shot underneath is a hand over the lens, so nothing should show through */
+.wash{position:absolute;inset:0;background:rgba(11,11,11,0.94)}
+
+.stack{position:absolute;left:110px;right:110px;top:760px}
+.eyebrow{color:var(--gold);font-weight:700;font-size:42px;letter-spacing:12px;text-transform:uppercase;text-align:center}
+.title{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:120px;line-height:1.03;
+  text-transform:uppercase;margin-top:18px;text-align:center}
+.title em{font-style:normal;color:var(--gold)}
+
+.steps{margin-top:80px}
+.step{display:flex;align-items:center;gap:40px;margin-bottom:52px}
+.num{width:118px;height:118px;flex:0 0 118px;border-radius:50%;background:var(--gold);
+  display:flex;align-items:center;justify-content:center}
+.num span{font-family:'Anton','Arial Black',sans-serif;color:var(--black);font-size:74px;line-height:1}
+.txt{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:86px;
+  text-transform:uppercase;line-height:1.06}
+.txt em{font-style:normal;color:var(--gold)}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1728" data-height="3072" data-duration="5.4">
+  <div class="wash" id="wash"></div>
+  <div class="stack">
+    <div class="eyebrow" id="eyebrow">RUNNING GAS TO THE ADU</div>
+    <div class="title" id="title">Off the <em>main house</em></div>
+    <div class="steps">
+      <div class="step" id="s1"><div class="num"><span>1</span></div><div class="txt">Tap the existing<br><em>gas line</em></div></div>
+      <div class="step" id="s2"><div class="num"><span>2</span></div><div class="txt">Add another<br><em>meter</em></div></div>
+      <div class="step" id="s3"><div class="num"><span>3</span></div><div class="txt">Run the line<br>to the <em>ADU</em></div></div>
+    </div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+
+tl.fromTo("#wash",{opacity:0},{opacity:1,duration:.30,ease:"power2.out"},0.00)
+  .fromTo("#eyebrow",{opacity:0,y:16},{opacity:1,y:0,duration:.35,ease:E},0.12)
+  .fromTo("#title",{opacity:0,y:22},{opacity:1,y:0,duration:.42,ease:E},0.24)
+  /* each step lands on the words: "tapped off" +0.55, "meter" +2.40, "ran the line" +4.20 */
+  .fromTo("#s1",{opacity:0,x:-44},{opacity:1,x:0,duration:.45,ease:E},0.55)
+  .fromTo("#s2",{opacity:0,x:-44},{opacity:1,x:0,duration:.45,ease:E},2.40)
+  .fromTo("#s3",{opacity:0,x:-44},{opacity:1,x:0,duration:.45,ease:E},4.20)
+  .to("#wash",{opacity:0,duration:.30,ease:"power2.in"},5.10)
+  .to(["#eyebrow","#title","#s1","#s2","#s3"],{opacity:0,duration:.26,ease:"power2.in"},5.10)
+  .set("#wash",{opacity:0,visibility:"hidden"},5.36);
+
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

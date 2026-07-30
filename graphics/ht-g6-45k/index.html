@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.82);}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1728px;height:3072px;overflow:hidden;background:transparent}
+#root{position:relative;width:1728px;height:3072px;font-family:'Archivo',Arial,sans-serif}
+.card{position:absolute;left:82px;right:82px;top:430px;
+  background:var(--panel);border:3px solid rgba(217,164,65,.35);border-radius:42px;
+  padding:64px 70px 70px;text-align:center}
+.eyebrow{color:var(--gold);font-weight:700;font-size:46px;letter-spacing:13px;text-transform:uppercase}
+.big{font-family:'Anton','Arial Black',sans-serif;color:var(--gold);font-size:250px;line-height:1;margin-top:22px}
+.rule{height:6px;width:240px;background:var(--gold);border-radius:3px;margin:36px auto 30px;transform-origin:center}
+.sub{color:rgba(255,255,255,.86);font-weight:700;font-size:44px;letter-spacing:4px;text-transform:uppercase;line-height:1.35}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1728" data-height="3072" data-duration="5.5">
+  <div class="card" id="card">
+    <div class="eyebrow" id="eyebrow">TO GET GOING</div>
+    <div class="big" id="big">~$45K</div>
+    <div class="rule" id="rule"></div>
+    <!-- everything after this is paid against work completed, like any build -->
+    <div class="sub" id="sub">THEN YOU PAY<br>AS THE WORK IS COMPLETED</div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#card",{opacity:0,y:44},{opacity:1,y:0,duration:.55,ease:E},0.00)
+  .fromTo("#eyebrow",{opacity:0,y:20},{opacity:1,y:0,duration:.5,ease:E},0.16)
+  .fromTo("#big",{opacity:0,scale:.86},{opacity:1,scale:1,duration:.6,ease:"back.out(1.6)"},0.32)
+  .fromTo("#rule",{scaleX:0},{scaleX:1,duration:.5,ease:E},0.66)
+  .fromTo("#sub",{opacity:0,y:18},{opacity:1,y:0,duration:.5,ease:E},0.82)
+  .to("#card",{opacity:0,y:-26,duration:.42,ease:"power2.in"},4.95)
+  .set("#card",{opacity:0,visibility:"hidden"},5.40);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

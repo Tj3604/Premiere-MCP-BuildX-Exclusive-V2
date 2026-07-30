@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.84);--black:#0B0B0B;--red:#D64A4A;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:transparent}
+#root{position:relative;width:1920px;height:1080px;font-family:'Archivo',Arial,sans-serif}
+.card{position:absolute;left:90px;bottom:92px;max-width:1180px;
+  background:var(--panel);border-left:10px solid var(--gold);border-radius:14px;padding:32px 46px 36px}
+.eyebrow{color:var(--gold);font-weight:700;font-size:27px;letter-spacing:8px;text-transform:uppercase}
+.headline{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:80px;line-height:1.05;
+  text-transform:uppercase;margin-top:12px}
+.headline em{font-style:normal;color:var(--gold)}
+.sub{color:rgba(255,255,255,.78);font-weight:700;font-size:30px;letter-spacing:2px;margin-top:16px}
+.row{display:flex;align-items:center;gap:22px;margin-top:15px}
+.num{width:46px;height:46px;flex:0 0 46px;border-radius:50%;background:var(--gold);
+  display:flex;align-items:center;justify-content:center}
+.num span{font-family:'Anton','Arial Black',sans-serif;color:var(--black);font-size:28px;line-height:1}
+.tick{width:42px;height:42px;flex:0 0 42px;border-radius:9px;border:3px solid var(--gold);position:relative}
+.tick svg{position:absolute;inset:0;width:100%;height:100%}
+.tick path{fill:none;stroke:var(--gold);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:60;stroke-dashoffset:60}
+.rtxt{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:48px;text-transform:uppercase;line-height:1.06}
+.rtxt em{font-style:normal;color:var(--gold)}
+.k{font-family:'Anton','Arial Black',sans-serif;color:var(--gold);font-size:66px;line-height:1;min-width:200px}
+.v{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:44px;text-transform:uppercase;line-height:1.08}
+.bar{margin-top:22px;display:table;background:var(--gold);border-radius:10px;padding:10px 26px 14px}
+.bar span{font-family:'Anton','Arial Black',sans-serif;color:var(--black);font-size:46px;text-transform:uppercase;line-height:1}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1920" data-height="1080" data-duration="8.5">
+  <div class="card" id="card">
+    <div class="eyebrow" id="eyebrow">HOW YOU ENTER THE PROCESS</div>
+    <div class="row" id="r1"><div class="num"><span>1</span></div><div class="rtxt">Come to a <em>home tour</em></div></div>
+    <div class="row" id="r2"><div class="num"><span>2</span></div><div class="rtxt">Or <em>fill out the form</em> on the website</div></div>
+    <div class="row" id="r3"><div class="num"><span>3</span></div><div class="rtxt">Then a <em>project clarity call</em></div></div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#card",{opacity:0,x:-46},{opacity:1,x:0,duration:.48,ease:E},0.00)
+  .fromTo("#eyebrow",{opacity:0,y:14},{opacity:1,y:0,duration:.38,ease:E},0.12);
+tl.set("#r1",{opacity:0},0).fromTo("#r1",{opacity:0,x:-22},{opacity:1,x:0,duration:.4,ease:E},0.30);
+tl.set("#r2",{opacity:0},0).fromTo("#r2",{opacity:0,x:-22},{opacity:1,x:0,duration:.4,ease:E},3.80);
+tl.set("#r3",{opacity:0},0).fromTo("#r3",{opacity:0,x:-22},{opacity:1,x:0,duration:.4,ease:E},5.60);
+tl.to("#card",{opacity:0,x:-34,duration:.42,ease:"power2.in"},7.95)
+  .set("#card",{opacity:0,visibility:"hidden"},8.40);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>
