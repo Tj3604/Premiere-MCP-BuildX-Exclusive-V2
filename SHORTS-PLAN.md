@@ -1,7 +1,12 @@
 # HomeTour 7.25.26 — Clip Plan · 20 Shorts
 
-Awaiting Tom's approval. **Nothing has been built.** Timecodes are seconds within each source
-clip. All dialogue is verbatim; `[…]` marks a Whisper garble I have flagged rather than fixed.
+> **Status corrected 2026-07-30.** This plan was approved and built. 20 shorts were exported
+> on 2026-07-29 — see `SHORTS-HANDOFF.md` for build and delivery state, and
+> `exports/shorts/_manifest.json` for what shipped. The plan below is preserved exactly as
+> written; only this status note has been added.
+
+Timecodes are seconds within each source clip. All dialogue is verbatim; `[…]` marks a
+Whisper garble I have flagged rather than fixed.
 
 **Global treatment on every short**
 - Lumetri contrast/saturation pass (footage is flat) + ~115% punch-in on the piece-to-camera clips

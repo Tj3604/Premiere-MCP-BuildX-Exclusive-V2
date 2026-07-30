@@ -1,5 +1,13 @@
 # Session Handoff — 2026-07-27
 
+> **Earlier project record.** This documents the **Hometour Sat 6-20-26** project on
+> `/Volumes/BuildX-TM`. A later project is recorded in **`SHORTS-HANDOFF.md`** (updated
+> 2026-07-29) on a different volume — **read that first.** This file remains accurate for the
+> system build and the tooling lessons below.
+>
+> Permanent BuildX knowledge — brand, editorial, workflow, tool behaviour — is in
+> `knowledge/buildx/`.
+
 State of the build, so a fresh session doesn't re-derive any of it.
 
 ## Status: built and verified end to end

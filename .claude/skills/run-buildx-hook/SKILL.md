@@ -50,7 +50,7 @@ Open `http://localhost:5500/buildx-hook-template.html` in a browser (Live Server
 
 ## Gotchas
 
-- **Google Fonts don't load in headless Chromium** — the fonts fall back to system fonts. Layout still works but Anton/Archivo/Space Mono won't render as designed. For copy verification this is fine; for visual QA before shipping, open in a real browser.
+- **Google Fonts don't load in headless Chromium** — the fonts fall back to system fonts. Layout still works, but any webfont the template specifies won't render as designed. For copy verification this is fine; for visual QA before shipping, open in a real browser.
 - **`npx playwright` resolves to the globally cached version**, not a project-local install. If `npx playwright --version` fails, run `npm install -g playwright` then `npx playwright install chromium`.
 - **Port 5500 is usually held by VS Code Live Server** (a Python process). The driver checks for it before starting a new one — safe to run while VS Code is open.
 - **`--wait-for-timeout` is wall-clock, not animation time** — if the machine is under load, the screenshot may lag slightly behind the expected frame. Add 200–300ms to your target if you're getting a frame too early.

@@ -20,11 +20,47 @@ Premiere tools fail silently-ish (they time out) unless the bridge is live. Ever
 If tool calls hang or time out, this is the cause ~90% of the time. Check the panel first,
 before debugging anything else. Right-click the panel → `Reload` if it looks stuck.
 
+**The bridge follows whatever project is frontmost in Premiere, and it has silently switched
+projects mid-session.** Call `get_project_info` and confirm the project name before every
+build step — not once at the start.
+
 Verify the install at any time:
 
 ```bash
 cd mcp/premiere-pro-mcp && npm run setup:doctor
 ```
+
+## BuildX knowledge — read before starting work
+
+Permanent BuildX knowledge lives in `knowledge/buildx/`. It is **not** loaded automatically.
+Read the relevant file before beginning the task. If multiple files are listed, read them in
+the order shown.
+
+| Before you… | Read |
+|---|---|
+| Do anything BuildX, unsure where to start | `knowledge/buildx/README.md` |
+| Write copy, a hook, a title or anything in BuildX's voice | `brand.md` |
+| Build or style any graphic | `design-system.md`, then `assets.md` |
+| Choose what to cut, or how to order a batch | `editorial.md` |
+| Choose b-roll, or decide graphic vs footage | `broll.md` |
+| Write or check a caption | `captions.md`, then `terminology.md` |
+| Put a number, price or statistic on screen | `verified-facts.md` |
+| Put a person's name on screen | `people.md` |
+| Run a project end to end, or QA before export | `production-workflow.md` |
+| Debug a Premiere tool that misbehaved | `premiere-gotchas.md` |
+
+Four rules from that knowledge base that apply to every BuildX task, without exception:
+
+- **Exact spoken dialogue only.** Never invent, reword or paraphrase a line.
+- **Never put a name or place on screen that was inferred rather than confirmed.**
+- **Check every on-screen figure against `verified-facts.md`**, including any qualifier it
+  carries.
+- **Every short gets the logo and the standard end card.** Never author a new CTA.
+
+Unresolved decisions are tracked in `knowledge/buildx/open-questions.md`. **Three brand
+questions are currently open** — the gold value, the typeface pair, and whether grain texture
+is permitted. Until they are answered, match the composition you are extending rather than
+picking a value.
 
 ## Layout
 
@@ -68,11 +104,14 @@ Doing this arithmetic inline is how you get one-frame black gaps and drift.
 
 ### Cutting judgement
 
-The transcript is a script, not a waveform. Cut for meaning:
+The transcript is a script, not a waveform. Cut for meaning.
 
-- Drop filler openings ("okay so", "basically", "um"), restarts, and repeated takes.
-- When someone says the same thing twice, keep the tighter delivery.
-- Keep the first clean statement of each idea; drop the re-explanation.
+**Full selection and cutting doctrine — what survives, hook standards, length, pacing and
+publication order — is in `knowledge/buildx/editorial.md`. Read it before choosing keeps.**
+
+Three things that live here because they are always true:
+
+- **Exact spoken dialogue only. Never invent, reword or paraphrase a line.**
 - Default `--pad 0.05` keeps a breath around each cut. Raise to `0.12` if words clip.
 - "Cut it hard" means keep only load-bearing sentences — expect to lose 50-70%.
 
@@ -91,6 +130,9 @@ cd graphics/my-graphic && npx hyperframes@latest lint
 node scripts/render-graphic.mjs graphics/my-graphic --alpha --fps 30 --quality high --name my-graphic
 ```
 
+**`--fps` must match the target sequence**, not default to 30. A 59.94 sequence needs the
+rational form (`60000/1001`). Rendering at the wrong rate is silent — nothing errors.
+
 `--alpha` → transparent **ProRes 4444 .mov** for overlays (lower thirds, callouts, captions).
 Without it → **MP4** for full-frame graphics.
 
@@ -108,6 +150,10 @@ Specify style concretely — frame rate feel (8fps stepped vs 30fps smooth), tex
 (halftone, grain, paper), palette, typography, and the beat-by-beat action. When the user
 is vague, ask what look they want or propose 2-3 specific directions. Don't silently pick.
 
+**For BuildX work, do not invent or reinterpret the visual language.** The design system,
+brand voice, editorial standards, and workflow are already defined in `knowledge/buildx/`.
+Follow them rather than creating a new style.
+
 ## 97 of the 281 tools lie about succeeding
 
 Read [TOOL-RELIABILITY.md](TOOL-RELIABILITY.md) before trusting any tool result.
@@ -123,6 +169,11 @@ names, durations, counts.
 Never tell the user an operation succeeded on the strength of `accepted: true`. Confirm
 with `get_project_info`, `list_sequence_tracks`, or `list_project_items` — or say it needs
 doing by hand.
+
+`TOOL-RELIABILITY.md` is a **static source audit** — it can see whether a tool has an
+implementation, not whether that implementation works. Six tools it lists as working fail
+when called. **Live-verified behaviour is in `knowledge/buildx/premiere-gotchas.md`, and
+where the two disagree, live observation wins.**
 
 ## Frame math: why `plan-cut.mjs` exists
 
@@ -141,12 +192,12 @@ handles both conversions. **Do not hand-compute in/out points.**
 
 ## Standing rule: the BuildX logo
 
-Every BuildX project contains `BuildX Logo WHITE.PNG.png`. Put it on **V3** at
-**x 540, y 74, scale 54%** on every edit, without being asked.
+Every BuildX project contains `BuildX Logo WHITE.PNG.png`. Put it on **V3** on every edit,
+without being asked.
 
-Those are Premiere's Effect Controls pixel values for a 1080x1920 sequence. The scripting
-API wants **normalized** coordinates, so convert — `x/width, y/height` → `[0.5, 0.0385417]`.
-Recompute if the sequence is not 1080x1920.
+For a 1080x1920 sequence: Position `[0.5, 0.0385417]`, Scale **54**. **Values for other
+sequence formats, and how to derive a new one, are in `knowledge/buildx/design-system.md`** —
+the normalized position is the same for any 9:16 sequence, only the scale changes.
 
 Use `set_param_value` (added locally — see below), not `set_clip_position`/`set_clip_scale`,
 which are fake no-ops.
@@ -194,12 +245,16 @@ as `foo.png.png`.
 - Transcription writes `transcript.json` into whatever project dir it is given —
   `transcribe.mjs` uses a scratch dir so it never litters the source footage folder.
 
+The fuller set — sequence creation, bulk delete, markers, export mechanics, and every tool
+behaviour verified by actually calling it — is in `knowledge/buildx/premiere-gotchas.md`.
+
 ## Useful MCP tools
 
 `list_sequences`, `get_project_info`, `list_project_items` — orient before editing.
 `import_media`, `create_sequence`, `create_bin` — setup.
 `add_to_timeline` (`sourceInPoint`/`sourceOutPoint`/`insertMode`) — the core placement tool.
-`razor_timeline_at_time`, `split_clip`, `trim_clip`, `ripple_delete` — surgical fixes.
+`razor_timeline_at_time`, `split_clip`, `trim_clip` — surgical fixes. (`ripple_delete` is
+listed as a no-op in `TOOL-RELIABILITY.md` — don't reach for it until it has been tested.)
 `apply_effect`, `add_transition` — treatment. `export_sequence` — delivery.
 `save_project`, `undo` — safety.
 

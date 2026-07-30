@@ -25,6 +25,8 @@ CapCut, or Final Cut.
 - **Canvas**: 1080×1920 (9:16 portrait)
 - **Background**: Transparent (alpha channel)
 
+**For BuildX work:** the values above are this skill's generic defaults. BuildX caption policy is defined in `knowledge/buildx/`; begin with `knowledge/buildx/README.md` and follow its routing before rendering.
+
 ## Animation
 
 Each caption group pops in with:
@@ -163,6 +165,8 @@ Set `data-duration` to `last_group_end + OFFSET` (the full composition length in
 cd <project-directory>
 npx hyperframes render . --format mov --output renders/<name>.mov --fps 30 --quality high
 ```
+
+Match `--fps` to the target sequence's real frame rate.
 
 The output MOV has a transparent alpha channel — ready to overlay on any video.
 

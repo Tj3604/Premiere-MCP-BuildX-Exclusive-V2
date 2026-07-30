@@ -1,18 +1,45 @@
-footage/
-renders/
-exports/
-transcripts/
-*.prproj
-*.mp4
-*.mov
-*.mxf
-*.wav
-*.mp3
-*.aif
-*.aiff
-*.png
-*.jpg
-*.jpeg
+# =========================
+# BuildX Claude Video Editor
+# .gitignore
+# =========================
+
+# macOS
 .DS_Store
+
+# Node.js
 node_modules/
+npm-debug.log*
+
+# Premiere Pro
+*.prproj.autosave
+*.prlock
+*.pek
+*.cfa
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Build outputs
+exports/
+renders/
+
+# Working media (stored outside Git)
+footage/
+transcripts/
+
+# Local caches
+.cache/
+
+# Environment files
 .env
+.env.*
+
+# OS/editor
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+*.pyc

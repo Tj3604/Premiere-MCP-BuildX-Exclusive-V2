@@ -5,7 +5,11 @@ All quotes are **verbatim from Whisper output** — condensed here to the load-b
 never reworded. **Re-check every quote against the `.words.json` before cutting**, and note that
 Whisper garbled some phrases (flagged inline). Times are seconds within that clip.
 
-Companion to `SHORTS-HANDOFF.md`. Nothing here is approved yet — Tom has not seen this list.
+Companion to `SHORTS-HANDOFF.md`.
+
+> **Status corrected 2026-07-30.** This pool has been reviewed and selections were made from
+> it — see `SHORTS-PLAN.md` for the 20 clips chosen and `SHORTS-HANDOFF.md` for what shipped.
+> The pool below is preserved exactly as written; only this status note has been added.
 
 > **Only two clips are pieces to camera: 0063 and 0067.** Both end on the "just build baby"
 > signoff. Everything else is candid open-house conversation. The subagents that mined

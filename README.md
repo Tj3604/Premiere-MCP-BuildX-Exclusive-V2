@@ -26,6 +26,7 @@ Then open this folder in Claude and prompt in plain language:
 | Path | |
 |---|---|
 | `CLAUDE.md` | How the system works — the operating manual Claude reads |
+| `knowledge/buildx/` | Permanent BuildX knowledge — brand, voice, editorial and production standards |
 | `TOOL-RELIABILITY.md` | Which MCP tools actually work — 97 of 281 fake success |
 | `scripts/transcribe.mjs` | Footage → word-level transcript |
 | `scripts/plan-cut.mjs` | Keep-ranges → exact timeline placements |

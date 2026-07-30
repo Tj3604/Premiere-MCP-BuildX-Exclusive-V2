@@ -1,5 +1,19 @@
 # HomeTour 7.25.26 — Social Shorts Build (HANDOFF)
 
+> **Most recent project record.** This documents the **HomeTour 7.25.26** project on
+> `/Volumes/BuildX-Media`, last updated 2026-07-29. It supersedes **`HANDOFF.md`**
+> (2026-07-27), which covers an earlier project on a different volume.
+>
+> Sections are ordered **newest first** — the top of this file is the current state; content
+> further down is a dated historical log and may describe conditions that no longer hold.
+>
+> **Whether this job is fully closed is not recorded here** — outstanding items are listed
+> below. Confirm before assuming the work is finished.
+>
+> The MCP bridge follows whatever project is frontmost in Premiere. **Confirm with
+> `get_project_info` before any build step.** Permanent BuildX knowledge is in
+> `knowledge/buildx/`.
+
 ## 📦 2026-07-29 — DELIVERED: 20 shorts exported + 20 transcripts
 
 `exports/shorts/` — 20 `.mp4` + 20 `.md` + `_manifest.json`. **6.99 GB total.**

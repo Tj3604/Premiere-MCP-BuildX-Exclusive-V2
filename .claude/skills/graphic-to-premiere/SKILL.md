@@ -57,6 +57,8 @@ node scripts/render-graphic.mjs graphics/my-graphic --alpha --fps 30 --quality h
 node scripts/render-graphic.mjs graphics/my-graphic --fps 30 --quality high --name my-graphic
 ```
 
+Match `--fps` to the target sequence's real frame rate.
+
 Use `--quality draft` while iterating; `high` only for the final pass.
 
 The command prints the absolute output path in `renders/`. Use that path verbatim.
