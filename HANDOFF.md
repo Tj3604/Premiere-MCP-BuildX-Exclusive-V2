@@ -82,7 +82,7 @@ existing 18.
 ## To pick up
 
 ```bash
-cd /Users/thomasmartell/Downloads/claude-video-editor
+cd /path/to/your/clone/claude-video-editor
 node scripts/mcp-call.mjs get_project_info    # confirms the bridge is live
 ```
 

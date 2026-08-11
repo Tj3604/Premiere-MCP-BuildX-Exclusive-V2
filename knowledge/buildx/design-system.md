@@ -380,7 +380,7 @@ All indexed in `open-questions.md`.
 | Reveal-after-spoken-word rule and its failure history | `SHORTS-HANDOFF.md` — graphics timing corrections |
 | Style summary as applied on a real build | `SHORTS-HANDOFF.md` — style / branding conventions |
 
-Session-memory files are outside this repository, in
-`~/.claude/projects/-Users-thomasmartell-Downloads/memory/`. They are not version-controlled
+Session-memory files are outside this repository, in the editor's own
+`~/.claude/projects/<project-slug>/memory/`. They are not version-controlled
 and do not load in a session opened at this project's own directory — which is the reason
 this file exists. See `open-questions.md` (question 5) for their planned disposition.

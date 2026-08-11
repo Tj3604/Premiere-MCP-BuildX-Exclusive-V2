@@ -3,7 +3,7 @@
     "premiere-pro": {
       "command": "node",
       "args": [
-        "/Users/thomasmartell/Downloads/claude-video-editor/mcp/premiere-pro-mcp/dist/index.js"
+        "__REPO_ROOT__/mcp/premiere-pro-mcp/dist/index.js"
       ],
       "env": {
         "PREMIERE_TEMP_DIR": "/tmp/premiere-mcp-bridge"

@@ -177,8 +177,8 @@ Indexed in `open-questions.md`.
 | Whisper does not diarise | `SHORTS-HANDOFF.md` — production notes |
 | Speaker identification priority | Editorial guidance, verified 2026-07-30 |
 
-Session-memory files are outside this repository, in
-`~/.claude/projects/-Users-thomasmartell-Downloads/memory/`. They are not version-controlled
+Session-memory files are outside this repository, in the editor's own
+`~/.claude/projects/<project-slug>/memory/`. They are not version-controlled
 and do not load in a session opened at this project's own directory — which is why this
 content was brought into the repository. See `open-questions.md` (question 5) for their
 planned disposition.

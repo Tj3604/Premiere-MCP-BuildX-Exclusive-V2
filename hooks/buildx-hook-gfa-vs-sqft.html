@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@700;800;900&display=swap');
+
+  :root {
+    --gold: #D4960A;
+    --white: #FFFFFF;
+    --dur: 6s;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px;
+    height: 1920px;
+    background: transparent;
+    overflow: hidden;
+    position: relative;
+    font-family: 'Bebas Neue', Impact, sans-serif;
+  }
+
+  /* ── Flash streak ── */
+  .streak {
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(105deg, transparent 30%, rgba(212,150,10,0.32) 50%, transparent 70%);
+    animation: streak var(--dur) linear 1 both;
+    z-index: 20;
+    pointer-events: none;
+  }
+  @keyframes streak {
+    0%   { left: -100%; opacity: 1; }
+    13%  { left: 120%;  opacity: 1; }
+    14%  { left: 120%;  opacity: 0; }
+    100% { left: 120%;  opacity: 0; }
+  }
+
+  /* ── Top bar ── */
+  .top-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 10px;
+    background: var(--gold);
+    transform-origin: left;
+    animation: slideInX var(--dur) linear 1 both;
+    z-index: 10;
+  }
+  @keyframes slideInX {
+    0%,8%  { transform: scaleX(0); opacity: 0; }
+    20%    { transform: scaleX(1); opacity: 1; }
+    100%   { transform: scaleX(1); opacity: 1; }
+  }
+
+  /* ── Left edge ── */
+  .left-edge {
+    position: absolute;
+    top: 0; left: 0;
+    width: 14px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--gold) 0%, rgba(212,150,10,0.5) 50%, transparent 85%);
+    clip-path: polygon(0 0,100% 0,80% 8%,100% 18%,75% 35%,100% 52%,85% 68%,100% 82%,90% 100%,0 100%);
+    animation: fadeIn var(--dur) linear 1 both;
+    z-index: 10;
+  }
+
+  /* ── Halftone ── */
+  .halftone {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    height: 50%;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.05) 2px, transparent 2px);
+    background-size: 28px 28px;
+    z-index: 0;
+    pointer-events: none;
+    animation: fadeIn var(--dur) linear 1 both;
+  }
+
+  /* ── Grain ── */
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ── Content ── */
+  .content {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 72px 56px 72px 80px;
+    z-index: 5;
+  }
+
+  /* ── Equation block ── */
+  .equation {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .line-gfa {
+    font-family: 'Bebas Neue', Impact, sans-serif;
+    font-size: 210px;
+    line-height: 0.82;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    text-shadow: 0 6px 36px rgba(0,0,0,0.95), 0 0 80px rgba(0,0,0,0.5);
+    animation: riseIn1 var(--dur) linear 1 both;
+  }
+  @keyframes riseIn1 {
+    0%,16% { opacity:0; transform:translateY(32px); }
+    28%    { opacity:1; transform:translateY(0); }
+    100%   { opacity:1; transform:translateY(0); }
+  }
+
+  .line-neq {
+    font-family: 'Bebas Neue', Impact, sans-serif;
+    font-size: 176px;
+    line-height: 0.85;
+    color: var(--white);
+    text-shadow: 0 5px 30px rgba(0,0,0,0.95);
+    animation: riseIn2 var(--dur) linear 1 both;
+    margin-top: 4px;
+  }
+  @keyframes riseIn2 {
+    0%,24% { opacity:0; transform:translateX(-28px); }
+    36%    { opacity:1; transform:translateX(0); }
+    100%   { opacity:1; transform:translateX(0); }
+  }
+
+  .line-sqft-1 {
+    font-family: 'Bebas Neue', Impact, sans-serif;
+    font-size: 176px;
+    line-height: 0.84;
+    color: var(--white);
+    text-transform: uppercase;
+    text-shadow: 0 5px 30px rgba(0,0,0,0.95);
+    animation: riseIn3 var(--dur) linear 1 both;
+    margin-top: 6px;
+  }
+  .line-sqft-2 {
+    font-family: 'Bebas Neue', Impact, sans-serif;
+    font-size: 260px;
+    line-height: 0.84;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    text-shadow: 0 5px 30px rgba(0,0,0,0.95);
+    animation: riseIn3 var(--dur) linear 1 both;
+  }
+  @keyframes riseIn3 {
+    0%,30% { opacity:0; transform:translateY(28px); }
+    42%    { opacity:1; transform:translateY(0); }
+    100%   { opacity:1; transform:translateY(0); }
+  }
+
+  /* ── Divider ── */
+  .divider-wrap {
+    animation: dividerIn var(--dur) linear 1 both;
+  }
+  @keyframes dividerIn {
+    0%,44%  { opacity:0; transform:scaleX(0); transform-origin:left; }
+    57%     { opacity:1; transform:scaleX(1); }
+    100%    { opacity:1; transform:scaleX(1); }
+  }
+
+  .divider {
+    width: 100%;
+    height: 18px;
+    background: var(--gold);
+    clip-path: polygon(
+      0% 40%, 2% 0%, 7% 30%, 14% 5%, 21% 38%, 29% 8%,
+      37% 42%, 44% 6%, 51% 36%, 59% 10%, 67% 44%,
+      74% 4%, 82% 38%, 89% 8%, 95% 32%, 100% 12%,
+      100% 68%, 95% 100%, 88% 72%, 80% 98%, 72% 65%,
+      64% 100%, 56% 70%, 48% 96%, 40% 64%, 32% 92%,
+      24% 66%, 16% 94%, 8% 62%, 2% 88%, 0% 60%
+    );
+  }
+
+  /* ── Sub-line ── */
+  .sub {
+    animation: subIn var(--dur) linear 1 both;
+  }
+  @keyframes subIn {
+    0%,54% { opacity:0; transform:translateY(22px); }
+    66%    { opacity:1; transform:translateY(0); }
+    100%   { opacity:1; transform:translateY(0); }
+  }
+
+  .sub-line-1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 96px;
+    line-height: 0.9;
+    color: var(--white);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    text-shadow: 0 4px 24px rgba(0,0,0,0.95);
+  }
+  .sub-line-2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 96px;
+    line-height: 0.9;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    text-shadow: 0 4px 24px rgba(0,0,0,0.95);
+    margin-top: 8px;
+  }
+
+  /* ── Bottom edge ── */
+  .bottom-edge {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    height: 28px;
+    background: var(--gold);
+    clip-path: polygon(
+      0% 100%, 0% 55%,
+      4% 75%, 9% 20%, 15% 65%, 21% 10%,
+      27% 60%, 33% 30%, 39% 70%, 45% 15%,
+      51% 55%, 57% 5%, 63% 50%, 69% 25%,
+      75% 65%, 81% 10%, 87% 55%, 93% 30%,
+      97% 60%, 100% 35%, 100% 100%
+    );
+    animation: fadeIn var(--dur) linear 1 both;
+    z-index: 10;
+  }
+
+  @keyframes fadeIn {
+    0%,14% { opacity:0; }
+    26%    { opacity:1; }
+    100%   { opacity:1; }
+  }
+
+</style>
+</head>
+<body>
+  <div class="halftone"></div>
+  <div class="grain"></div>
+  <div class="streak"></div>
+  <div class="top-bar"></div>
+  <div class="left-edge"></div>
+  <div class="bottom-edge"></div>
+
+  <div class="content">
+    <div class="equation">
+      <span class="line-gfa">USE GFA</span>
+      <span class="line-neq">TO YOUR</span>
+      <span class="line-sqft-1">ADVANTAGE —</span>
+      <span class="line-sqft-2">BUILD MORE.</span>
+    </div>
+
+    <div class="divider-wrap">
+      <div class="divider"></div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-line-1">DON'T LEAVE ADU SIZE</div>
+      <div class="sub-line-2">ON THE TABLE.</div>
+    </div>
+  </div>
+</body>
+</html>

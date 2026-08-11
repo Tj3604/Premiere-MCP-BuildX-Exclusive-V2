@@ -9,6 +9,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$REPO_ROOT/../.." && pwd)"
 CEP_EXTENSIONS_DIR="$HOME/Library/Application Support/Adobe/CEP/extensions"
 CEP_TARGET_DIR="$CEP_EXTENSIONS_DIR/MCPBridgeCEP"
 CLAUDE_CONFIG_PATH="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
@@ -91,6 +92,11 @@ data.mcpServers["premiere-pro"] = {
 
 fs.writeFileSync(configPath, `${JSON.stringify(data, null, 2)}\n`);
 '
+
+if [[ -f "$PROJECT_ROOT/scripts/init-mcp-config.mjs" ]]; then
+  echo "Generating project .mcp.json for Claude Code..."
+  node "$PROJECT_ROOT/scripts/init-mcp-config.mjs"
+fi
 
 echo
 echo "Install complete."

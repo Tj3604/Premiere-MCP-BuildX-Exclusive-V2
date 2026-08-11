@@ -5,16 +5,19 @@
  * Records a buildx-hook HTML animation as a ProRes 4444 MOV with alpha channel.
  * Captures 180 frames at 30fps (6s) using Playwright animation seek + ffmpeg.
  *
- * Output: ~/Downloads/<basename>.mov
+ * The hook is located by hooks-dir.mjs (repo hooks/, $BUILDX_HOOKS_DIR, or an
+ * explicit path) and that folder becomes the static server root.
+ *
+ * Output: <basename>.mov, written next to the hook.
  */
 
 import { chromium } from 'playwright';
-import { execSync, spawn } from 'child_process';
-import { existsSync, mkdirSync, rmSync } from 'fs';
+import { execSync } from 'child_process';
+import { mkdirSync, rmSync } from 'fs';
 import { basename, resolve } from 'path';
-import { homedir, tmpdir } from 'os';
+import { tmpdir } from 'os';
+import { ensureServer, resolveHook } from './hooks-dir.mjs';
 
-const downloadsDir = resolve(homedir(), 'Downloads');
 const [, , fileArg] = process.argv;
 
 if (!fileArg) {
@@ -22,36 +25,12 @@ if (!fileArg) {
   process.exit(1);
 }
 
-const htmlFile = fileArg.endsWith('.html') ? fileArg : fileArg + '.html';
-const filePath = resolve(downloadsDir, htmlFile);
-if (!existsSync(filePath)) {
-  console.error(`File not found: ${filePath}`);
-  process.exit(1);
-}
+const { htmlFile, serveDir } = resolveHook(fileArg);
 
 const slug = basename(htmlFile, '.html');
-const outputPath = resolve(downloadsDir, `${slug}.mov`);
+const outputPath = resolve(serveDir, `${slug}.mov`);
 const framesDir = resolve(tmpdir(), `buildx-frames-${Date.now()}`);
 mkdirSync(framesDir);
-
-function serverUp() {
-  try {
-    execSync('curl -s -o /dev/null -w "%{http_code}" http://localhost:5500/', { encoding: 'utf8' });
-    return true;
-  } catch { return false; }
-}
-
-if (!serverUp()) {
-  console.log('Starting http.server at localhost:5500 ...');
-  const server = spawn('python3', ['-m', 'http.server', '5500'], {
-    cwd: downloadsDir, detached: true, stdio: 'ignore',
-  });
-  server.unref();
-  for (let i = 0; i < 15; i++) {
-    await new Promise(r => setTimeout(r, 200));
-    if (serverUp()) break;
-  }
-}
 
 const FPS = 30;
 const DURATION_MS = 6000;
@@ -63,7 +42,8 @@ console.log(`${TOTAL_FRAMES} frames @ ${FPS}fps (${DURATION_MS / 1000}s)`);
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1080, height: 1920 } });
 
-await page.goto(`http://localhost:5500/${htmlFile}`);
+const baseUrl = await ensureServer(serveDir, htmlFile);
+await page.goto(`${baseUrl}/${encodeURIComponent(htmlFile)}`);
 await page.waitForLoadState('networkidle');
 
 // Pause all CSS animations so we can seek frame-by-frame

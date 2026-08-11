@@ -1,6 +1,6 @@
 # SHORTS MANIFEST — Lemon Testimonial
 
-Source: `/Users/thomasmartell/Downloads/Lemon Testimonial V1.mp4` (4096x2160, 29.97fps)
+Source: `~/Downloads/Lemon Testimonial V1.mp4` (4096x2160, 29.97fps)
 Speaker: **Michael Lemon**, Whitman MA — BuildX ADU customer.
 Project: `Lemon Jobsite Update.prproj`. All sequences 1080x1920 @ 30fps.
 

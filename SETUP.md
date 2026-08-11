@@ -40,14 +40,17 @@ different config format and would need the server registered by hand.
 cd mcp/premiere-pro-mcp
 npm install
 npm run build          # REQUIRED — see below
-npm run setup:mac      # installs the CEP panel into Premiere
+npm run setup:mac      # installs the CEP panel AND generates .mcp.json
 npm run setup:doctor   # verifies the install
 ```
+
+`setup:mac` generates `.mcp.json` for you. If you skip it, generate that file
+by hand before launching Claude Code — see [Generate `.mcp.json`](#generate-mcpjson).
 
 ### `npm run build` is not optional
 
 `dist/` is gitignored, so a fresh clone has **no compiled server at all** — the
-path in `.mcp.json` will not exist until you build.
+path `.mcp.json` points at will not exist until you build.
 
 It also carries a local patch. `set_param_value` was added to
 `src/tools/index.ts` because the stock server cannot set 2D parameters: its
@@ -59,13 +62,31 @@ Skip the build and logo placement will appear to succeed and do nothing.
 
 Rebuild any time you change the server source.
 
-### Fix the server path
+### Generate `.mcp.json`
 
-`.mcp.json` currently hardcodes an absolute path. Update it to wherever you
-cloned the repo, or the server will fail to start:
+`.mcp.json` is **not** in the repo — it holds an absolute path to your clone, so
+it cannot be shared. `.mcp.json.example` is the tracked template, and `.mcp.json`
+is gitignored. `npm run setup:mac` generates it; to do it separately:
 
-```json
-"args": ["<your-clone-path>/mcp/premiere-pro-mcp/dist/index.js"]
+```bash
+node scripts/init-mcp-config.mjs           # writes .mcp.json for this clone
+node scripts/init-mcp-config.mjs --force   # overwrite an existing one (e.g. after moving the repo)
+```
+
+Without it Claude Code starts with no `premiere-pro` server and every Premiere
+tool is simply missing.
+
+**A relative path does not work here, so don't "fix" it to one.** Claude Code
+resolves `args` against the process working directory, not the project root — a
+relative path connects when you launch Claude from the repo root and fails from
+any subdirectory. `${CLAUDE_PROJECT_DIR}` is a hooks-only variable and is not
+expanded in `.mcp.json` either. The path has to be absolute, which is why it is
+generated rather than committed.
+
+Verify it at any time:
+
+```bash
+claude mcp list    # expect: premiere-pro: ... ✔ Connected
 ```
 
 ## Starting a session
@@ -112,7 +133,8 @@ TOOL-RELIABILITY.md  which tools actually work
 HANDOFF.md, SHORTS-*.md  project handoffs and plans
 knowledge/         BuildX knowledge base (not auto-loaded — read as directed)
 graphics/          one HyperFrames composition per subfolder
-scripts/           transcribe, plan-cut, render-graphic, mcp-call, audit-tools
+.mcp.json.example  template for the gitignored, per-clone .mcp.json
+scripts/           init-mcp-config, transcribe, plan-cut, render-graphic, mcp-call, audit-tools
 mcp/               Premiere Pro MCP server + CEP bridge source
 presets/           reusable look/audio settings
 captions/          caption assets
@@ -133,11 +155,13 @@ renders/           rendered output (gitignored)
 | Symptom | Check |
 |---|---|
 | Tool calls hang | Bridge panel open and started; temp dir correct |
-| Server won't start | `npm run build` has been run; path in `.mcp.json` is correct |
+| No Premiere tools at all | `.mcp.json` exists — `node scripts/init-mcp-config.mjs` |
+| Server won't start | `npm run build` has been run; `claude mcp list` shows it connected |
+| Worked, then stopped after moving the repo | `node scripts/init-mcp-config.mjs --force` |
 | Position/scale does nothing | Using `set_param_value`, and the server was rebuilt after patching |
 | Alpha renders as a black box | Composition sets `background:transparent`, and `--alpha` was passed |
 | Graphic renders blank | Run `npx hyperframes@latest lint` — usually a timing-attribute error |
 
 ## Version
 
-BuildX Claude Video Editor v2.1.1
+BuildX Claude Video Editor v2.2

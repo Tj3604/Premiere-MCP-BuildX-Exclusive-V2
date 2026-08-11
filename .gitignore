@@ -63,6 +63,16 @@ __pycache__/
 # which does not exist on anyone else's machine)
 .claude/settings.local.json
 
+# Hook previews and recordings are generated next to the hook they came from.
+hooks/*-preview.png
+hooks/*.mov
+
+# Generated per-clone MCP config. It has to hold an absolute path to this
+# clone, so it cannot be shared. Generate it with:
+#     node scripts/init-mcp-config.mjs
+# The tracked template is .mcp.json.example.
+.mcp.json
+
 # -------------------------------------------------------------------------
 # .gitignore does NOT untrack files that are already committed. To stop
 # tracking something that is already in the repo:

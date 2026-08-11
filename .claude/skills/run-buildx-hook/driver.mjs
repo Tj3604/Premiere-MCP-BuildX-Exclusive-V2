@@ -3,21 +3,21 @@
  * Usage: node driver.mjs <html-file-basename> [time_ms=3500]
  *
  * Screenshots a buildx-hook HTML file served at localhost:5500.
- * If the server is not running, starts python3 -m http.server 5500 in ~/Downloads.
  *
- * Output: ~/Downloads/<basename>-preview.png
+ * The hook is located by hooks-dir.mjs (repo hooks/, $BUILDX_HOOKS_DIR, or an
+ * explicit path) and that folder becomes the static server root.
+ *
+ * Output: <basename>-preview.png, written next to the hook.
  *
  * Examples:
  *   node driver.mjs buildx-hook-template.html
  *   node driver.mjs buildx-hook-adu-test.html 2000
  */
 
-import { execSync, spawn } from 'child_process';
-import { existsSync } from 'fs';
+import { execSync } from 'child_process';
 import { basename, resolve } from 'path';
-import { homedir } from 'os';
+import { ensureServer, resolveHook } from './hooks-dir.mjs';
 
-const downloadsDir = resolve(homedir(), 'Downloads');
 const [, , fileArg, timeArg] = process.argv;
 
 if (!fileArg) {
@@ -25,53 +25,23 @@ if (!fileArg) {
   process.exit(1);
 }
 
-const htmlFile = fileArg.endsWith('.html') ? fileArg : fileArg + '.html';
-const filePath = resolve(downloadsDir, htmlFile);
-
-if (!existsSync(filePath)) {
-  console.error(`File not found: ${filePath}`);
-  process.exit(1);
-}
+const { htmlFile, serveDir } = resolveHook(fileArg);
 
 const timeMs = parseInt(timeArg ?? '3500', 10);
 const slug = basename(htmlFile, '.html');
-const outputPath = resolve(downloadsDir, `${slug}-preview.png`);
+const outputPath = resolve(serveDir, `${slug}-preview.png`);
 
-// Ensure server is running at :5500
-function serverUp() {
-  try {
-    execSync('curl -s -o /dev/null -w "%{http_code}" http://localhost:5500/', { encoding: 'utf8' });
-    return true;
-  } catch {
-    return false;
-  }
-}
+// Hooks are authored on a fixed 1080x1920 canvas, so the preview must match it.
+// A smaller viewport crops the frame and silently hides copy that runs wide —
+// which is the exact thing these screenshots exist to catch.
+const viewport = process.env.BUILDX_HOOK_VIEWPORT ?? '1080,1920';
 
-if (!serverUp()) {
-  console.log('Starting http.server at localhost:5500 ...');
-  const server = spawn('python3', ['-m', 'http.server', '5500'], {
-    cwd: downloadsDir,
-    detached: true,
-    stdio: 'ignore',
-  });
-  server.unref();
-  // Wait up to 3s for it to come up
-  for (let i = 0; i < 15; i++) {
-    await new Promise(r => setTimeout(r, 200));
-    if (serverUp()) break;
-  }
-  if (!serverUp()) {
-    console.error('Server did not start in time');
-    process.exit(1);
-  }
-  console.log('Server up.');
-}
-
-const url = `http://localhost:5500/${htmlFile}`;
+const baseUrl = await ensureServer(serveDir, htmlFile);
+const url = `${baseUrl}/${encodeURIComponent(htmlFile)}`;
 console.log(`Screenshotting ${url} at t=${timeMs}ms → ${outputPath}`);
 
 execSync(
-  `npx playwright screenshot --wait-for-timeout ${timeMs} --viewport-size "600,1067" "${url}" "${outputPath}"`,
+  `npx playwright screenshot --wait-for-timeout ${timeMs} --viewport-size "${viewport}" "${url}" "${outputPath}"`,
   { stdio: 'inherit' }
 );
 

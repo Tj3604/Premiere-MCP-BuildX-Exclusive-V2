@@ -162,12 +162,12 @@ The big one is `..._0069_D` — 1208s / 16GB.
 
 | Asset | Project item id | Notes |
 |---|---|---|
-| `CTA Graphics 9x16.mp4` | `000f4265` | `/Users/thomasmartell/Desktop/CTA Graphics 9x16.mp4` — **5.00s, 1080×1920**, fully revealed by ~3.7s. Needs **~160% scale** in a 1728×3072 sequence. Content: ADU HOME TOURS / Walk through a finished BuildX ADU / EVERY WEEKEND 11AM–1PM / FOLLOW THE LINK FOR CURRENT LOCATIONS / BuildX.com |
+| `CTA Graphics 9x16.mp4` | `000f4265` | `~/Desktop/CTA Graphics 9x16.mp4` — **5.00s, 1080×1920**, fully revealed by ~3.7s. Needs **~160% scale** in a 1728×3072 sequence. Content: ADU HOME TOURS / Walk through a finished BuildX ADU / EVERY WEEKEND 11AM–1PM / FOLLOW THE LINK FOR CURRENT LOCATIONS / BuildX.com |
 | `BuildX Logo WHITE.PNG.png` | `000f4264` | Standing rule: logo on **V3** every edit. The x540/y74/54% figures in CLAUDE.md are for a **1080×1920** sequence — **recompute for 1728×3072** before applying. |
 
 ## Transcripts (DONE — 14 files, do not re-run)
 
-`/Users/thomasmartell/Downloads/claude-video-editor/transcripts/DJI_*.md` + `.words.json`.
+`transcripts/DJI_*.md` + `.words.json`.
 Generated with `scripts/transcribe.mjs` (whisper small.en). Line prefixes are `[start-end]` in
 seconds, relative to that clip.
 
