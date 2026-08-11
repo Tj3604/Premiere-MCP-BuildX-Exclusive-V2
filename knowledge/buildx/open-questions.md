@@ -51,19 +51,26 @@ reconciled with each other.** They are one conversation, not three.
 title-safe band, where the iPhone Dynamic Island was covering it. Resolved to
 `[0.5, 0.1530]` / scale 40. See `safe-zones.md`.
 
-**SZ3 is decided but only half applied** (2026-08-11). The side margin moves from 51px (and
-80px in some cards) to **108px**, the 9:16 edge-safe line. 14 compositions have been
-updated; **17 still carry the old value** and will be cropped on narrower devices:
+**SZ3 is closed** (2026-08-11). The side margin moved from 51px (and 80px in some cards) to
+**108px**, the 9:16 edge-safe line, across **all 31 compositions** — 14 in the first pass,
+the remaining 17 in the second. `grep -rE "left:(51|80)px" graphics/` now returns nothing.
+Every composition linted clean afterwards, and three archetypes (top-anchored card,
+bottom-anchored card, side panel) were snapshot-checked for reflow. Nothing overflowed.
 
-| Still on 51/80px | Count |
-|---|---|
-| `graphics/faq-cards/card-01` … `card-10` | 10 |
-| `lt-g1-identity`, `lt-g3-no-misleading`, `lt-g4-had-the-answers`, `lt-g5-presentation`, `lt-g6-no-excuses` | 5 |
-| `lt-id-a-panel`, `lt-id-c-slab` | 2 |
+**SZ5 was found while verifying SZ3 and is open.** The *side* margins are now correct, but
+**34 elements sit below the 192px bottom control-safe line**, where the platform draws
+captions, the caption toggle and the share buttons:
 
-Until the rollout finishes, **`graphics/` is inconsistent** — do not copy an arbitrary
-existing composition to get the margin. Copy `graphics/example-*`, which are correct.
-SZ3 stays open until the count above is zero.
+| Element | Position | Count |
+|---|---|---|
+| `.tag` — the "BuildX. Just build baby." kicker in `faq-cards` | `bottom:150px` | 10 |
+| various | `bottom:92px` | 19 |
+| various | `bottom:140px` | 3 |
+| various | `bottom:120px` / `bottom:70px` | 2 |
+
+All are frame-relative (children of `#root`), so these are true frame offsets, not offsets
+inside a card. The `faq-cards` kicker is the clearest case: it is a brand line, placed
+42px inside the band that TikTok covers. See SZ5 in the register below.
 
 ---
 
@@ -71,7 +78,8 @@ SZ3 stays open until the count above is zero.
 
 | # | Question | File | Blocks | Priority |
 |---|---|---|---|---|
-| **SZ3** | Raise the side margin from 51px to the 108px edge safe? **Decided yes; rollout is partial** — see below | `safe-zones.md` | Any new card layout | **High** |
+| **SZ5** | 34 elements sit below the 192px bottom control-safe line — raise them, or accept the overlap? | `safe-zones.md` | The `faq-cards` kicker on every platform | **High** |
+| ~~**SZ3**~~ | ~~Raise the side margin from 51px to the 108px edge safe?~~ **Closed 2026-08-11** — 108px applied across all 31 compositions | `safe-zones.md` | — | ✅ Resolved |
 | **SZ4** | Does the end-card asset's own logo clear the safe zone? | `safe-zones.md` | Nothing today; affects all 14 shorts if so | **High** |
 | **SZ1** | Are portrait safe zones full-width or inset 108px? | `safe-zones.md` | Final side-margin value | **High** |
 | **DS1** | Which gold is canonical? | `design-system.md` | Every new graphic | **Gating** |

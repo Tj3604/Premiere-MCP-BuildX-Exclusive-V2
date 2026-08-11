@@ -7,6 +7,31 @@ documented here.
 
 ------------------------------------------------------------------------
 
+# Version 2.1.1
+
+Released 2026-08-11.
+
+## Safe Zones — SZ3 closed
+
+-   Applied the 108px edge-safe side margin to the remaining 17
+    compositions (10 `faq-cards`, 5 `lt-g*`, 2 `lt-id-*`)
+-   All 31 compositions are now consistent; `grep -rE "left:(51|80)px"`
+    over `graphics/` returns nothing
+-   All 17 lint clean; three archetypes snapshot-checked for reflow at
+    the narrower column width — nothing overflowed or clipped
+-   **SZ3 closed** in `open-questions.md`
+
+## Safe Zones — SZ5 opened
+
+-   Found while verifying SZ3: **34 elements sit below the 192px bottom
+    control-safe line**, where platforms draw captions and buttons
+-   Includes the "BuildX. Just build baby." kicker in all 10
+    `faq-cards`, at `bottom:150px` — 42px inside the covered band
+-   All are frame-relative, so these are true frame offsets
+-   Logged as **SZ5**, High priority. No graphics changed for it
+
+------------------------------------------------------------------------
+
 # Version 2.1
 
 Released 2026-08-11.
