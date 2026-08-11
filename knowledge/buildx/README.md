@@ -93,7 +93,7 @@ two disagree, live observation wins. It does not restate `CLAUDE.md`.
 
 **Before touching Premiere:** `CLAUDE.md` (bridge startup), then `premiere-gotchas.md`.
 
-**Before building a graphic:** `design-system.md`, then `assets.md`.
+**Before building a graphic:** `design-system.md`, then `safe-zones.md`, then `assets.md`.
 
 ---
 
@@ -104,6 +104,7 @@ two disagree, live observation wins. It does not restate `CLAUDE.md`.
 | `README.md` | This file — scope, rules, index |
 | `brand.md` | Voice, messaging, personality, CTA policy, podcast branding |
 | `design-system.md` | Colour, typography, logo placement, spacing, lower thirds, hooks, visual standards |
+| `safe-zones.md` | Platform safe zones — where logos, text and graphics may sit, and what the app covers |
 | `production-workflow.md` | The end-to-end production process, QA checklist, publishing handoff |
 | `editorial.md` | Selection, hooks, cutting judgement, shot and coverage doctrine |
 | `broll.md` | B-roll standards — what covers what, and when not to cut away |

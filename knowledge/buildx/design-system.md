@@ -184,26 +184,33 @@ asked. Asset identity and source path are in `assets.md`.
 
 | Sequence format | Position (normalised) | Scale | Placement |
 |---|---|---|---|
-| **1080 × 1920** (9:16) | `[0.5, 0.0385417]` | **54** | Top centre |
-| **1728 × 3072** (9:16) | `[0.5, 0.0385417]` | **86.4** | Top centre — *verified live* |
-| **1920 × 1080** (16:9 studio interview) | `[0.905, 0.093]` | **24** | **Top right** |
+| **1080 × 1920** (9:16) | `[0.5, 0.1530]` | **40** | Top centre — safe-zone compliant |
+| **1728 × 3072** (9:16) | `[0.5, 0.1530]` | **64** | Top centre — `40 × 1.6` |
+| **1920 × 1080** (16:9 studio interview) | `[0.905, 0.093]` | **24** | **Top right** — *not yet checked against safe zones* |
+
+> **Changed 2026-08-11.** The 9:16 values were `[0.5, 0.0385417]` / scale 54, which put the
+> logo's top edge at **−31px** — cropped off frame, and squarely under the iPhone Dynamic
+> Island. The top 192px of a 9:16 frame is title-safe. See `safe-zones.md` for the
+> derivation; do not revert without reading it.
 
 ### Deriving a new format
 
 Premiere's Effect Controls shows **pixel** values; the scripting API takes **normalised**
 coordinates. Convert with `x / width, y / height`.
 
-The 9:16 reference is **x 540, y 74, scale 54%** in a 1080 × 1920 sequence:
+The 9:16 reference is **x 540, y 294, scale 40%** in a 1080 × 1920 sequence:
 
 ```
 x:      540 / 1080  = 0.5
-y:       74 / 1920  = 0.0385417
-scale:   54 × (sequence_width / 1080)
+y:      294 / 1920  = 0.1530      ← logo top edge lands at 216px, clear of the 192px title-safe line
+scale:   40 × (sequence_width / 1080)
 ```
 
+The y value is derived, not chosen: the logo asset is 1000 × 389, so at scale 40 it renders
+156px tall. Centre = `192 (safe line) + 24 (breathing room) + 156/2` = **294px**.
+
 Because the normalised position is resolution-independent within one aspect ratio, **any
-9:16 sequence uses the same position** — only the scale changes. Confirming with the verified
-1728 × 3072 case: `54 × (1728 / 1080) = 54 × 1.6 = 86.4`. ✓
+9:16 sequence uses the same position** — only the scale changes: `40 × (1728 / 1080) = 64`. ✓
 
 **16:9 is a separate regime**, not a derivation — top right, roughly 11% of frame width, so
 the logo stays clear of both faces in a two-shot.

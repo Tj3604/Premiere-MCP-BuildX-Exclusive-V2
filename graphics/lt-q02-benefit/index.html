@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--black:#0B0B0B;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0B0B0B}
+#root{position:relative;width:1080px;height:1920px;font-family:'Archivo',Arial,sans-serif}
+/* frozen first frame of the shot this card leads into — the cut to motion is seamless */
+.freeze{position:absolute;inset:0;background:url('freeze.png') center/cover no-repeat}
+.wash{position:absolute;inset:0;background:rgba(11,11,11,0.80)}
+.stack{position:absolute;left:80px;right:80px;top:520px}
+.topbar{height:12px;width:300px;background:var(--gold);border-radius:6px;transform-origin:left center}
+.eyebrow{color:var(--gold);font-weight:700;font-size:32px;letter-spacing:9px;
+  text-transform:uppercase;margin-top:40px}
+.q{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:104px;
+  line-height:1.03;text-transform:uppercase;margin-top:26px;text-shadow:0 6px 30px rgba(0,0,0,.6)}
+.q em{font-style:normal;color:var(--gold)}
+.jag{height:18px;width:380px;margin-top:44px;transform-origin:left center;
+  background:repeating-linear-gradient(-45deg,var(--gold) 0 11px,transparent 11px 22px)}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1080" data-height="1920" data-duration="2.6">
+  <div class="freeze" id="freeze"></div>
+  <div class="wash" id="wash"></div>
+  <div class="stack" id="stack">
+    <div class="topbar" id="topbar"></div>
+    <div class="eyebrow" id="eyebrow">WE ASKED</div>
+    <div class="q" id="q">What is the benefit to your <em>life</em> from an ADU?</div>
+    <div class="jag" id="jag"></div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+/* wash lifts at the end so the freeze is clean on the cut into motion */
+tl.fromTo("#topbar",{scaleX:0},{scaleX:1,duration:.42,ease:E},0.10)
+  .fromTo("#eyebrow",{opacity:0,y:18},{opacity:1,y:0,duration:.42,ease:E},0.22)
+  .fromTo("#q",{opacity:0,y:34},{opacity:1,y:0,duration:.58,ease:E},0.34)
+  .fromTo("#jag",{scaleX:0},{scaleX:1,duration:.45,ease:E},0.66)
+  .to("#stack",{opacity:0,y:-20,duration:.30,ease:"power2.in"},2.16)
+  .to("#wash",{opacity:0,duration:.34,ease:"power2.in"},2.20);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

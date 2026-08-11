@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.82);--black:#0B0B0B;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{position:relative;width:1080px;height:1920px;font-family:'Archivo',Arial,sans-serif}
+.panel{position:absolute;left:0;top:0;bottom:0;width:520px;background:rgba(11,11,11,.88);
+  border-right:6px solid var(--gold);display:flex;flex-direction:column;justify-content:center;
+  padding:0 44px;transform-origin:left center}
+.eyebrow{color:var(--gold);font-weight:700;font-size:28px;letter-spacing:7px;text-transform:uppercase}
+.head{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:96px;line-height:1.02;
+  text-transform:uppercase;margin-top:20px}
+.head em{font-style:normal;color:var(--gold)}
+.kicker{color:var(--gold);font-weight:700;font-size:24px;letter-spacing:3px;text-transform:uppercase;margin-top:34px}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1080" data-height="1920" data-duration="19.8">
+  <div class="panel" id="panel">
+    <div class="eyebrow" id="eyebrow">IN HIS WORDS</div>
+    <div class="head" id="head">HAD THE <em>ANSWERS</em> TO EVERYTHING</div>
+    <div class="kicker" id="kicker">BuildX. Just build baby.</div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out"; var IN=2.8, OUT=13.4;
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#panel",{opacity:0,x:-160},{opacity:1,x:0,duration:.6,ease:E},IN)
+  .fromTo("#eyebrow",{opacity:0,x:-30},{opacity:1,x:0,duration:.5,ease:E},IN+0.22)
+  .fromTo("#head",{opacity:0,x:-34},{opacity:1,x:0,duration:.6,ease:E},IN+0.36)
+  .fromTo("#kicker",{opacity:0},{opacity:1,duration:.5,ease:E},IN+0.62)
+  .to("#panel",{opacity:0,x:-140,duration:.5,ease:"power2.in"},OUT)
+  .set("#panel",{opacity:0,visibility:"hidden"},OUT+0.55);
+gsap.set("#panel",{opacity:0});
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.82);--black:#0B0B0B;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{position:relative;width:1080px;height:1920px;font-family:'Archivo',Arial,sans-serif}
+.wrap{position:absolute;left:51px;top:1200px;display:flex;align-items:stretch;gap:26px}
+.rule{width:10px;background:var(--gold);border-radius:5px;transform-origin:top center}
+.txt{padding:4px 0}
+.eyebrow{color:var(--gold);font-weight:700;font-size:30px;letter-spacing:8px;text-transform:uppercase;
+  text-shadow:0 2px 12px rgba(0,0,0,.85)}
+.name{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:124px;line-height:1.02;
+  text-transform:uppercase;margin-top:10px;white-space:nowrap;
+  text-shadow:0 4px 26px rgba(0,0,0,.95), 0 2px 6px rgba(0,0,0,.9)}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1080" data-height="1920" data-duration="5.5">
+  <div class="wrap" id="card">
+    <div class="rule" id="rule"></div>
+    <div class="txt">
+      <div class="eyebrow" id="eyebrow">BUILDX CUSTOMER</div>
+      <div class="name" id="name">MIKE LEMON</div>
+    </div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#rule",{scaleY:0},{scaleY:1,duration:.45,ease:E},0.00)
+  .fromTo("#eyebrow",{opacity:0,x:-24},{opacity:1,x:0,duration:.5,ease:E},0.18)
+  .fromTo("#name",{opacity:0,x:-30},{opacity:1,x:0,duration:.6,ease:E},0.32)
+  .to("#card",{opacity:0,y:-22,duration:.42,ease:"power2.in"},4.95)
+  .set("#card",{opacity:0,visibility:"hidden"},5.40);
+gsap.set("#card",{opacity:1});
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

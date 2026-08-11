@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.82);--black:#0B0B0B;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{position:relative;width:1080px;height:1920px;font-family:'Archivo',Arial,sans-serif}
+.wrap{position:absolute;left:51px;top:1190px}
+.chip{display:inline-block;background:var(--gold);color:var(--black);font-weight:700;
+  font-size:28px;letter-spacing:8px;text-transform:uppercase;padding:12px 22px 10px;border-radius:8px;
+  transform-origin:left center}
+.slab{display:inline-block;background:var(--black);border-radius:14px;padding:18px 30px 22px;margin-top:12px}
+.name{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:118px;line-height:1.02;
+  text-transform:uppercase;white-space:nowrap}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1080" data-height="1920" data-duration="5.5">
+  <div class="wrap" id="card">
+    <div><span class="chip" id="eyebrow">BUILDX CUSTOMER</span></div>
+    <div class="slab" id="slab"><div class="name" id="name">MIKE LEMON</div></div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#eyebrow",{scaleX:0,opacity:0},{scaleX:1,opacity:1,duration:.45,ease:E},0.00)
+  .fromTo("#slab",{opacity:0,y:26},{opacity:1,y:0,duration:.5,ease:E},0.22)
+  .fromTo("#name",{opacity:0,y:20},{opacity:1,y:0,duration:.55,ease:E},0.34)
+  .to("#card",{opacity:0,y:-22,duration:.42,ease:"power2.in"},4.95)
+  .set("#card",{opacity:0,visibility:"hidden"},5.40);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

@@ -47,12 +47,19 @@ existing composition or picks a value that may be wrong.
 All three come from the same root: **two generations of brand documentation that were never
 reconciled with each other.** They are one conversation, not three.
 
+**SZ2 was a fourth gating question and is now closed** (2026-08-11): the logo sat inside the
+title-safe band, where the iPhone Dynamic Island was covering it. Resolved to
+`[0.5, 0.1530]` / scale 40. See `safe-zones.md`.
+
 ---
 
 ## The full register
 
 | # | Question | File | Blocks | Priority |
 |---|---|---|---|---|
+| **SZ3** | Raise the side margin from 51px to the 108px edge safe? | `safe-zones.md` | Any new card layout | **High** |
+| **SZ4** | Does the end-card asset's own logo clear the safe zone? | `safe-zones.md` | Nothing today; affects all 14 shorts if so | **High** |
+| **SZ1** | Are portrait safe zones full-width or inset 108px? | `safe-zones.md` | Final side-margin value | **High** |
 | **DS1** | Which gold is canonical? | `design-system.md` | Every new graphic | **Gating** |
 | **DS2** | Which typeface pair? | `design-system.md` | Every new graphic | **Gating** |
 | **DS3** | Is grain texture permitted? | `design-system.md` | Hook graphics | **Gating** |
@@ -71,7 +78,7 @@ reconciled with each other.** They are one conversation, not three.
 | **A2** | Does the end card contain information that goes stale? | `assets.md` | — | Medium |
 | **A3** | Should each composition carry a description? | `assets.md` | — | Medium |
 | **BR2** | Permission policy for identifiable customers | `broll.md` | — | Medium |
-| **C1** | Is there a standing caption safe area? | `captions.md` | — | Medium |
+| ~~**C1**~~ | ~~Is there a standing caption safe area?~~ **Closed 2026-08-11** — see `safe-zones.md` | `captions.md` | — | ✅ Resolved |
 | **C2** | Document caption readability standards | `captions.md` | — | Medium |
 | **W2** | Confirm the per-format frame-rate rule | `production-workflow.md` | — | Low |
 | **E1** | Is the platform-priority lean a standing rule? | `editorial.md` | — | Low |

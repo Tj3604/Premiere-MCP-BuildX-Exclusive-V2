@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.82);--black:#0B0B0B;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{position:relative;width:1080px;height:1920px;font-family:'Archivo',Arial,sans-serif}
+.wash{position:absolute;inset:0;opacity:0;background:linear-gradient(to bottom,
+  rgba(11,11,11,0) 0%, rgba(11,11,11,.55) 38%, rgba(11,11,11,.92) 68%, rgba(11,11,11,.96) 100%)}
+.stack{position:absolute;left:51px;right:51px;bottom:300px;text-align:center;opacity:0}
+.eyebrow{color:var(--gold);font-weight:700;font-size:30px;letter-spacing:8px;text-transform:uppercase}
+.big{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:150px;line-height:0.98;
+  text-transform:uppercase;margin-top:22px;text-shadow:0 6px 30px rgba(0,0,0,.7)}
+.big em{font-style:normal;color:var(--gold);display:block}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1080" data-height="1920" data-duration="16.3">
+  <div class="wash" id="wash"></div>
+  <div class="stack" id="stack">
+    <div class="eyebrow" id="eyebrow">IN HIS WORDS</div>
+    <div class="big" id="big">NO<em>MISLEADING</em>STATEMENTS</div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out"; var IN=11.8, OUT=15.6;
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#wash",{opacity:0},{opacity:1,duration:.6,ease:E},IN)
+  .fromTo("#eyebrow",{opacity:0,y:20},{opacity:1,y:0,duration:.5,ease:E},IN+0.20)
+  .fromTo("#big",{opacity:0,y:40},{opacity:1,y:0,duration:.65,ease:E},IN+0.34)
+  .to(["#wash","#stack"],{opacity:0,duration:.45,ease:"power2.in"},OUT)
+  .set(["#wash","#stack"],{opacity:0,visibility:"hidden"},OUT+0.5);
+gsap.set(["#wash","#stack"],{opacity:0});
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

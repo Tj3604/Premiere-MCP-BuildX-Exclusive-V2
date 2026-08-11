@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.82);--black:#0B0B0B;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{position:relative;width:1080px;height:1920px;font-family:'Archivo',Arial,sans-serif}
+.wrap{position:absolute;left:51px;right:51px;top:250px}
+.block{border-radius:22px;padding:30px 36px 34px}
+.problem{background:rgba(11,11,11,.86);border-left:10px solid rgba(255,255,255,.45)}
+.payoff{background:rgba(11,11,11,.92);border-left:10px solid var(--gold);margin-top:22px}
+.lbl{font-weight:700;font-size:26px;letter-spacing:7px;text-transform:uppercase}
+.problem .lbl{color:rgba(255,255,255,.65)}
+.payoff .lbl{color:var(--gold)}
+.txt{font-family:'Anton','Arial Black',sans-serif;font-size:82px;line-height:1.03;text-transform:uppercase;margin-top:12px}
+.problem .txt{color:rgba(255,255,255,.78)}
+.payoff .txt{color:var(--white)}
+.payoff .txt em{font-style:normal;color:var(--gold)}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1080" data-height="1920" data-duration="16.7">
+  <div class="wrap">
+    <div class="block problem" id="b1">
+      <div class="lbl">THE PROBLEM</div>
+      <div class="txt">The town changed the permit</div>
+    </div>
+    <div class="block payoff" id="b2">
+      <div class="lbl">WHAT THEY DID</div>
+      <div class="txt">No <em>excuses</em></div>
+    </div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+/* problem after 7.03 (permit story ends); payoff after "as an excuse," 12.35 */
+tl.fromTo("#b1",{opacity:0,y:32},{opacity:1,y:0,duration:.55,ease:E},7.20)
+  .fromTo("#b2",{opacity:0,y:32},{opacity:1,y:0,duration:.55,ease:E},12.90)
+  .to(["#b1","#b2"],{opacity:0,y:-22,duration:.42,ease:"power2.in"},16.05)
+  .set(["#b1","#b2"],{opacity:0,visibility:"hidden"},16.50);
+gsap.set(["#b1","#b2"],{opacity:0});
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

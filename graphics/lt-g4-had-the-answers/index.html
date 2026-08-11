@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.82);}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{position:relative;width:1080px;height:1920px;font-family:'Archivo',Arial,sans-serif}
+/* upper third — the lower half is reserved for captions */
+.card{position:absolute;left:51px;right:51px;top:230px;
+  background:var(--panel);border:2px solid rgba(217,164,65,.35);border-radius:26px;
+  padding:40px 44px 44px;text-align:center}
+.eyebrow{color:var(--gold);font-weight:700;font-size:30px;letter-spacing:8px;text-transform:uppercase}
+.headline{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:88px;line-height:1.05;
+  text-transform:uppercase;margin-top:20px;text-shadow:0 4px 20px rgba(0,0,0,.5)}
+.headline em{font-style:normal;color:var(--gold)}
+.rule{height:4px;width:150px;background:var(--gold);border-radius:2px;margin:28px auto 22px;transform-origin:center}
+.kicker{color:var(--gold);font-weight:700;font-size:26px;letter-spacing:3px;text-transform:uppercase}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1080" data-height="1920" data-duration="19.8">
+  <div class="card" id="card">
+    <div class="eyebrow" id="eyebrow">IN HIS WORDS</div>
+    <div class="headline" id="headline">HAD THE <em>ANSWERS</em><br>TO EVERYTHING</div>
+    <div class="rule" id="rule"></div>
+    <div class="kicker" id="kicker">BuildX. Just build baby.</div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var IN=2.8;               /* lands after the line is spoken — never before */
+var OUT=13.5;
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#card",{opacity:0,y:44},{opacity:1,y:0,duration:.55,ease:E},IN)
+  .fromTo("#eyebrow",{opacity:0,y:22},{opacity:1,y:0,duration:.5,ease:E},IN+0.16)
+  .fromTo("#headline",{opacity:0,y:34},{opacity:1,y:0,duration:.6,ease:E},IN+0.32)
+  .fromTo("#rule",{scaleX:0},{scaleX:1,duration:.5,ease:E},IN+0.62)
+  .fromTo("#kicker",{opacity:0,y:18},{opacity:1,y:0,duration:.5,ease:E},IN+0.78)
+  .to("#card",{opacity:0,y:-26,duration:.42,ease:"power2.in"},OUT)
+  .set("#card",{opacity:0,visibility:"hidden"},OUT+0.45);
+gsap.set("#card",{opacity:0});
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

@@ -40,7 +40,8 @@ the order shown.
 |---|---|
 | Do anything BuildX, unsure where to start | `knowledge/buildx/README.md` |
 | Write copy, a hook, a title or anything in BuildX's voice | `brand.md` |
-| Build or style any graphic | `design-system.md`, then `assets.md` |
+| Build or style any graphic | `design-system.md`, then `safe-zones.md`, then `assets.md` |
+| Place a logo, lower third, caption or card near a frame edge | `safe-zones.md` |
 | Choose what to cut, or how to order a batch | `editorial.md` |
 | Choose b-roll, or decide graphic vs footage | `broll.md` |
 | Write or check a caption | `captions.md`, then `terminology.md` |
@@ -195,9 +196,15 @@ handles both conversions. **Do not hand-compute in/out points.**
 Every BuildX project contains `BuildX Logo WHITE.PNG.png`. Put it on **V3** on every edit,
 without being asked.
 
-For a 1080x1920 sequence: Position `[0.5, 0.0385417]`, Scale **54**. **Values for other
+For a 1080x1920 sequence: Position `[0.5, 0.1530]`, Scale **40**. **Values for other
 sequence formats, and how to derive a new one, are in `knowledge/buildx/design-system.md`** —
 the normalized position is the same for any 9:16 sequence, only the scale changes.
+
+> **Why 0.1530 and not the old 0.0385417:** the top **192px** of a 9:16 frame is title-safe —
+> on iPhone the Dynamic Island covers it, and it was hiding the logo. `0.1530` at scale 40
+> puts the logo's top edge at 216px, 24px clear of that line. The old `0.0385417` / scale 54
+> put it at **−31px**, cropped off the top of frame entirely. **Do not revert it.**
+> See `knowledge/buildx/safe-zones.md`.
 
 Use `set_param_value` (added locally — see below), not `set_clip_position`/`set_clip_scale`,
 which are fake no-ops.
@@ -212,8 +219,8 @@ an array, clears any existing keyframes so the value is genuinely static, and re
 value read back from Premiere:
 
 ```
-set_param_value {"clipId":"...","componentName":"Motion","paramName":"Position","value":[0.5,0.0385]}
-set_param_value {"clipId":"...","componentName":"Motion","paramName":"Scale","value":54}
+set_param_value {"clipId":"...","componentName":"Motion","paramName":"Position","value":[0.5,0.1530]}
+set_param_value {"clipId":"...","componentName":"Motion","paramName":"Scale","value":40}
 ```
 
 `add_keyframe` was also fixed to `JSON.stringify` its value, so it now handles 2D params too.

@@ -1,0 +1,108 @@
+{
+  "source": "/Users/thomasmartell/Downloads/Lemon Testimonial V1.mp4",
+  "projectItemId": "000f426d",
+  "fps": 30,
+  "format": "1080x1920",
+  "ctaSeconds": 5,
+  "speaker": "Michael Lemon \u2014 Whitman, MA (BuildX ADU customer)",
+  "shorts": [
+    {
+      "n": 1,
+      "slug": "perfect-solution",
+      "title": "This is like a perfect solution",
+      "keep": "36.30-59.16",
+      "sequenceId": "147a017c-e6e9-4e36-b519-9bc2f3b69e82"
+    },
+    {
+      "n": 2,
+      "slug": "days-behind-me",
+      "title": "Those days are behind me",
+      "keep": "275.14-294.85",
+      "sequenceId": "118d77b3-cda6-43c1-ac89-5918d39df839"
+    },
+    {
+      "n": 3,
+      "slug": "ten-miles-away",
+      "title": "What I would have done instead",
+      "keep": "396.52-414.80",
+      "sequenceId": "b565e21f-5bb8-43b1-bea3-faf204f0d0f5"
+    },
+    {
+      "n": 4,
+      "slug": "one-floor",
+      "title": "A big old house I don't need",
+      "keep": "25.44-36.24,308.10-312.50,318.58-326.20",
+      "sequenceId": "d5377f3c-d0bf-41e9-ac6a-cee0b1e99b4d"
+    },
+    {
+      "n": 5,
+      "slug": "go-look",
+      "title": "Go check out what they've built",
+      "keep": "59.22-73.14,330.94-340.15",
+      "sequenceId": "7e66ee58-a61f-45ad-af7c-e8f2f5d330ef"
+    },
+    {
+      "n": 6,
+      "slug": "no-misleading",
+      "title": "No misleading statements",
+      "keep": "160.84-177.00",
+      "sequenceId": "51ae7c97-2337-46c5-90f6-2bf6c908e23a"
+    },
+    {
+      "n": 7,
+      "slug": "start-to-finish",
+      "title": "They do everything start to finish",
+      "keep": "235.90-239.76,179.20-193.70",
+      "sequenceId": "dda85c94-1b6c-4d0b-92bf-ceca0473ec51"
+    },
+    {
+      "n": 8,
+      "slug": "had-the-answers",
+      "title": "Buz had the answers to everything",
+      "keep": "118.02-137.68",
+      "sequenceId": "db210c02-e178-4671-8ed0-2b5b27f251b1"
+    },
+    {
+      "n": 9,
+      "slug": "zoning-board",
+      "title": "The zoning board meeting",
+      "keep": "193.76-216.88",
+      "sequenceId": "f0ef6234-3ab0-4fc3-8a00-c4386e8deae2"
+    },
+    {
+      "n": 10,
+      "slug": "paying-as-we-go",
+      "title": "How we're paying for it",
+      "keep": "104.14-117.96",
+      "sequenceId": "b12cbf06-eebd-4c1d-899b-8b5e0734077c"
+    },
+    {
+      "n": 11,
+      "slug": "no-excuses",
+      "title": "They didn't use it as an excuse",
+      "keep": "445.12-452.15,462.58-472.08",
+      "sequenceId": "1e1eb056-7da9-4aeb-b02d-d483b09974d7"
+    },
+    {
+      "n": 12,
+      "slug": "on-schedule",
+      "title": "The team deserves all the credit",
+      "keep": "414.86-433.20",
+      "sequenceId": "14bffe51-b1a0-4b3f-b366-bf529654ca89"
+    },
+    {
+      "n": 13,
+      "slug": "house-that-sold-us",
+      "title": "The house that convinced them",
+      "keep": "354.38-372.10,375.78-382.10",
+      "sequenceId": "b89051dd-075f-433f-bda0-7c4c78f642e4"
+    },
+    {
+      "n": 14,
+      "slug": "three-words",
+      "title": "Listening. Quality. Character.",
+      "keep": "472.14-492.44",
+      "sequenceId": "ccc3e6a6-39a6-4ddf-b3a3-2288c1955660"
+    }
+  ]
+}
