@@ -9,7 +9,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
 #root{position:relative;width:1080px;height:1920px;font-family:'Archivo',Arial,sans-serif}
 .wash{position:absolute;inset:0;opacity:0;background:linear-gradient(to bottom,
   rgba(11,11,11,0) 0%, rgba(11,11,11,.55) 38%, rgba(11,11,11,.92) 68%, rgba(11,11,11,.96) 100%)}
-.stack{position:absolute;left:51px;right:51px;bottom:300px;text-align:center;opacity:0}
+.stack{position:absolute;left:108px;right:108px;bottom:300px;text-align:center;opacity:0}
 .eyebrow{color:var(--gold);font-weight:700;font-size:30px;letter-spacing:8px;text-transform:uppercase}
 .big{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:150px;line-height:0.98;
   text-transform:uppercase;margin-top:22px;text-shadow:0 6px 30px rgba(0,0,0,.7)}
@@ -26,6 +26,9 @@ window.__timelines=window.__timelines||{};
 var E="power3.out"; var IN=11.8, OUT=15.6;
 var tl=gsap.timeline({paused:true});
 tl.fromTo("#wash",{opacity:0},{opacity:1,duration:.6,ease:E},IN)
+  /* .stack is opacity:0 in CSS for seek-safety, so it must be tweened back up here —
+     animating only its children leaves the wrapper invisible and the card renders bare. */
+  .fromTo("#stack",{opacity:0},{opacity:1,duration:.3,ease:E},IN+0.10)
   .fromTo("#eyebrow",{opacity:0,y:20},{opacity:1,y:0,duration:.5,ease:E},IN+0.20)
   .fromTo("#big",{opacity:0,y:40},{opacity:1,y:0,duration:.65,ease:E},IN+0.34)
   .to(["#wash","#stack"],{opacity:0,duration:.45,ease:"power2.in"},OUT)

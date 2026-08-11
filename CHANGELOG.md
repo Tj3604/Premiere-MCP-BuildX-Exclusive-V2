@@ -7,6 +7,46 @@ documented here.
 
 ------------------------------------------------------------------------
 
+# Version 2.1
+
+Released 2026-08-11.
+
+## Anonymised Examples
+
+-   Added `graphics/example-lower-third`, `example-question-card` and
+    `example-statement-card` — reference builds with placeholder copy,
+    carrying no customer name, footage or pricing
+-   `example-question-card` ships a gradient in place of the freeze
+    frame, since freeze frames are stills of real customer footage
+-   Each documents the v2.0 safe-zone geometry inline; all lint clean
+
+## Safe Zones — SZ3 partial rollout
+
+-   Side margin raised from 51px/80px to the 108px edge-safe line in 14
+    compositions
+-   **17 compositions still carry the old margin** — 10 `faq-cards`,
+    5 `lt-g*`, 2 `lt-id-*`. `graphics/` is inconsistent until this
+    finishes; copy `example-*` rather than an arbitrary composition
+-   SZ3 remains **open** in `open-questions.md` with the outstanding
+    list recorded
+
+## Setup and Packaging
+
+-   `SETUP.md` rewritten against the actual repo: names **Claude Code**
+    (not Claude Desktop), lists real dependencies (Node ≥18, Premiere
+    2026, ffmpeg, npx network access; no Python), documents CEP bridge
+    startup and the `.mcp.json` path fix
+-   `npm run build` documented as **required** — `dist/` is gitignored,
+    so a fresh clone has no server, and the `set_param_value` patch that
+    fixes logo placement does nothing until compiled
+-   `.gitignore` now blocks freeze frames and customer stills, and
+    covers `.claude/settings.local.json`, previously protected only by a
+    machine-local global ignore
+-   Recorded in `.gitignore` that ignoring cannot untrack what is
+    already committed
+
+------------------------------------------------------------------------
+
 # Version 2.0
 
 Released 2026-08-11.

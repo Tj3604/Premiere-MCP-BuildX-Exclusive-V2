@@ -51,13 +51,27 @@ reconciled with each other.** They are one conversation, not three.
 title-safe band, where the iPhone Dynamic Island was covering it. Resolved to
 `[0.5, 0.1530]` / scale 40. See `safe-zones.md`.
 
+**SZ3 is decided but only half applied** (2026-08-11). The side margin moves from 51px (and
+80px in some cards) to **108px**, the 9:16 edge-safe line. 14 compositions have been
+updated; **17 still carry the old value** and will be cropped on narrower devices:
+
+| Still on 51/80px | Count |
+|---|---|
+| `graphics/faq-cards/card-01` … `card-10` | 10 |
+| `lt-g1-identity`, `lt-g3-no-misleading`, `lt-g4-had-the-answers`, `lt-g5-presentation`, `lt-g6-no-excuses` | 5 |
+| `lt-id-a-panel`, `lt-id-c-slab` | 2 |
+
+Until the rollout finishes, **`graphics/` is inconsistent** — do not copy an arbitrary
+existing composition to get the margin. Copy `graphics/example-*`, which are correct.
+SZ3 stays open until the count above is zero.
+
 ---
 
 ## The full register
 
 | # | Question | File | Blocks | Priority |
 |---|---|---|---|---|
-| **SZ3** | Raise the side margin from 51px to the 108px edge safe? | `safe-zones.md` | Any new card layout | **High** |
+| **SZ3** | Raise the side margin from 51px to the 108px edge safe? **Decided yes; rollout is partial** — see below | `safe-zones.md` | Any new card layout | **High** |
 | **SZ4** | Does the end-card asset's own logo clear the safe zone? | `safe-zones.md` | Nothing today; affects all 14 shorts if so | **High** |
 | **SZ1** | Are portrait safe zones full-width or inset 108px? | `safe-zones.md` | Final side-margin value | **High** |
 | **DS1** | Which gold is canonical? | `design-system.md` | Every new graphic | **Gating** |

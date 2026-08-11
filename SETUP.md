@@ -140,4 +140,4 @@ renders/           rendered output (gitignored)
 
 ## Version
 
-BuildX Claude Video Editor v2.0
+BuildX Claude Video Editor v2.1
