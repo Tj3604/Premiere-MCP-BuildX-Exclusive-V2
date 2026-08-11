@@ -43,3 +43,31 @@ transcripts/
 # Python cache
 __pycache__/
 *.pyc
+
+# =========================
+# Non-anonymous material
+# =========================
+# NOTE: these rules only stop NEW files being committed. Anything already
+# tracked is unaffected — see the note at the bottom of this file.
+
+# Freeze frames are stills lifted from real customer footage.
+**/freeze.png
+**/freeze-*.png
+**/freeze/
+
+# Customer-identifying stills and reference frames
+**/customer-*.png
+**/customer-*.jpg
+
+# Local Claude Code settings (previously only covered by a global ignore,
+# which does not exist on anyone else's machine)
+.claude/settings.local.json
+
+# -------------------------------------------------------------------------
+# .gitignore does NOT untrack files that are already committed. To stop
+# tracking something that is already in the repo:
+#     git rm --cached <path>
+# and note that it REMAINS in git history and is still recoverable from an
+# earlier commit by anyone who clones. For anything that must never be
+# distributed, publish from a repository that never contained it.
+# -------------------------------------------------------------------------

@@ -1,0 +1,73 @@
+<!doctype html>
+<!--
+  EXAMPLE — panel card with a numbered list.
+
+  Anonymised reference build. Copy this folder, rename it, replace the
+  #eyebrow, the three .word rows and the #kicker.
+
+  THE IMPORTANT PART IS THE TIMING, NOT THE COPY.
+  Each row reveals on or after the moment its word is spoken — never
+  before. The offsets in the timeline below (4.30 / 7.55 / 9.65) are read
+  off the transcript, not spaced evenly. Revealing a word before it is
+  said gives the punchline away and is the most common mistake in this
+  format. Re-time these against your own transcript; do not keep them.
+
+  Overlay composition: html,body stay `background:transparent` and this
+  renders with --alpha.
+-->
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--panel:rgba(11,11,11,0.82);}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{position:relative;width:1080px;height:1920px;font-family:'Archivo',Arial,sans-serif}
+/* left/right 108px = 9:16 side safe line. top 220px clears the 192px
+   title-safe band. See knowledge/buildx/safe-zones.md */
+.card{position:absolute;left:108px;right:108px;top:220px;
+  background:var(--panel);border:2px solid rgba(217,164,65,.35);border-radius:26px;
+  padding:40px 44px 46px}
+.eyebrow{color:var(--gold);font-weight:700;font-size:30px;letter-spacing:8px;text-transform:uppercase;text-align:center}
+.list{margin-top:34px}
+.row{display:flex;align-items:baseline;gap:22px;margin-top:20px}
+.row:first-child{margin-top:0}
+.num{font-family:'Anton','Arial Black',sans-serif;color:var(--gold);font-size:46px;line-height:1;min-width:56px}
+.word{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:104px;line-height:1.05;
+  text-transform:uppercase;text-shadow:0 4px 20px rgba(0,0,0,.5)}
+.rule{height:4px;width:150px;background:var(--gold);border-radius:2px;margin:34px auto 20px;transform-origin:center}
+.kicker{color:var(--gold);font-weight:700;font-size:26px;letter-spacing:3px;text-transform:uppercase;text-align:center}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1080" data-height="1920" data-duration="15">
+  <div class="card" id="card">
+    <!-- Replace all copy. Exact spoken dialogue only — never paraphrase a
+         line the speaker actually said. See CLAUDE.md. -->
+    <div class="eyebrow" id="eyebrow">EYEBROW LINE</div>
+    <div class="list">
+      <div class="row" id="r1"><div class="num">01</div><div class="word">First</div></div>
+      <div class="row" id="r2"><div class="num">02</div><div class="word">Second</div></div>
+      <div class="row" id="r3"><div class="num">03</div><div class="word">Third</div></div>
+    </div>
+    <div class="rule" id="rule"></div>
+    <div class="kicker" id="kicker">Closing kicker line.</div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+/* Reveals land on or after the word is spoken — never before.
+   Re-time these three offsets from your own transcript. */
+tl.fromTo("#card",{opacity:0,y:44},{opacity:1,y:0,duration:.55,ease:E},3.70)
+  .fromTo("#eyebrow",{opacity:0,y:22},{opacity:1,y:0,duration:.5,ease:E},3.86)
+  .fromTo("#r1",{opacity:0,y:30},{opacity:1,y:0,duration:.55,ease:E},4.30)
+  .fromTo("#r2",{opacity:0,y:30},{opacity:1,y:0,duration:.55,ease:E},7.55)
+  .fromTo("#r3",{opacity:0,y:30},{opacity:1,y:0,duration:.55,ease:E},9.65)
+  .fromTo("#rule",{scaleX:0},{scaleX:1,duration:.5,ease:E},10.40)
+  .fromTo("#kicker",{opacity:0,y:18},{opacity:1,y:0,duration:.5,ease:E},10.60)
+  .to("#card",{opacity:0,y:-26,duration:.45,ease:"power2.in"},14.30)
+  .set("#card",{opacity:0,visibility:"hidden"},14.90);
+gsap.set(["#r1","#r2","#r3"],{opacity:0});
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

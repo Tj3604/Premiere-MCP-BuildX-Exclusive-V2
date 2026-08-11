@@ -1,0 +1,70 @@
+<!doctype html>
+<!--
+  EXAMPLE — full-frame question / title card.
+
+  Anonymised reference build. Copy this folder, rename it, replace the
+  #eyebrow and #q text.
+
+  ABOUT THE BACKGROUND
+  In a real build, .bg is the frozen first frame of the shot this card cuts
+  into — saved next to index.html as freeze.png and referenced with
+  `background:url('freeze.png') center/cover no-repeat`. The wash lifts at
+  the end of the timeline, so the card dissolves onto the exact frame the
+  footage starts on and the cut to motion is invisible.
+
+  This example ships a flat gradient instead, because freeze frames are
+  frames of real customer footage and are not distributed. To restore the
+  real behaviour, drop a freeze.png in this folder and swap the .bg rule.
+
+  Full-frame card, NOT an overlay: html,body carry a solid background and
+  this renders to MP4 without --alpha.
+-->
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{--gold:#D9A441;--white:#FFFFFF;--black:#0B0B0B;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0B0B0B}
+#root{position:relative;width:1080px;height:1920px;font-family:'Archivo',Arial,sans-serif}
+/* Stand-in for the frozen first frame of the next shot. See header note. */
+.bg{position:absolute;inset:0;
+  background:radial-gradient(120% 80% at 50% 30%,#2A2A2A 0%,#141414 55%,#0B0B0B 100%)}
+.wash{position:absolute;inset:0;background:rgba(11,11,11,0.80)}
+/* left/right 108px = the 9:16 side safe line; top 520px clears the 192px
+   title-safe band with room to spare. See knowledge/buildx/safe-zones.md */
+.stack{position:absolute;left:108px;right:108px;top:520px}
+.topbar{height:12px;width:300px;background:var(--gold);border-radius:6px;transform-origin:left center}
+.eyebrow{color:var(--gold);font-weight:700;font-size:32px;letter-spacing:9px;
+  text-transform:uppercase;margin-top:40px}
+.q{font-family:'Anton','Arial Black',sans-serif;color:var(--white);font-size:128px;
+  line-height:1.03;text-transform:uppercase;margin-top:26px;text-shadow:0 6px 30px rgba(0,0,0,.6)}
+.q em{font-style:normal;color:var(--gold)}
+.jag{height:18px;width:380px;margin-top:44px;transform-origin:left center;
+  background:repeating-linear-gradient(-45deg,var(--gold) 0 11px,transparent 11px 22px)}
+</style></head><body>
+<div id="root" data-composition-id="root" data-start="0" data-width="1080" data-height="1920" data-duration="2.6">
+  <div class="bg" id="bg"></div>
+  <div class="wash" id="wash"></div>
+  <div class="stack" id="stack">
+    <div class="topbar" id="topbar"></div>
+    <!-- Replace. Wrap the emphasis word in <em> to pick up the gold. -->
+    <div class="eyebrow" id="eyebrow">EYEBROW LINE</div>
+    <div class="q" id="q">Your question <em>here</em> in full?</div>
+    <div class="jag" id="jag"></div>
+  </div>
+<script>
+window.__timelines=window.__timelines||{};
+var E="power3.out";
+var tl=gsap.timeline({paused:true});
+/* wash lifts at the end so the background is clean on the cut into motion */
+tl.fromTo("#topbar",{scaleX:0},{scaleX:1,duration:.42,ease:E},0.10)
+  .fromTo("#eyebrow",{opacity:0,y:18},{opacity:1,y:0,duration:.42,ease:E},0.22)
+  .fromTo("#q",{opacity:0,y:34},{opacity:1,y:0,duration:.58,ease:E},0.34)
+  .fromTo("#jag",{scaleX:0},{scaleX:1,duration:.45,ease:E},0.66)
+  .to("#stack",{opacity:0,y:-20,duration:.30,ease:"power2.in"},2.16)
+  .to("#wash",{opacity:0,duration:.34,ease:"power2.in"},2.20);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>
