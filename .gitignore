@@ -32,6 +32,12 @@ transcripts/
 
 # Local caches
 .cache/
+# Ultralytics downloads its segmentation weights into the working directory
+# the first time verthor runs. Cached on purpose (avoids a re-download), but
+# it is a binary model file, not source.
+yolo11n-seg.pt
+*.pt
+
 
 # Environment files
 .env
