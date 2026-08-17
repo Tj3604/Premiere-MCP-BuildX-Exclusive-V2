@@ -1,0 +1,13 @@
+{
+  "name": "buildx-claude-video-editor",
+  "version": "2.2.0",
+  "private": true,
+  "description": "Prompt-driven Premiere Pro editing. Scripts are .mjs (explicit ESM); no type field so nothing else in the tree is reinterpreted.",
+  "scripts": {
+    "check": "node scripts/check-sequence.mjs",
+    "audit-tools": "node scripts/audit-tools.mjs"
+  },
+  "dependencies": {
+    "@chatoctopus/timeline": "^0.3.0"
+  }
+}
