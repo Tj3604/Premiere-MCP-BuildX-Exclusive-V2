@@ -24,6 +24,7 @@ npm-debug.log*
 # Build outputs
 exports/
 renders/
+reframed/
 
 # Working media (stored outside Git)
 footage/
