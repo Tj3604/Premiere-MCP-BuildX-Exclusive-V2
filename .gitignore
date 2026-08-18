@@ -25,6 +25,7 @@ npm-debug.log*
 exports/
 renders/
 reframed/
+transcription-audio/
 
 # Working media (stored outside Git)
 footage/
