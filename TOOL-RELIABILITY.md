@@ -34,6 +34,24 @@ Real tools return actual data (IDs, names, counts, durations).
 Never report success to the user based on `accepted: true`. Verify with a read tool
 (`get_project_info`, `list_sequence_tracks`, `list_project_items`) or do it manually.
 
+## A third category: no tool exists at all
+
+Beyond *real* and *fake-success no-op*, some operations have **no tool and no ExtendScript API**.
+A no-op at least has a name to call; these have nothing, and no amount of MCP work will fix them.
+
+| Operation | Evidence |
+|---|---|
+| **Caption creation / readback** | `app.project.activeSequence.captionTracks` returns **`undefined`** — probed live through the CEP bridge, 2026-08-18. Caption tracks are invisible to ExtendScript entirely: they cannot be created, listed, or read |
+
+These are the operations that justify the computer-use GUI fallback. See
+[`gui/SETUP.md`](gui/SETUP.md) and the computer-use section of [`CLAUDE.md`](CLAUDE.md).
+
+**Not a tool problem, but it lands the same way:** Premiere's own *Create captions* dialog accepts
+a `Minimum duration in seconds` value and then does not enforce it. With it set to 1.2, measured
+caption durations ran 0.40s–1.97s, five of six sampled captions under the minimum. Caption
+boundaries are inherited from the transcript segment timings. Do not report the dialog's settings
+as properties of the output — measure the output.
+
 ## The 97 no-op tools
 
 - `add_adjustment_layer`

@@ -6,7 +6,7 @@ both onto a real Premiere Pro timeline.
 Two engines:
 
 - **HyperFrames** — motion graphics authored as HTML/CSS/GSAP, rendered to video.
-- **Premiere Pro MCP** — 281 tools that drive Premiere Pro 2026 over a CEP bridge.
+- **Premiere Pro MCP** — 283 tools that drive Premiere Pro 2026 over a CEP bridge.
 
 ## Before you touch Premiere — READ THIS
 
@@ -155,7 +155,7 @@ is vague, ask what look they want or propose 2-3 specific directions. Don't sile
 brand voice, editorial standards, and workflow are already defined in `knowledge/buildx/`.
 Follow them rather than creating a new style.
 
-## 97 of the 281 tools lie about succeeding
+## 97 of the 283 tools lie about succeeding
 
 Read [TOOL-RELIABILITY.md](TOOL-RELIABILITY.md) before trusting any tool result.
 
@@ -175,6 +175,48 @@ doing by hand.
 implementation, not whether that implementation works. Six tools it lists as working fail
 when called. **Live-verified behaviour is in `knowledge/buildx/premiere-gotchas.md`, and
 where the two disagree, live observation wins.**
+
+## Computer use — a scoped GUI fallback, not a general capability
+
+Computer use (the `computer-use` MCP) drives Premiere's GUI by screenshot and click. It is the
+**last-resort tier**, below the bridge and the working MCP tools. Full runbook: [`gui/SETUP.md`](gui/SETUP.md).
+
+**The four sanctioned operations.** Each is GUI-only because no working API exists:
+
+| Operation | Why |
+|---|---|
+| **Caption creation** | `sequence.captionTracks` is **`undefined`** in ExtendScript — verified live 2026-08-18. There is no scripting surface at all, not a broken one |
+| FCPXML import | `import_sequences` is a no-op |
+| Sequence creation @ 29.97 / 1080×1920 | all four sequence tools are no-ops |
+| Export / Media Encoder queueing | all encode tools are no-ops |
+
+Plus **visual verification** — independently confirming a mutation actually happened.
+
+**The seven hard rules:**
+
+1. **Last resort, once per batch — never per-clip.** If an operation runs more than once per
+   project, it belongs in XML or a script, not on screen.
+2. **Never use computer use for what the bridge does reliably.** `set_source_in_out`,
+   `overwrite_from_source`, `import_media` and the read tools work. Use them.
+3. **Sandbox only** until told otherwise — `~/premiere-gui-sandbox/`, never a live
+   `X#### (surname)` project.
+4. **Never click** `Save As`, `Project Manager`, `Consolidate and Transcode`, `Remove Unused`,
+   `Make Offline`, `Link Media`, `Render and Replace`, `Replace Footage`, or anything under
+   `File > Project Settings`. If a task seems to need one — stop and ask.
+5. **Never dismiss an unexpected dialog.** Screenshot it, stop, report. Do not guess at modal
+   buttons.
+6. **No app approvals beyond Premiere Pro and Media Encoder.** If a task appears to need Finder
+   or a terminal on screen, that is the signal it should be a Bash command instead.
+7. **Screenshot before and after every GUI operation**, saved to `gui/evidence/` with a timestamp.
+
+**Two traps that cost real time** — both in `gui/SETUP.md` in full:
+
+- The macOS TCC grant belongs to **Terminal**, the host app, not to Claude or the MCP server. Never
+  "refresh" Screen Recording by toggling it off and on: the grant is bound at process start, so
+  toggling off kills it until Terminal is fully quit and relaunched.
+- Timecode display is **Feet + Frames (16mm)** — 40 frames per foot. Reading `29+18` as 29.6
+  seconds instead of 39.3 is a 10-second error. Cross-check against
+  `activeSequence.end / 254016000000`.
 
 ## Frame math: why `plan-cut.mjs` exists
 
@@ -225,6 +267,33 @@ set_param_value {"clipId":"...","componentName":"Motion","paramName":"Scale","va
 
 `add_keyframe` was also fixed to `JSON.stringify` its value, so it now handles 2D params too.
 Rebuild after changing the server: `cd mcp/premiere-pro-mcp && npm run build`.
+
+## Exports are capped at 480 MB
+
+`export_sequence` enforces a **480 MB** budget on every delivery. AME has no target-size
+setting, so the cap is applied after the fact: the tool waits for the render (watching the
+output file stop growing — there is no completion callback), measures it, and re-encodes
+anything oversized with a two-pass ffmpeg bitrate derived from the file's real duration.
+
+```
+export_sequence  {"sequenceId":"...","outputPath":"/abs/out.mp4","presetPath":"/abs/p.epr"}
+compress_export  {"filePath":"/abs/already-rendered.mp4"}
+```
+
+- `maxSizeMB` changes the budget; `autoCompress:false` opts out and returns as soon as AME
+  has the job.
+- The compressed file is written as `<name>-under480mb.mp4` **beside** the original. Pass
+  `replaceOriginal:true` to swap in place — but not for anything Premiere has imported,
+  which loses its media link when the file underneath it changes.
+- **Alpha overlays are refused, not compressed.** `h264`/`hevc` cannot store an alpha
+  channel, so re-encoding a ProRes 4444 render silently flattens it into an opaque box —
+  the exact failure this repo already warns about for alpha WebM. Cap the finished edit
+  instead. `allowAlphaLoss:true` overrides it if the transparency genuinely is not needed.
+- `add_to_render_queue` does **not** wait or compress; it only queues. Run `compress_export`
+  on its output.
+- `export_sequence` now **blocks** until the render finishes. It gives up early if the file
+  never appears (90s) or the render exceeds `waitTimeoutMinutes` (default 30), reporting
+  `sizeCapEnforced: false` rather than pretending the cap held.
 
 ## Verify overlays visually with `export_frame`
 

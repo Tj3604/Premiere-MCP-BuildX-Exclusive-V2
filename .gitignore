@@ -24,6 +24,7 @@ npm-debug.log*
 # Build outputs
 exports/
 renders/
+gui/evidence/
 reframed/
 transcription-audio/
 

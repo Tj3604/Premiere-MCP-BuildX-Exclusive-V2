@@ -50,6 +50,7 @@ Then open this folder in Claude and prompt in plain language:
 | `scripts/mcp-call.mjs` | Call any Premiere tool from the shell (bridge testing) |
 | `scripts/audit-tools.mjs` | Regenerate `TOOL-RELIABILITY.md` |
 | `graphics/alpha-test/` | Working transparent lower-third, use as a template |
+| `gui/` | Computer-use runbooks — the four GUI-only operations, and the evidence log |
 | `mcp/premiere-pro-mcp/` | The MCP server + CEP bridge |
 | `presets/` | Audio and colour treatment notes |
 

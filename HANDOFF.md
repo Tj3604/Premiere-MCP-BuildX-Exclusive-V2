@@ -41,6 +41,21 @@ Also verified independently:
    note *"Expanded tool dispatched through the native Premiere bridge"* means nothing
    happened. Always confirm writes with a read tool.
 
+## Why there is GUI automation in this repo
+
+`gui/` drives Premiere by screenshot and click through the `computer-use` MCP. **It is a
+deliberately narrow fallback, not the primary path, and it should not be expanded.** It exists
+because four operations have no working alternative: caption creation, FCPXML import, sequence
+creation at 29.97 / 1080×1920, and Media Encoder queueing. The first is the sharpest case —
+`activeSequence.captionTracks` is `undefined` in ExtendScript, so caption tracks cannot be
+created or even read by script. That is not a bug to route around; there is no API to call.
+
+Everything else belongs on the bridge, in Bash, or in XML. Clicking is slow, cannot be verified
+in bulk, and every click is an opportunity to mutate the wrong project — which is why the rules
+in `CLAUDE.md` cap it at once per batch, sandbox only, with a screenshot before and after. If you
+find yourself writing a GUI recipe for something that runs per-clip, that is the signal the work
+belongs in a script instead. Read `gui/SETUP.md` before using it.
+
 ## Every session: start the bridge
 
 Premiere open → `Window > Extensions > MCP Bridge (CEP)` → temp dir `/tmp/premiere-mcp-bridge`
