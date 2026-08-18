@@ -8,8 +8,8 @@
  * land on 1080x1920 @ 29.97 with the right track layout.
  *
  * Usage:
- *   node scripts/new-project.mjs "X0412 (Barber)" --dest "/Volumes/BuildX-Media/Projects"
- *   node scripts/new-project.mjs --code X0412 --surname Barber --dest <dir>
+ *   node scripts/new-project.mjs "X0412 (Surname)" --dest "/path/to/projects"
+ *   node scripts/new-project.mjs --code X0412 --surname Surname --dest <dir>
  *
  * Options:
  *   --dest <dir>    parent directory for the new project folder (required)
@@ -18,8 +18,8 @@
  *   --no-folders    skip the standard working subfolders
  *
  * Creates:
- *   <dest>/X0412 (Barber)/
- *     X0412 (Barber).prproj
+ *   <dest>/X0412 (Surname)/
+ *     X0412 (Surname).prproj
  *     footage/  transcripts/  graphics/  renders/  exports/
  */
 
@@ -64,12 +64,12 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
 
   if (!args.name) {
-    die('Usage: node scripts/new-project.mjs "X0412 (Barber)" --dest <dir>');
+    die('Usage: node scripts/new-project.mjs "X0412 (Surname)" --dest <dir>');
   }
   if (!NAME_PATTERN.test(args.name)) {
     die(
       `Project name "${args.name}" does not match the convention.\n` +
-      '  Expected: X#### (surname)   e.g. "X0412 (Barber)"\n' +
+      '  Expected: X#### (surname)   e.g. "X0412 (Surname)"\n' +
       '  Four digits, one space, surname in parentheses.'
     );
   }
