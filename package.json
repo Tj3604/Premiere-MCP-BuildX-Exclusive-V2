@@ -1,6 +1,6 @@
 {
   "name": "buildx-claude-video-editor",
-  "version": "2.2.0",
+  "version": "2.4.0",
   "private": true,
   "description": "Prompt-driven Premiere Pro editing. Scripts are .mjs (explicit ESM); no type field so nothing else in the tree is reinterpreted.",
   "scripts": {
