@@ -10,6 +10,13 @@ import { spawn } from 'child_process';
 import type { PremiereProTransport } from '../bridge/types.js';
 import { Logger } from '../utils/logger.js';
 import { createMotionDemoAssets } from '../utils/demoAssets.js';
+import {
+  DEFAULT_MAX_SIZE_MB,
+  compressToLimit,
+  probe as probeMedia,
+  bytesToMB,
+  waitForRenderComplete,
+} from '../utils/compress.js';
 import { executeExpandedTool, getExpandedTools, isExpandedTool } from './expanded.js';
 
 export interface MCPTool {
@@ -543,7 +550,7 @@ export class PremiereProTools {
       // Export and Rendering
       {
         name: 'export_sequence',
-        description: 'Renders and exports a sequence to a video file. This is for creating the final video.',
+        description: `Renders and exports a sequence to a video file. This is for creating the final video. Every export is capped at ${DEFAULT_MAX_SIZE_MB} MB: once Adobe Media Encoder finishes, the output is measured and, if it is over the cap, re-encoded with a two-pass ffmpeg bitrate derived from its duration. Set autoCompress:false to opt out, or maxSizeMB to change the budget.`,
         inputSchema: z.object({
           sequenceId: z.string().describe('The ID of the sequence to export'),
           outputPath: z.string().describe('The absolute path where the final video file will be saved'),
@@ -551,7 +558,24 @@ export class PremiereProTools {
           format: z.enum(['mp4', 'mov', 'avi', 'h264', 'prores']).optional().describe('The export format or codec'),
           quality: z.enum(['low', 'medium', 'high', 'maximum']).optional().describe('Export quality setting'),
           resolution: z.string().optional().describe('Export resolution (e.g., "1920x1080", "3840x2160")'),
-          range: z.enum(['entire','inout','workarea']).optional().describe("Which part of the sequence to export: 'entire' (default), 'inout' (sequence in/out points), or 'workarea' (set it first with set_work_area \u2014 use this to export one short from a longer timeline)")
+          range: z.enum(['entire','inout','workarea']).optional().describe("Which part of the sequence to export: 'entire' (default), 'inout' (sequence in/out points), or 'workarea' (set it first with set_work_area \u2014 use this to export one short from a longer timeline)"),
+          maxSizeMB: z.number().positive().optional().describe(`Size budget in MB (decimal, matching Finder). Defaults to ${DEFAULT_MAX_SIZE_MB}.`),
+          autoCompress: z.boolean().optional().describe('Wait for the render, then compress it under the cap if needed. Default true. Set false to queue in AME and return immediately without enforcing a size.'),
+          replaceOriginal: z.boolean().optional().describe('Overwrite the oversized export with the compressed one. Default false, which writes <name>-under480mb.mp4 alongside it and leaves the original media link intact.'),
+          compressCodec: z.enum(['h264', 'hevc']).optional().describe("Codec for the compression pass. 'h264' (default) plays everywhere; 'hevc' looks better at the same size but is less portable."),
+          waitTimeoutMinutes: z.number().positive().optional().describe('How long to wait for AME to finish before giving up on the size check. Default 30.')
+        })
+      },
+      {
+        name: 'compress_export',
+        description: `Brings an existing video file under a size cap (default ${DEFAULT_MAX_SIZE_MB} MB) using a two-pass ffmpeg re-encode targeted at the file's real duration. No-ops and reports success when the file is already under the cap, so it is safe to run on anything. Use this for exports that were rendered outside the MCP, or to re-check a delivery folder.`,
+        inputSchema: z.object({
+          filePath: z.string().describe('Absolute path to the video file to bring under the cap'),
+          maxSizeMB: z.number().positive().optional().describe(`Size budget in MB (decimal, matching Finder). Defaults to ${DEFAULT_MAX_SIZE_MB}.`),
+          replaceOriginal: z.boolean().optional().describe('Overwrite the source file instead of writing <name>-under480mb.mp4 beside it. Default false.'),
+          codec: z.enum(['h264', 'hevc']).optional().describe("Codec for the re-encode. Default 'h264'."),
+          preset: z.string().optional().describe("libx264/libx265 speed preset (e.g. 'fast', 'medium', 'slow'). Default 'medium'."),
+          allowAlphaLoss: z.boolean().optional().describe('Permit compressing a file that has an alpha channel, destroying the transparency. Default false — alpha ProRes overlays are refused, because h264/hevc cannot store alpha and the overlay would silently become an opaque box.')
         })
       },
       {
@@ -1357,7 +1381,15 @@ export class PremiereProTools {
 
         // Export and Rendering
         case 'export_sequence':
-          return await this.exportSequence(args.sequenceId, args.outputPath, args.presetPath, args.format, args.quality, args.resolution, args.range);
+          return await this.exportSequence(args.sequenceId, args.outputPath, args.presetPath, args.format, args.quality, args.resolution, args.range, {
+            maxSizeMB: args.maxSizeMB,
+            autoCompress: args.autoCompress,
+            replaceOriginal: args.replaceOriginal,
+            compressCodec: args.compressCodec,
+            waitTimeoutMinutes: args.waitTimeoutMinutes,
+          });
+        case 'compress_export':
+          return await this.compressExport(args.filePath, args.maxSizeMB, args.replaceOriginal, args.codec, args.preset, args.allowAlphaLoss);
         case 'export_frame':
           return await this.exportFrame(args.sequenceId, args.time, args.outputPath, args.format);
 
@@ -4349,7 +4381,22 @@ export class PremiereProTools {
   }
 
   // Export and Rendering Implementation
-  private async exportSequence(sequenceId: string, outputPath: string, presetPath?: string, format?: string, quality?: string, resolution?: string, range: 'entire' | 'inout' | 'workarea' = 'entire'): Promise<any> {
+  private async exportSequence(
+    sequenceId: string,
+    outputPath: string,
+    presetPath?: string,
+    format?: string,
+    quality?: string,
+    resolution?: string,
+    range: 'entire' | 'inout' | 'workarea' = 'entire',
+    sizeOptions: {
+      maxSizeMB?: number | undefined;
+      autoCompress?: boolean | undefined;
+      replaceOriginal?: boolean | undefined;
+      compressCodec?: 'h264' | 'hevc' | undefined;
+      waitTimeoutMinutes?: number | undefined;
+    } = {}
+  ): Promise<any> {
     // app.encoder.encodeSequence() expects an absolute path to a .epr preset file.
     // Passing a string name like "H.264" silently fails: encodeSequence returns
     // no jobID and the JSX bridge reports {success:false}. Reject early with a
@@ -4384,9 +4431,11 @@ export class PremiereProTools {
         };
       }
 
-      return {
+      const maxSizeMB = sizeOptions.maxSizeMB ?? DEFAULT_MAX_SIZE_MB;
+      const autoCompress = sizeOptions.autoCompress ?? true;
+
+      const queued = {
         success: true,
-        message: 'Sequence queued in Adobe Media Encoder. Render runs asynchronously — verify by checking the output file size growth.',
         sequenceId,
         outputPath,
         presetPath,
@@ -4395,7 +4444,63 @@ export class PremiereProTools {
         resolution,
         jobID: result?.jobID,
         queued: result?.queued,
+        maxSizeMB,
         verify: `ffprobe -show_entries format=duration,size '${outputPath}'`,
+      };
+
+      if (!autoCompress) {
+        return {
+          ...queued,
+          message:
+            'Sequence queued in Adobe Media Encoder. Render runs asynchronously — verify by checking the output file size growth. Size cap NOT enforced (autoCompress:false), so this export may exceed ' +
+            `${maxSizeMB} MB.`,
+          sizeCapEnforced: false,
+        };
+      }
+
+      // AME gives no completion callback, so the render is tracked by watching the
+      // output file stop growing. Everything past this point is the size cap.
+      const waited = await waitForRenderComplete(outputPath, {
+        timeoutMs: (sizeOptions.waitTimeoutMinutes ?? 30) * 60 * 1000,
+      });
+
+      if (!waited.finished) {
+        return {
+          ...queued,
+          message:
+            `Sequence queued in Adobe Media Encoder, but the render did not finish within ` +
+            `${sizeOptions.waitTimeoutMinutes ?? 30} minutes, so the ${maxSizeMB} MB cap was not applied. ` +
+            `Run compress_export on the file once AME is done.`,
+          sizeCapEnforced: false,
+          renderWait: waited,
+        };
+      }
+
+      const compression = await compressToLimit(outputPath, {
+        maxSizeMB,
+        codec: sizeOptions.compressCodec,
+        replaceOriginal: sizeOptions.replaceOriginal,
+      });
+
+      if (!compression.success) {
+        return {
+          ...queued,
+          message: `Render finished at ${bytesToMB(waited.sizeBytes)} MB, but it could not be brought under the ${maxSizeMB} MB cap.`,
+          sizeCapEnforced: false,
+          renderedSizeMB: bytesToMB(waited.sizeBytes),
+          compression,
+        };
+      }
+
+      return {
+        ...queued,
+        message: compression.compressed
+          ? `Render finished at ${compression.originalSizeMB} MB and was compressed to ${compression.finalSizeMB} MB, under the ${maxSizeMB} MB cap.`
+          : `Render finished at ${compression.finalSizeMB} MB, already under the ${maxSizeMB} MB cap.`,
+        sizeCapEnforced: true,
+        deliverablePath: compression.outputPath,
+        finalSizeMB: compression.finalSizeMB,
+        compression,
       };
     } catch (error) {
       return {
@@ -4405,6 +4510,45 @@ export class PremiereProTools {
         outputPath,
       };
     }
+  }
+
+  private async compressExport(
+    filePath: string,
+    maxSizeMB?: number,
+    replaceOriginal?: boolean,
+    codec?: 'h264' | 'hevc',
+    preset?: string,
+    allowAlphaLoss?: boolean
+  ): Promise<any> {
+    if (!filePath) {
+      return { success: false, error: 'filePath is required — pass the absolute path to the video file.' };
+    }
+
+    const cap = maxSizeMB ?? DEFAULT_MAX_SIZE_MB;
+    const before = await probeMedia(filePath);
+
+    const result = await compressToLimit(filePath, {
+      maxSizeMB: cap,
+      codec,
+      preset,
+      replaceOriginal,
+      allowAlphaLoss,
+    });
+
+    return {
+      ...result,
+      source: before
+        ? {
+            sizeMB: bytesToMB(before.sizeBytes),
+            durationSeconds: Math.round(before.durationSeconds * 100) / 100,
+            resolution: before.width && before.height ? `${before.width}x${before.height}` : null,
+            videoCodec: before.videoCodec,
+            audioCodec: before.audioCodec,
+            pixelFormat: before.pixelFormat,
+            hasAlpha: before.hasAlpha,
+          }
+        : null,
+    };
   }
 
   private async exportFrame(sequenceId: string, time: number, outputPath: string, format = 'png'): Promise<any> {
@@ -5295,7 +5439,12 @@ export class PremiereProTools {
 
   // Render Queue
   private async addToRenderQueue(sequenceId: string, outputPath: string, presetPath?: string, _startImmediately?: boolean): Promise<any> {
-    return await this.exportSequence(sequenceId, outputPath, presetPath);
+    // Queueing is not delivering: this tool's contract is "hand the job to AME and
+    // return", so it must not block on the render the way export_sequence does.
+    // Run compress_export on the output once AME finishes to apply the size cap.
+    return await this.exportSequence(sequenceId, outputPath, presetPath, undefined, undefined, undefined, 'entire', {
+      autoCompress: false,
+    });
   }
 
   private async getRenderQueueStatus(): Promise<any> {

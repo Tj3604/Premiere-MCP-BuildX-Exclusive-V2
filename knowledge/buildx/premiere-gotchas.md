@@ -310,3 +310,85 @@ Both indexed in `open-questions.md`.
 
 Dates are when the behaviour was **observed**, against Premiere Pro 2026 (26.3.0). Re-verify
 after major Premiere Pro or MCP updates, as tool behaviour may change between releases.
+
+
+## AME renders stall partway (observed 2026-08-11)
+
+`export_sequence` queues successfully and returns a real `jobID`, but the render **stops
+partway and never resumes** — verified by watching file size for 90s with zero growth.
+Truncation points are inconsistent and not clip-aligned (2.6s on one sequence, 6.43s
+mid-clip on another), so it is not a work-area or in/out problem: both read back correct.
+
+**Diagnosis is blind from the bridge.** `get_render_queue_status` returns
+`available: false` — there is no queue telemetry, and AME's error state is only visible in
+its own window.
+
+**What to check first:** open Adobe Media Encoder and look at the queue for failed items.
+A queue with accumulated failed jobs from earlier in a session appears to be the trigger;
+clearing it (or restarting AME) is the first thing to try before re-queuing.
+
+**Contributing factor to avoid:** re-rendering a graphic **over a path Premiere already has
+open** and relying on `refresh_media`. `design-system.md` already says to render to a new
+unique filename every time; overwriting in place and refreshing is not a reliable
+substitute, and this session hit it repeatedly.
+
+
+## Transitions (observed 2026-08-12)
+
+### `add_transition` applies to the START of `clipId1`, not its end
+
+To place a transition on the cut between clips N and N+1, pass clip **N+1** as `clipId1`.
+
+Verified: passing the clip that starts at 5.2386s produced a transition spanning
+5.1218–5.3720s — centred on that clip's **start**. Getting this wrong puts every transition
+one cut early.
+
+- **`clipId2` is ignored entirely.** The implementation signature names it `_clipId2`.
+- **`duration` is honoured exactly.** 0.25s → 15 frames at 59.94fps.
+- Alignment is centred on the cut, so **handles are required on both sides**.
+
+### `add_transition` always returns `success: false` — it is a false negative
+
+The error reads *"Transition call completed but Premiere Pro did not expose a verified
+transition change"*, with `before` and `after` both `available: false`.
+
+**Cause:** `transitionVerificationScript()` in `src/tools/index.ts` probes `numTransitions`
+on the QE **clip** object, but Premiere 2026 stores transitions on the **track**. The probe
+finds nothing to read either way, so verification can never pass.
+
+**All 10 transitions applied in this session returned `success: false`, and all 10 landed.**
+
+This is the inverse of the usual failure mode in this file — normally a tool lies about
+succeeding. Here it lies about failing. Do not retry on `success: false`; you will double up.
+
+### How to actually verify a transition
+
+`evaluate_expression` resolves these property paths:
+
+```
+app.project.activeSequence.videoTracks[0].transitions.numItems
+app.project.activeSequence.videoTracks[0].transitions[i].name
+app.project.activeSequence.videoTracks[0].transitions[i].start.seconds
+app.project.activeSequence.videoTracks[0].transitions[i].end.seconds
+```
+
+**Capture the baseline count before the first call.** Skipping that made it ambiguous
+whether an existing transition was pre-existing or newly created, and cost a round of
+investigation to resolve.
+
+Note these times are **absolute sequence time**, matching `list_sequence_tracks`.
+`get_clip_at_position` returned times 0.5005s *lower* on the same sequence — a zero-point
+offset. Do not compare the two directly.
+
+### There is no `remove_transition` tool
+
+`undo` works and is the only programmatic removal — verified, count went 3 → 2 and removed
+only the most recent transition. Otherwise it is a manual delete in Premiere (select the
+transition, press Delete), which is cheap, so a wrong transition is low-stakes.
+
+### Motion Bro cannot be driven from the bridge
+
+It is a CEP panel with its own UI and no scripting hook, and `execute_extendscript` is a
+no-op. Native transitions only. `list_available_transitions` returned **110** on Premiere
+2026, including the modern set — Zoom Blur, Whip, Flash, Earthquake, Glitch, VHS Damage,
+Light Leak, Spin Motion, Pop Motion — which covers the high-energy vocabulary without it.

@@ -844,10 +844,14 @@ describe('PremiereProTools', () => {
         presetPath: '/Users/me/preset.epr',
       });
 
+      // autoCompress:false keeps this to the queue-only contract. With the size cap
+      // on (the default) the call intentionally blocks until AME has written the
+      // file, which is covered separately below.
       const result = await tools.executeTool('export_sequence', {
         sequenceId: 'seq-1',
         outputPath: '/tmp/out.mp4',
         presetPath: '/Users/me/preset.epr',
+        autoCompress: false,
       });
 
       expect(result.success).toBe(true);
@@ -858,8 +862,94 @@ describe('PremiereProTools', () => {
         'seq-1',
         '/tmp/out.mp4',
         '/Users/me/preset.epr',
+        'entire',
       );
     });
+
+    it('reports the size cap as unenforced when autoCompress is off', async () => {
+      mockBridge.renderSequence.mockResolvedValue({
+        success: true,
+        queued: true,
+        jobID: 'job-1',
+      });
+
+      const result = await tools.executeTool('export_sequence', {
+        sequenceId: 'seq-1',
+        outputPath: '/tmp/out.mp4',
+        presetPath: '/Users/me/preset.epr',
+        autoCompress: false,
+      });
+
+      expect(result.sizeCapEnforced).toBe(false);
+      expect(result.maxSizeMB).toBe(480);
+      expect(result.message).toMatch(/may exceed 480 MB/);
+    });
+
+    it('surfaces the configured cap rather than hardcoding 480', async () => {
+      mockBridge.renderSequence.mockResolvedValue({ success: true, queued: true });
+
+      const result = await tools.executeTool('export_sequence', {
+        sequenceId: 'seq-1',
+        outputPath: '/tmp/out.mp4',
+        presetPath: '/Users/me/preset.epr',
+        autoCompress: false,
+        maxSizeMB: 200,
+      });
+
+      expect(result.maxSizeMB).toBe(200);
+    });
+
+    it('gives up rather than blocking when AME never writes the file', async () => {
+      mockBridge.renderSequence.mockResolvedValue({ success: true, queued: true, jobID: 'job-2' });
+
+      const result = await tools.executeTool('export_sequence', {
+        sequenceId: 'seq-1',
+        outputPath: '/tmp/definitely-not-written-by-ame.mp4',
+        presetPath: '/Users/me/preset.epr',
+        waitTimeoutMinutes: 0.02, // ~1.2s
+      });
+
+      expect(result.sizeCapEnforced).toBe(false);
+      expect(result.renderWait?.finished).toBe(false);
+      expect(result.message).toMatch(/compress_export/);
+    }, 15000);
+  });
+
+  describe('add_to_render_queue size cap', () => {
+    it('queues without blocking on the render', async () => {
+      mockBridge.renderSequence.mockResolvedValue({ success: true, queued: true, jobID: 'job-3' });
+
+      const result = await tools.executeTool('add_to_render_queue', {
+        sequenceId: 'seq-1',
+        outputPath: '/tmp/queued.mp4',
+        presetPath: '/Users/me/preset.epr',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.sizeCapEnforced).toBe(false);
+    });
+  });
+
+  describe('compress_export', () => {
+    it('rejects a missing filePath at schema validation', async () => {
+      const result = await tools.executeTool('compress_export', {});
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Invalid arguments|filePath/);
+    });
+
+    it('requires a non-empty filePath', async () => {
+      const result = await tools.executeTool('compress_export', { filePath: '' });
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/filePath is required/);
+    });
+
+    it('reports a missing file instead of claiming success', async () => {
+      const result = await tools.executeTool('compress_export', {
+        filePath: '/tmp/does-not-exist-at-all.mp4',
+      });
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/not found on disk|ffmpeg was not found/);
+    }, 15000);
   });
 
   describe('add_to_render_queue', () => {

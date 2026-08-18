@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* CTA end card — same copy as "CTA Graphics 9x16.mp4", re-laid out so every element
+   sits inside the platform safe zone: x 108-972, y 192-1728 (see safe-zones.md).
+   Gold #FDAD16 sampled from the original asset, not from the token set. */
+:root{--gold:#FDAD16;--white:#FFFFFF;--bg:#181818;--grey:#B8B8B8;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1728px;height:3072px;overflow:hidden;background:var(--bg)}
+#root{position:relative;width:1728px;height:3072px;font-family:'Archivo',Arial,sans-serif;background:var(--bg)}
+/* the safe box — nothing may leave it */
+.safe{position:absolute;left:173px;top:307px;width:1382px;height:2458px;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+  text-align:center}
+.logo{width:672px;height:auto;display:block}
+.adu{font-family:'Anton',sans-serif;color:var(--gold);font-size:640px;line-height:.90;letter-spacing:3px}
+.tours{font-family:'Anton',sans-serif;color:var(--white);font-size:224px;line-height:1;letter-spacing:2px}
+.walk{color:var(--white);font-weight:700;font-size:64px;margin-top:16px}
+.weekend{font-family:'Anton',sans-serif;color:var(--grey);font-size:141px;line-height:1;letter-spacing:3px}
+.time{font-family:'Anton',sans-serif;color:var(--white);font-size:218px;line-height:1;letter-spacing:2px;margin-top:10px}
+.follow{font-family:'Anton',sans-serif;color:var(--white);font-size:86px;letter-spacing:2px}
+.locations{display:inline-block;background:var(--gold);color:#000;font-family:'Anton',sans-serif;
+  font-size:112px;line-height:1;padding:32px 61px 26px;border-radius:13px;margin-top:26px}
+.arrow{width:192px;height:192px;border-radius:50%;background:var(--white);
+  display:flex;align-items:center;justify-content:center}
+.arrow svg{width:99px;height:99px}
+.site{display:inline-block;background:var(--white);color:#000;font-family:'Anton',sans-serif;
+  font-size:147px;line-height:1;padding:35px 93px 29px;border-radius:90px}
+.site .x{color:var(--gold)}
+.blk{display:flex;flex-direction:column;align-items:center}
+</style></head><body>
+<div id="root" data-composition-id="root" data-no-timeline data-start="0" data-width="1728" data-height="3072" data-duration="5">
+  <div class="safe">
+    <img class="logo" src="logo.png" alt="BuildX"/>
+    <div class="blk">
+      <div class="adu">ADU</div>
+      <div class="tours">HOME TOURS</div>
+      <div class="walk">Walk through a finished BuildX ADU</div>
+    </div>
+    <div class="blk">
+      <div class="weekend">EVERY WEEKEND</div>
+      <div class="time">11AM &ndash; 1PM</div>
+    </div>
+    <div class="blk">
+      <div class="follow">FOLLOW THE LINK FOR</div>
+      <div class="locations">CURRENT LOCATIONS</div>
+    </div>
+    <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"
+      stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M5 13l7 7 7-7"/></svg></div>
+    <div class="site">Build<span class="x">X</span>.com</div>
+  </div>
+</div></body></html>
