@@ -5,8 +5,16 @@
  * information about Adobe Premiere Pro projects, sequences, and media.
  */
 
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import type { PremiereProTransport } from '../bridge/types.js';
 import { Logger } from '../utils/logger.js';
+import {
+  LIBRARY_ENTRY_URI_PREFIX,
+  listEntries,
+  readEntry,
+  toIndexRow
+} from '../library/index.js';
 
 export interface MCPResource {
   uri: string;
@@ -15,13 +23,27 @@ export interface MCPResource {
   mimeType: string;
 }
 
+/**
+ * Where the BuildX library lives. Both are resolved by the caller (src/index.ts)
+ * so this module never touches import.meta. Omitted = library resources report
+ * that they are not configured instead of guessing a path.
+ */
+export interface ResourceDirs {
+  /** $BUILDX_PRIVATE_DIR, or <repo>/private. Gitignored. */
+  privateDir?: string;
+  /** <repo>/knowledge — the tracked schema lives here. */
+  knowledgeDir?: string;
+}
+
 export class PremiereProResources {
   private bridge: PremiereProTransport;
   private logger: Logger;
+  private dirs: ResourceDirs;
 
-  constructor(bridge: PremiereProTransport) {
+  constructor(bridge: PremiereProTransport, dirs: ResourceDirs = {}) {
     this.bridge = bridge;
     this.logger = new Logger('PremiereProResources');
+    this.dirs = dirs;
   }
 
   getAvailableResources(): MCPResource[] {
@@ -103,6 +125,18 @@ export class PremiereProResources {
         name: 'Premiere Operating Instructions',
         description: 'Attach this before editing to give the model workflow and safety guidance for using the Premiere MCP server',
         mimeType: 'text/plain'
+      },
+      {
+        uri: 'buildx://library/index',
+        name: 'BuildX Video Library Index',
+        description: `One compact row per past video (title, hook line, length, publish date, 30-day views, stayed-to-watch). Open a single video with ${LIBRARY_ENTRY_URI_PREFIX}<slug>. Reads $BUILDX_PRIVATE_DIR/library/entries.`,
+        mimeType: 'application/json'
+      },
+      {
+        uri: 'buildx://library/schema',
+        name: 'BuildX Video Library Entry Schema',
+        description: 'JSON Schema for one library entry — the fields every past video records.',
+        mimeType: 'application/schema+json'
       }
     ];
   }
@@ -149,14 +183,59 @@ export class PremiereProResources {
 
       case 'premiere://config/get_instructions':
         return this.getInstructions();
-      
+
+      case 'buildx://library/index':
+        return await this.getLibraryIndex();
+
+      case 'buildx://library/schema':
+        return await this.getLibrarySchema();
+
       default:
+        if (uri.startsWith(LIBRARY_ENTRY_URI_PREFIX)) {
+          return await readEntry(this.requirePrivateDir(), uri.slice(LIBRARY_ENTRY_URI_PREFIX.length));
+        }
         throw new Error(`Resource '${uri}' not found`);
     }
   }
 
   getResource(uri: string): MCPResource | undefined {
-    return this.getAvailableResources().find((resource) => resource.uri === uri);
+    const listed = this.getAvailableResources().find((resource) => resource.uri === uri);
+    if (listed) return listed;
+    // One entry per past video, so entries are addressed by prefix rather than listed.
+    if (uri.startsWith(LIBRARY_ENTRY_URI_PREFIX) && uri.length > LIBRARY_ENTRY_URI_PREFIX.length) {
+      return {
+        uri,
+        name: `BuildX Video Library Entry ${uri.slice(LIBRARY_ENTRY_URI_PREFIX.length)}`,
+        description: 'One past video: hook, transcript path, length, cuts, graphics, captions, links and performance.',
+        mimeType: 'application/json'
+      };
+    }
+    return undefined;
+  }
+
+  private requirePrivateDir(): string {
+    if (!this.dirs.privateDir) {
+      throw new Error('BuildX private dir is not configured — set BUILDX_PRIVATE_DIR on the MCP server.');
+    }
+    return this.dirs.privateDir;
+  }
+
+  private async getLibraryIndex(): Promise<any> {
+    const privateDir = this.requirePrivateDir();
+    const { entries, skipped } = await listEntries(privateDir);
+    return {
+      privateDir,
+      count: entries.length,
+      entries: entries.map(toIndexRow),
+      skipped
+    };
+  }
+
+  private async getLibrarySchema(): Promise<string> {
+    if (!this.dirs.knowledgeDir) {
+      throw new Error('Knowledge dir is not configured on the MCP server.');
+    }
+    return await readFile(path.join(this.dirs.knowledgeDir, 'library', 'video-entry.schema.json'), 'utf8');
   }
 
   private async getProjectInfo(): Promise<any> {
