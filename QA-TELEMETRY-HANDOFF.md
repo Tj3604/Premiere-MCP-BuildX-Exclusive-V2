@@ -66,16 +66,11 @@ Build a sandbox with the five defects from the brief — one-frame gap, missing 
 bad safe-zone placement, missing end card, wrong resolution — and confirm each is
 detected, classified, and only the safe ones repaired.
 
-## One decision left for you
+## Logo placement — decided 2026-10-06
 
-`knowledge/buildx/safe-zones.md` (authoritative, 2026-08-11) says the logo is
-**centred at `[0.5, 0.1530]`, scale 40**. Session memory records a later
-**upper-right** variant at `0.794 / 0.160`, scale 31.
-
-I did not pick a side. The QA check tests **safe-zone compliance**, which both
-satisfy, and the auto-fix applies the **smallest nudge** that clears the line rather
-than snapping to either placement. If one is now canonical, set
-`expectedLogoPosition` in the workflow profile — `src/qa/config.ts`.
+The upper-right placement (`0.794 / 0.160`, scale 31) is the 1080x1920 standard. It is
+carried as `SHORTS_LOGO_PLACEMENT` in `src/qa/config.ts` and passes QA despite its 41px
+right-edge breach. safe-zones.md, design-system.md and CLAUDE.md now say the same.
 
 ## Recommended next, in order
 
@@ -121,7 +116,6 @@ moved with its audio). Reports are in `fix2-*.json` and the filled frames in `fr
 Still open, not a gap bug: the resolution FAIL message says resolution "cannot be changed
 after creation", but `seq.setSettings()` changed it fine in this test.
 
-**Logo decision is no longer optional:** the upper-right production placement
-(858,308 / 0.794,0.160 scale 31) has its right edge at x=1013 and FAILS the doc's
-x≤972 edge-safe by 41px — the August claim that "both placements satisfy compliance"
-was wrong. Left as-is, apply_safe_qa_fixes nudges every short's logo 41px left.
+**Logo decision: MADE (2026-10-06).** Thomas confirmed the upper-right placement (858,308 /
+scale 31) as the standard. It is an approved placement in `src/qa/config.ts`, so QA passes it.
+Verified live on `QA Clean`.

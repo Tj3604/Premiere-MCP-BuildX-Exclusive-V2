@@ -310,10 +310,11 @@ small and reversible, and the rule comes from BuildX knowledge rather than being
 | `fix_logo_safe_zone` | Moves the logo the **smallest distance** that brings it inside the safe zone. Scale is never changed. |
 | `fix_one_frame_gap` | Closes a gap of **exactly one frame**, the known frame-maths artefact. It first extends the previous clip one frame into the gap (`extend_clip_tail`: a real trim, linked audio included, with the handle proven from ffprobe stream durations), so nothing downstream moves. Failing that, it moves the following clip back with its audio, but only when that clip is last on its track and nothing on another track lines up with it. Otherwise it leaves the gap and says why. |
 
-The logo fix deliberately does **not** snap to a canonical position. The documented placement
-(`[0.5, 0.1530]`, scale 40) and a later recorded upper-right variant disagree, and a fix has
-no business picking a side; nudging the element just inside the line satisfies the objective
-rule and preserves the placement intent.
+**Approved placements pass as they are.** The 1080 × 1920 shorts standard (upper-right, x858
+y308, scale 31) crosses the right safe line by 41px on purpose. It is listed in
+`approvedLogoPlacements` (`src/qa/config.ts`), so QA passes it, says so in the report, and
+never nudges it. Any other placement that crosses a line gets the smallest nudge back inside.
+The fix never snaps to a canonical position or changes scale.
 
 **Never auto-fixed:** a missing logo or end card (importing an asset and placing a clip is
 not one reversible write), gaps larger than a frame, overlaps, wrong sequence resolution or
@@ -378,9 +379,8 @@ duration; final status; and **which checks failed**. Reports live at
   `get_param_value`, the logo nudge, and the gap fix (extend, move and decline paths), each
   confirmed by diffing the timeline frame by frame. The media half (export, black frames,
   audio, frame extraction) is verified against real ffmpeg-rendered files.
-- **Open decision:** the upper-right shorts logo (858/308, scale 31) breaks the documented
-  right safe edge (x ≤ 972) by 41px, so the safe-zone fix nudges it left. Set
-  `expectedLogoPosition` in `src/qa/config.ts` once a placement is chosen.
+- The upper-right shorts logo (858/308, scale 31) is an **approved placement** (Thomas,
+  2026-10-06). It passes despite its 41px right-edge breach, and this was verified live.
 - Caption tracks cannot be read at all. Only a burned-in overlay clip is detectable.
 - Safe-zone compliance for captions and lower thirds is baked into the rendered overlay;
   Premiere cannot see where text sits inside it, so that stays a visual REVIEW.

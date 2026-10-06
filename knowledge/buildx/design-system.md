@@ -184,10 +184,14 @@ asked. Asset identity and source path are in `assets.md`.
 
 | Sequence format | Position (normalised) | Scale | Placement |
 |---|---|---|---|
-| **1080 × 1920** (9:16) | `[0.5, 0.1530]` | **40** | Top centre — safe-zone compliant |
+| **1080 × 1920** (9:16 short) | `[0.79444, 0.16042]` (x858 y308) | **31** | **Upper right**: the house standard, confirmed 2026-10-06. Right edge is 41px past the edge-safe line, approved |
 | **1728 × 3072** (9:16) | `[0.5, 0.1530]` | **64** | Top centre — `40 × 1.6` |
 | **1920 × 1080** (16:9 studio interview) | `[0.905, 0.093]` | **24** | **Top right** — *not yet checked against safe zones* |
 
+> **Changed 2026-10-06.** For 1080 × 1920 the upper-right placement (in use since 2026-08-17)
+> is confirmed as the standard and replaces the centred `[0.5, 0.1530]` / 40, which is kept
+> below only as the derivation reference. QA passes the upper-right placement as approved.
+>
 > **Changed 2026-08-11.** The 9:16 values were `[0.5, 0.0385417]` / scale 54, which put the
 > logo's top edge at **−31px** — cropped off frame, and squarely under the iPhone Dynamic
 > Island. The top 192px of a 9:16 frame is title-safe. See `safe-zones.md` for the

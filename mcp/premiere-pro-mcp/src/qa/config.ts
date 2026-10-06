@@ -10,7 +10,7 @@
  * short is a rate conform rather than a passthrough.
  */
 
-import type { QaWorkflowConfig } from './types.js';
+import type { ApprovedLogoPlacement, QaWorkflowConfig } from './types.js';
 
 /** 29.97 as a rational. Never compared as a float. */
 export const FPS_29_97 = { numerator: 30000, denominator: 1001 };
@@ -25,16 +25,26 @@ export const LOGO_ASSET_WIDTH = 1000;
 export const LOGO_ASSET_HEIGHT = 389;
 
 /**
- * The logo placement the repository documents as current.
- *
- * NOTE: session memory records a later upper-right variant (0.794 / 0.160 at
- * scale 31). The two disagree, so neither is hardcoded as a pass condition:
- * the objective check is safe-zone compliance, which both satisfy. Set
- * `expectedLogoPosition` in a profile only if an exact placement must be
- * enforced.
+ * The 2026-08-11 centred placement from safe-zones.md. Kept for recognising older
+ * projects; it is no longer the 1080x1920 standard.
  */
 export const DOCUMENTED_LOGO_POSITION: [number, number] = [0.5, 0.153];
 export const DOCUMENTED_LOGO_SCALE = 40;
+
+/**
+ * The BuildX 1080x1920 shorts logo: upper-right, x858 y308, scale 31. Its right
+ * edge lands at x1013, 41px past the 972 edge-safe line. Thomas chose this
+ * placement deliberately and confirmed it as the standard on 2026-10-06, so QA
+ * passes it rather than nudging every short.
+ */
+export const SHORTS_LOGO_PLACEMENT: ApprovedLogoPlacement = {
+  frameWidth: 1080,
+  frameHeight: 1920,
+  position: [858 / 1080, 308 / 1920],
+  scale: 31,
+  label: 'BuildX shorts standard (upper-right, x858 y308, scale 31)',
+  approved: 'Thomas, 2026-10-06'
+};
 
 const VERTICAL_BASE: Omit<QaWorkflowConfig, 'workflow' | 'requiredChecks' | 'optionalChecks'> = {
   visualQa: true,
@@ -45,6 +55,7 @@ const VERTICAL_BASE: Omit<QaWorkflowConfig, 'workflow' | 'requiredChecks' | 'opt
   durationToleranceSeconds: 0.5,
   logoTrackIndex: 2, // V3, zero-indexed
   logoAssetPattern: 'BuildX Logo',
+  approvedLogoPlacements: [SHORTS_LOGO_PLACEMENT],
   endCardPattern: 'CTA',
   endCardDurationSeconds: 5,
   endCardDurationToleranceSeconds: 0.5,
@@ -148,7 +159,8 @@ export function resolveWorkflowConfig(
     optionalChecks: overrides.optionalChecks ?? [...resolved.optionalChecks],
     expectedFps: overrides.expectedFps ?? { ...resolved.expectedFps },
     visualSamplePoints: overrides.visualSamplePoints ?? [...resolved.visualSamplePoints],
-    requiredGraphics: overrides.requiredGraphics ?? [...resolved.requiredGraphics]
+    requiredGraphics: overrides.requiredGraphics ?? [...resolved.requiredGraphics],
+    approvedLogoPlacements: overrides.approvedLogoPlacements ?? [...(resolved.approvedLogoPlacements ?? [])]
   };
 }
 

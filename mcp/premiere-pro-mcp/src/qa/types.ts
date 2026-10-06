@@ -122,6 +122,12 @@ export interface QaWorkflowConfig {
   logoTrackIndex: number;
   /** Substring identifying the logo clip by name. */
   logoAssetPattern: string;
+  /**
+   * Logo placements signed off as the house standard, even where they cross a
+   * safe-zone line. A logo sitting on one (within LOGO_PLACEMENT_TOLERANCE) passes
+   * and is never nudged.
+   */
+  approvedLogoPlacements?: ApprovedLogoPlacement[];
   /** Substring identifying the end-card clip by name. */
   endCardPattern: string;
   endCardDurationSeconds: number;
@@ -349,3 +355,15 @@ export interface QaFix {
 }
 
 export const PREMIERE_TICKS_PER_SECOND = 254016000000;
+
+export interface ApprovedLogoPlacement {
+  frameWidth: number;
+  frameHeight: number;
+  /** Normalised Motion > Position. */
+  position: [number, number];
+  /** Motion > Scale, percent. */
+  scale: number;
+  label: string;
+  /** Who approved it and when, for the report. */
+  approved: string;
+}

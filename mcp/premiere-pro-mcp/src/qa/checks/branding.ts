@@ -14,7 +14,7 @@
 import { LOGO_ASSET_HEIGHT, LOGO_ASSET_WIDTH } from '../config.js';
 import { formatTimecode, secondsToFrames } from '../frames.js';
 import { boxForPlacement, describeViolations, safeZoneFor, safeZoneViolations } from '../geometry.js';
-import type { QaCheck, QaIssue, TimelineClip, TimelineTrack } from '../types.js';
+import type { ApprovedLogoPlacement, QaCheck, QaIssue, TimelineClip, TimelineTrack } from '../types.js';
 
 export function findLogoClips(tracks: TimelineTrack[], trackIndex: number, pattern: string): TimelineClip[] {
   const normalized = pattern.trim().toLowerCase();
@@ -177,6 +177,24 @@ export const logoSafeZoneCheck: QaCheck = {
 
     if (violations.length === 0) return { status: 'PASS', detail, issues: [] };
 
+    // A signed-off house placement passes even where it crosses a line: it is a
+    // brand decision, and nudging it would move every short off the standard.
+    const approved = matchApprovedPlacement(context.config.approvedLogoPlacements, {
+      width,
+      height,
+      position: [position[0] as number, position[1] as number],
+      scale
+    });
+    if (approved) {
+      return {
+        status: 'PASS',
+        detail: `approved placement: ${approved.label}; ${violations
+          .map((violation) => `${violation.edge} edge ${violation.overflowPx}px past the safe line`)
+          .join(', ')}, accepted (${approved.approved})`,
+        issues: []
+      };
+    }
+
     return {
       status: 'AUTO_FIX',
       detail,
@@ -200,3 +218,22 @@ export const logoSafeZoneCheck: QaCheck = {
     };
   }
 };
+
+/** Within this many pixels on each axis, a logo is on an approved placement. */
+export const LOGO_PLACEMENT_TOLERANCE_PX = 2;
+/** Within this many scale percent, a logo is at an approved scale. */
+export const LOGO_SCALE_TOLERANCE = 0.5;
+
+export function matchApprovedPlacement(
+  placements: ApprovedLogoPlacement[] | undefined,
+  actual: { width: number; height: number; position: [number, number]; scale: number }
+): ApprovedLogoPlacement | undefined {
+  return (placements ?? []).find(
+    (placement) =>
+      placement.frameWidth === actual.width &&
+      placement.frameHeight === actual.height &&
+      Math.abs((actual.position[0] - placement.position[0]) * actual.width) <= LOGO_PLACEMENT_TOLERANCE_PX &&
+      Math.abs((actual.position[1] - placement.position[1]) * actual.height) <= LOGO_PLACEMENT_TOLERANCE_PX &&
+      Math.abs(actual.scale - placement.scale) <= LOGO_SCALE_TOLERANCE
+  );
+}

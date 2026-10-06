@@ -27,9 +27,15 @@ auto-fix desynced audio and cascaded. Fixed and re-verified live.
 -   **Fixes are planned from fresh state.** The runner applies one fix at a time and takes
     the next issue from the re-run, never the first-pass snapshot. A fix counts as verified
     only when its own issue is gone and its read-back raised no error.
+-   **Approved logo placements.** The 1080 × 1920 shorts logo (upper-right, x858 y308,
+    scale 31) is now the documented standard, approved by Thomas on 2026-10-06. QA passes it
+    despite its 41px right-edge breach instead of nudging every short. It is
+    `approvedLogoPlacements` on every vertical profile, with a 2px / 0.5-scale match
+    tolerance. CLAUDE.md, design-system.md and safe-zones.md all updated; they still said
+    centred, scale 40.
 -   **`MediaStreamInfo` carries per-stream durations** (`videoDurationSeconds`,
     `audioDurationSeconds`). The container duration overruns the video.
--   10 new tests (199 total; the 16 pre-existing `jest is not defined` failures are
+-   14 new tests (203 total; the 16 pre-existing `jest is not defined` failures are
     unchanged).
 
 ------------------------------------------------------------------------

@@ -20,6 +20,7 @@ import {
   safeZoneViolations
 } from '../../qa/geometry.js';
 import { computeMinimalReposition } from '../../qa/fixes/fix-safe-zone.js';
+import { matchApprovedPlacement } from '../../qa/checks/branding.js';
 import { formatTimecode, timebaseFor, timebaseMatches } from '../../qa/frames.js';
 import { isRealResponse } from '../../qa/premiere-reader.js';
 import { renderQaFailures, renderQaReport } from '../../qa/reports.js';
@@ -815,6 +816,45 @@ describe('one-frame gap fix (live-verified shapes, 2026-10-06)', () => {
     expect(report.fixes).toHaveLength(1);
     expect(report.fixes[0]?.verified).toBe(false);
     expect(statusOf(report, 'timeline_gaps')).toBe('AUTO_FIX');
+  });
+});
+
+describe('approved logo placement (Thomas, 2026-10-06)', () => {
+  const shortsLogo = (x = 858, y = 308, scale = 31) => {
+    const state = healthyProject();
+    state.params.set('clip-logo::Motion::Position', [x / 1080, y / 1920]);
+    state.params.set('clip-logo::Motion::Scale', scale);
+    return state;
+  };
+
+  it('passes the upper-right shorts logo although it crosses the right safe line', async () => {
+    const { runner, premiere } = makeRunner(shortsLogo());
+    const report = await runner.run({ ...NO_VISUAL, autoFix: true });
+    const result = report.technical.find((entry) => entry.checkId === 'logo_safe_zone')!;
+    expect(result.status).toBe('PASS');
+    expect(result.detail).toContain('approved placement');
+    expect(result.detail).toContain('right edge 41px');
+    expect(premiere.calls).not.toContain('setParamValue');
+    expect(report.fixes).toHaveLength(0);
+  });
+
+  it('still nudges a logo that is near, but not on, the approved placement', async () => {
+    const { runner } = makeRunner(shortsLogo(880));
+    const report = await runner.run({ ...NO_VISUAL, autoFix: true });
+    expect(report.fixes[0]?.fixId).toBe('fix_logo_safe_zone');
+  });
+
+  it('does not carry the approval to another scale or frame size', () => {
+    const placements = resolveWorkflowConfig('podcast_short').approvedLogoPlacements;
+    expect(matchApprovedPlacement(placements, { width: 1080, height: 1920, position: [858 / 1080, 308 / 1920], scale: 31 })).toBeDefined();
+    expect(matchApprovedPlacement(placements, { width: 1080, height: 1920, position: [858 / 1080, 308 / 1920], scale: 40 })).toBeUndefined();
+    expect(matchApprovedPlacement(placements, { width: 1728, height: 3072, position: [858 / 1080, 308 / 1920], scale: 31 })).toBeUndefined();
+  });
+
+  it('applies to every vertical workflow profile', () => {
+    for (const workflow of ['podcast_short', 'social_vertical', 'interview_clip', 'home_tour']) {
+      expect(resolveWorkflowConfig(workflow).approvedLogoPlacements).toHaveLength(1);
+    }
   });
 });
 
