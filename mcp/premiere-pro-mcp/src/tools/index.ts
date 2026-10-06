@@ -25,6 +25,7 @@ import { executeLibraryTool, getLibraryTools, isLibraryTool, knowledgeDirFromRep
 import { executeEditTool, getEditTools, isEditTool } from '../edit/tools.js';
 import { executeCaptionTool, getCaptionTools, isCaptionTool } from '../captions/tools.js';
 import { executeZoneTool, getZoneTools, isZoneTool } from '../qa/zone-tool.js';
+import { executeAudioTool, getAudioTools, isAudioTool } from '../audio/tools.js';
 
 export interface MCPTool {
   name: string;
@@ -1266,6 +1267,7 @@ export class PremiereProTools {
     const editTools = getEditTools() as MCPTool[];
     const captionTools = getCaptionTools() as MCPTool[];
     const zoneTools = getZoneTools() as MCPTool[];
+    const audioTools = getAudioTools() as MCPTool[];
     const claimed = new Set([
       ...localTools.map((tool) => tool.name),
       ...telemetryTools.map((tool) => tool.name),
@@ -1273,7 +1275,8 @@ export class PremiereProTools {
       ...libraryTools.map((tool) => tool.name),
       ...editTools.map((tool) => tool.name),
       ...captionTools.map((tool) => tool.name),
-      ...zoneTools.map((tool) => tool.name)
+      ...zoneTools.map((tool) => tool.name),
+      ...audioTools.map((tool) => tool.name)
     ]);
     return [
       ...localTools,
@@ -1283,6 +1286,7 @@ export class PremiereProTools {
       ...editTools,
       ...captionTools,
       ...zoneTools,
+      ...audioTools,
       ...getExpandedTools(claimed)
     ];
   }
@@ -1344,6 +1348,10 @@ export class PremiereProTools {
 
     if (isLibraryTool(name)) {
       return await executeLibraryTool(name, args);
+    }
+
+    if (isAudioTool(name)) {
+      return await executeAudioTool(name, args);
     }
 
     if (isZoneTool(name)) {
