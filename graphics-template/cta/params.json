@@ -1,0 +1,8 @@
+{
+  "description": "The standard BuildX end card (Start Your ADU Journey checklist). Wording is fixed — never author a new CTA. Full-frame — render without --alpha.",
+  "alpha": false,
+  "formats": ["9x16", "16x9"],
+  "params": {
+    "duration": { "default": "8.008", "help": "Seconds. 8.008 matches the delivered card and the QA end-card check." }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "description": "Question / title card: gold bar, eyebrow, big question with one gold *word*. Full-frame — render without --alpha.",
+  "alpha": false,
+  "formats": ["9x16", "16x9"],
+  "params": {
+    "eyebrow": { "default": "", "example": "Ask Buz", "help": "Short label above the question. May be empty." },
+    "question": { "required": true, "example": "Do you need a *permit* for an ADU?", "help": "Exact words. *word* turns gold — one per card." },
+    "duration": { "default": "2.6", "help": "Seconds." }
+  }
+}

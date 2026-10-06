@@ -1,0 +1,41 @@
+/* BuildX graphics tokens — one source for colour, type and safe bands.
+   Values from the current house style (the latest short graphics and the standard
+   end card, buildx-cta-adu-journey-9x16): gold #FFB81C, panel #0B0B0C, Poppins.
+   Chosen by Thomas 2026-10-06 for the shared template (design-system.md TODO-DS1 lists
+   older golds #D9A441 / #D4960A). Change a value here, not in a template.
+   scripts/graphic-from-template.mjs inlines this file into every generated graphic. */
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&display=swap");
+
+:root{
+  /* colour */
+  --gold:#FFB81C;
+  --panel:#0B0B0C;
+  --panel-soft:rgba(11,11,12,0.82);
+  --white:#FFFFFF;
+  --dim:#8B8B90;
+  --line:#2A2A2C;
+  --ink:#111111;                 /* text on gold */
+
+  /* type */
+  --font:"Poppins","Helvetica Neue",Arial,sans-serif;
+  --w-bold:700;
+  --w-black:800;
+  --track-eyebrow:.32em;
+
+  /* 1080x1920 bands (feedback_shorts_safe_bands, safe-zones.md) */
+  --v-side:108px;                /* left/right safe line */
+  --v-logo-top:248px;            /* logo occupies y248..368, x703..1013 */
+  --v-logo-bottom:368px;
+  --v-free-top:410px;            /* free band for graphics */
+  --v-free-bottom:880px;         /* content ends by here ... */
+  --v-caption-top:909px;         /* ... captions start here */
+  --v-rail-x:920px;              /* IG/TikTok action rail bites beyond this */
+
+  /* 1920x1080 */
+  --h-side:96px;                 /* 5% title-safe */
+  --h-top:54px;
+
+  /* motion */
+  --ease-out:cubic-bezier(.2,.8,.3,1);
+}
