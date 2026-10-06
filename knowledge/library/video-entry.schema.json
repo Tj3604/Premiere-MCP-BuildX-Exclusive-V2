@@ -77,10 +77,9 @@
         "views30d": { "type": ["integer", "null"], "minimum": 0 },
         "avgViewDurationSeconds": { "type": ["number", "null"], "minimum": 0 },
         "retentionPercent": {
-          "description": "Average percentage viewed, 0-100.",
+          "description": "Average percentage viewed. Over 100 means the Short looped.",
           "type": ["number", "null"],
-          "minimum": 0,
-          "maximum": 100
+          "minimum": 0
         },
         "stayedToWatchPercent": {
           "description": "YouTube Shorts 'Stayed to watch', 0-100. The hook metric.",
