@@ -31,6 +31,9 @@ import {
   suggestPunchIns
 } from './punchins.js';
 import { readBrollIndex } from '../broll/index.js';
+import { checkHook, DEFAULT_SIMILARITY_THRESHOLD } from '../library/hooks.js';
+import { listEntries } from '../library/index.js';
+import { findShortCandidates, ShortCandidate, ShortOptions, shortsMarkdown } from './shorts.js';
 import { BrollOptions, brollMarkdown, BrollSuggestion, suggestBroll } from '../broll/match.js';
 
 export interface CutListFile {
@@ -218,4 +221,56 @@ export async function createBrollList(
     written = true;
   }
   return { jsonPath, mdPath, written, list, libraryClips: index.clips.length };
+}
+
+export interface ShortListFile {
+  description: string;
+  transcriptPath: string;
+  transcriptSeconds: number;
+  options: ShortOptions;
+  createdAt: string;
+  candidates: ShortCandidate[];
+}
+
+/**
+ * <name>.shorts.json + .md beside the transcript; existing list kept unless force.
+ * With a private dir, each hook is checked against the library's past hooks.
+ */
+export async function createShortList(
+  transcriptPath: string,
+  options: ShortOptions = {},
+  { write = true, force = false, privateDir }: { write?: boolean; force?: boolean; privateDir?: string | undefined } = {}
+): Promise<{ jsonPath: string; mdPath: string; written: boolean; list: ShortListFile; hooksCheckedAgainst: number }> {
+  const words = wordsFrom(JSON.parse(await readFile(transcriptPath, 'utf8')));
+  if (words.length === 0) throw new Error(`No timed words in ${transcriptPath}`);
+  const entries = privateDir ? (await listEntries(privateDir)).entries : [];
+  const candidates: ShortCandidate[] = findShortCandidates(words, options).map((c) => {
+    if (!entries.length) return { ...c, closeTo: null };
+    const check = checkHook(c.hook, entries, DEFAULT_SIMILARITY_THRESHOLD, 1);
+    if (!check.tooClose) return { ...c, closeTo: null };
+    return {
+      ...c,
+      score: Math.round((c.score - 2) * 1000) / 1000,
+      reasons: [...c.reasons, 'too close to a past hook'],
+      closeTo: check.closest[0]?.hookLine ?? null
+    };
+  });
+  const list: ShortListFile = {
+    description: 'Short candidates (30-60s native windows) ranked on the opening line. All unapproved; build chosen ids with build_short_sequences.',
+    transcriptPath,
+    transcriptSeconds: words[words.length - 1]!.end,
+    options,
+    createdAt: new Date().toISOString(),
+    candidates
+  };
+  const base = cutListBase(transcriptPath);
+  const jsonPath = `${base}.shorts.json`;
+  const mdPath = `${base}.shorts.md`;
+  let written = false;
+  if (write && (force || !existsSync(jsonPath))) {
+    await writeAtomic(jsonPath, JSON.stringify(list, null, 2) + '\n');
+    await writeAtomic(mdPath, shortsMarkdown(path.basename(base), candidates));
+    written = true;
+  }
+  return { jsonPath, mdPath, written, list, hooksCheckedAgainst: entries.length };
 }

@@ -5,7 +5,7 @@
 
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
-import { createBrollList, createCutList, createPunchList, PunchListFile } from './files.js';
+import { createBrollList, createCutList, createPunchList, createShortList, PunchListFile, ShortListFile } from './files.js';
 import { punchKeyframes } from './punchins.js';
 
 /** Runs ExtendScript through the bridge (helpers like __findClip are prepended). */
@@ -71,6 +71,33 @@ export const EDIT_TOOLS: EditTool[] = [
       write: z.boolean().optional().describe('Write the .broll files. Default true.'),
       force: z.boolean().optional().describe('Replace an existing .broll.json. Default false.')
     })
+  },
+  {
+    name: 'find_short_candidates',
+    description:
+      'Podcast-to-shorts, step 1: from a long episode\'s WhisperX .words.json, finds 30-60s native windows that start and end on whole sentences and ranks them on the opening line (number, contradiction, stakes, question; weak openers like "so"/"and" and "BuildX" in the hook score down — editorial.md, SHORTS_ENGINE_SPEC.md). Checks each hook against past library hooks. Writes <name>.shorts.json + .md beside the transcript, all unapproved; builds nothing. The transcript must be of the master sequence for build_short_sequences to line up.',
+    inputSchema: z.object({
+      transcriptPath: z.string().min(1).describe('Absolute path to the episode\'s WhisperX <name>.words.json (of the master sequence).'),
+      minSeconds: z.number().min(5).max(170).optional().describe('Shortest candidate. Default 30.'),
+      maxSeconds: z.number().min(10).max(180).optional().describe('Longest candidate. Default 60.'),
+      limit: z.number().int().min(1).max(60).optional().describe('Candidates to keep. Default 20.'),
+      write: z.boolean().optional().describe('Write the .shorts files. Default true.'),
+      force: z.boolean().optional().describe('Replace an existing .shorts.json. Default false.')
+    })
+  },
+  {
+    name: 'build_short_sequences',
+    description:
+      'Podcast-to-shorts, step 2: builds a 1080x1920 29.97 sequence for each APPROVED candidate id from a .shorts.json by copying that range out of the master sequence (createSubsequence — the master is never edited). Scales footage to fill the vertical frame, puts the BuildX logo (a video logo item, e.g. "BuildX Logo.mov") on V3 at 0.79444/0.16042 scale 31 over the content, and appends the 9:16 CTA end card after it. Does not export, caption, add the first-frame thumbnail card, or reframe per speaker — Thomas proof-watches first.',
+    inputSchema: z.object({
+      shortsPath: z.string().min(1).describe('The <name>.shorts.json from find_short_candidates.'),
+      masterSequenceId: z.string().min(1).describe('The episode master sequence the transcript was made from.'),
+      ids: z.array(z.number().int().min(1)).min(1).max(40).describe('Candidate ids the user approved.'),
+      prefix: z.string().optional().describe('Name prefix, e.g. "EP12". Sequence names are "<prefix> <title>".'),
+      titles: z.record(z.string()).optional().describe('Title overrides by id, e.g. {"3": "Septic Decides Everything"}.'),
+      logo: z.boolean().optional().describe('Place the logo. Default true.'),
+      endCard: z.boolean().optional().describe('Append the end card. Default true.')
+    })
   }
 ];
 
@@ -97,6 +124,11 @@ export async function executeEditTool(
 ): Promise<any> {
   if (name === 'suggest_punch_ins') return await suggestPunchInsTool(args);
   if (name === 'suggest_broll') return await suggestBrollTool(args, context);
+  if (name === 'find_short_candidates') return await findShortCandidatesTool(args, context);
+  if (name === 'build_short_sequences') {
+    if (!runScript) return { success: false, error: 'build_short_sequences needs the Premiere bridge.' };
+    return await buildShortSequencesTool(args, runScript);
+  }
   if (name === 'apply_punch_ins') {
     if (!runScript) return { success: false, error: 'apply_punch_ins needs the Premiere bridge.' };
     return await applyPunchInsTool(args, runScript);
@@ -300,4 +332,221 @@ async function suggestBrollTool(args: Record<string, any>, context: EditContext)
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
+}
+
+async function findShortCandidatesTool(args: Record<string, any>, context: EditContext): Promise<any> {
+  try {
+    const result = await createShortList(
+      args.transcriptPath,
+      { minSeconds: args.minSeconds, maxSeconds: args.maxSeconds, limit: args.limit },
+      { write: args.write ?? true, force: args.force ?? false, privateDir: context.privateDir }
+    );
+    return {
+      success: true,
+      count: result.list.candidates.length,
+      hooksCheckedAgainst: result.hooksCheckedAgainst,
+      candidates: result.list.candidates.map(({ text, ...c }) => c),
+      shortsJson: result.jsonPath,
+      shortsMd: result.mdPath,
+      written: result.written,
+      note: result.written
+        ? `Nothing built. Review ${result.mdPath}; build chosen ids with build_short_sequences.`
+        : (args.write ?? true)
+          ? `${result.jsonPath} already exists and was left alone. Pass force:true to replace it.`
+          : 'Not written (write:false).'
+    };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+/** 29.97 as a frame duration in ticks (1001/30000 s). */
+const TICKS_2997 = '8475667200';
+const LOGO_POSITION = [0.79444444, 0.16041667];
+const LOGO_SCALE = 31;
+const END_CARD_NAME = /buildx-cta-adu-journey-9x16-ig-v3/i;
+
+const MOTION_HELPERS = `
+  function __motionParam(clip, name) {
+    for (var i = 0; i < clip.components.numItems; i++) {
+      var comp = clip.components[i];
+      if (comp.displayName !== "Motion") continue;
+      for (var j = 0; j < comp.properties.numItems; j++) if (comp.properties[j].displayName === name) return comp.properties[j];
+    }
+    return null;
+  }
+`;
+
+async function buildShortSequencesTool(args: Record<string, any>, runScript: RunScript): Promise<any> {
+  let list: ShortListFile;
+  try {
+    list = JSON.parse(await readFile(args.shortsPath, 'utf8'));
+  } catch (error) {
+    return { success: false, error: `Could not read ${args.shortsPath}: ${error instanceof Error ? error.message : String(error)}` };
+  }
+  const ids: number[] = args.ids;
+  const missing = ids.filter((id) => !list.candidates.some((c) => c.id === id));
+  if (missing.length) return { success: false, error: `No candidate id ${missing.join(', ')} in ${args.shortsPath}` };
+
+  const probe = parse(
+    await runScript(`try {
+      var seq = __findSequence(${JSON.stringify(args.masterSequenceId)});
+      if (!seq) return JSON.stringify({ success: false, error: "Master sequence not found" });
+      var st = seq.getSettings();
+      var logos = [], cards = [];
+      function walk(item) {
+        if ((item.type === 2 || item.type === 3) && item.children) { for (var i = 0; i < item.children.numItems; i++) walk(item.children[i]); return; }
+        var p = ""; try { p = item.getMediaPath(); } catch (e) {}
+        if (/buildx logo/i.test(item.name)) logos.push({ id: item.nodeId, name: item.name, path: p });
+        if (/cta/i.test(item.name) && /9x16|end ?card/i.test(item.name) && /\\.(mov|mp4)$/i.test(p)) cards.push({ id: item.nodeId, name: item.name, path: p });
+      }
+      walk(app.project.rootItem);
+      return JSON.stringify({ success: true, name: seq.name, seconds: __ticksToSeconds(seq.end), width: st.videoFrameWidth,
+        height: st.videoFrameHeight, videoTracks: seq.videoTracks.numTracks, logos: logos, cards: cards });
+    } catch (e) { return JSON.stringify({ success: false, error: e.toString() }); }`)
+  );
+  if (!probe?.success) return { success: false, error: probe?.error ?? 'Could not read the master sequence' };
+
+  // The transcript has to be of this master, or every range lands on the wrong words.
+  if (list.transcriptSeconds > probe.seconds + 0.5) {
+    return {
+      success: false,
+      error: `The transcript runs ${list.transcriptSeconds.toFixed(1)}s but "${probe.name}" is ${probe.seconds.toFixed(1)}s — it is not this sequence's transcript.`
+    };
+  }
+
+  const warnings: string[] = [];
+  const wantLogo = args.logo ?? true;
+  const wantCard = args.endCard ?? true;
+  // Stills hang ExtendScript when lengthened (clip.end), so only a video logo is placed.
+  const logo = probe.logos.find((l: any) => /\.(mov|mp4)$/i.test(l.path));
+  if (wantLogo && !logo) {
+    warnings.push(
+      probe.logos.length
+        ? 'Only a still logo is in the project — stretching a still hangs Premiere, so no logo was placed. Import a logo .mov (e.g. sandbox "BuildX Logo.mov") and rebuild, or add it by hand.'
+        : 'No "BuildX Logo" item in the project — no logo placed.'
+    );
+  }
+  const card = probe.cards.find((c: any) => END_CARD_NAME.test(c.name)) ?? probe.cards[0];
+  if (wantCard && !card) warnings.push('No 9x16 CTA end card in the project — import buildx-cta-adu-journey-9x16-ig-v3.mov and rebuild.');
+  if (wantCard && card && !END_CARD_NAME.test(card.name)) warnings.push(`Used "${card.name}" — the standard card is buildx-cta-adu-journey-9x16-ig-v3.mov.`);
+  if (wantLogo && logo && probe.videoTracks < 3) warnings.push('The master has fewer than 3 video tracks, so the logo cannot go on V3 — add it by hand.');
+
+  const built: any[] = [];
+  for (const id of ids) {
+    const c = list.candidates.find((x) => x.id === id)!;
+    if (c.end > probe.seconds + 0.05) {
+      built.push({ id, success: false, error: `Ends at ${c.end}s, past the master's ${probe.seconds.toFixed(2)}s` });
+      continue;
+    }
+    const title = args.titles?.[String(id)] ?? c.title;
+    const name = [args.prefix, title].filter(Boolean).join(' ');
+    const result = parse(
+      await runScript(`try {
+        ${MOTION_HELPERS}
+        var master = __findSequence(${JSON.stringify(args.masterSequenceId)});
+        var oldIn = master.getInPointAsTime().seconds, oldOut = master.getOutPointAsTime().seconds;
+        master.setInPoint(${c.start});
+        master.setOutPoint(${c.end});
+        var sub = master.createSubsequence(true);
+        master.setInPoint(oldIn);
+        master.setOutPoint(oldOut);
+        if (!sub) return JSON.stringify({ success: false, error: "createSubsequence returned nothing" });
+        sub.name = ${JSON.stringify(name)};
+
+        var st = sub.getSettings();
+        st.videoFrameWidth = 1080;
+        st.videoFrameHeight = 1920;
+        var fr = new Time(); fr.ticks = "${TICKS_2997}";
+        st.videoFrameRate = fr;
+        sub.setSettings(st);
+
+        // A clip that filled the master's height fills 1920 at scale * 1920 / masterHeight.
+        var factor = 1920 / ${probe.height}, scaled = 0, skipped = 0;
+        for (var t = 0; t < sub.videoTracks.numTracks; t++) {
+          var tr = sub.videoTracks[t];
+          for (var k = 0; k < tr.clips.numItems; k++) {
+            var sc = __motionParam(tr.clips[k], "Scale");
+            if (!sc) continue;
+            if (sc.isTimeVarying()) { skipped++; continue; }
+            sc.setValue(sc.getValue() * factor, true);
+            scaled++;
+          }
+        }
+        var contentEnd = __ticksToSeconds(sub.end);
+
+        var logo = null;
+        ${wantLogo && logo && probe.videoTracks >= 3 ? `
+        var li = __findProjectItem(${JSON.stringify(logo.id)});
+        if (li) {
+          li.setInPoint(0, 4);
+          li.setOutPoint(contentEnd, 4);
+          sub.videoTracks[2].overwriteClip(li, 0);
+          li.clearInPoint(); li.clearOutPoint();
+          var lt = sub.videoTracks[2];
+          for (var q = 0; q < lt.clips.numItems; q++) if (lt.clips[q].projectItem && lt.clips[q].projectItem.nodeId === li.nodeId) logo = lt.clips[q];
+          if (logo) {
+            __motionParam(logo, "Position").setValue(${JSON.stringify(LOGO_POSITION)}, true);
+            __motionParam(logo, "Scale").setValue(${LOGO_SCALE}, true);
+          }
+        }` : ''}
+
+        var card = null;
+        ${wantCard && card ? `
+        var ci = __findProjectItem(${JSON.stringify(card.id)});
+        if (ci) {
+          ci.clearInPoint(); ci.clearOutPoint();
+          sub.videoTracks[0].overwriteClip(ci, contentEnd);
+          var ct = sub.videoTracks[0];
+          for (var q = 0; q < ct.clips.numItems; q++) if (ct.clips[q].projectItem && ct.clips[q].projectItem.nodeId === ci.nodeId) card = ct.clips[q];
+        }` : ''}
+
+        // Nothing but the card from its first frame on: the range end rarely lands on a
+        // 29.97 frame, so a sliver of copied footage, audio or the master's own logo can
+        // run under it. Footage only (never a still — clip.end on a still hangs Premiere).
+        var tailRemoved = 0, tailTrimmed = 0, tailLeft = [];
+        if (card) {
+          var cardStart = card.start.seconds;
+          var groups = [sub.videoTracks, sub.audioTracks];
+          for (var gi = 0; gi < 2; gi++) {
+            for (var t2 = 0; t2 < groups[gi].numTracks; t2++) {
+              var tk = groups[gi][t2];
+              for (var k2 = tk.clips.numItems - 1; k2 >= 0; k2--) {
+                var it = tk.clips[k2];
+                if (it.nodeId === card.nodeId || (logo && it.nodeId === logo.nodeId)) continue;
+                if (it.start.seconds >= cardStart - 0.0005) {
+                  try { it.remove(false, false); tailRemoved++; } catch (er) { tailLeft.push(it.name + " " + er); }
+                } else if (it.end.seconds > cardStart + 0.0005) {
+                  try { var te = new Time(); te.seconds = cardStart; it.end = te; tailTrimmed++; } catch (et) { tailLeft.push(it.name + " " + et); }
+                }
+              }
+            }
+          }
+        }
+
+        var s2 = sub.getSettings();
+        return JSON.stringify({ success: true, sequenceId: sub.sequenceID, name: sub.name,
+          width: s2.videoFrameWidth, height: s2.videoFrameHeight, frameTicks: s2.videoFrameRate.ticks,
+          contentSeconds: contentEnd, totalSeconds: __ticksToSeconds(sub.end), clipsScaled: scaled, keyframedScaleSkipped: skipped,
+          logo: logo ? { start: logo.start.seconds, end: logo.end.seconds, position: __motionParam(logo, "Position").getValue(), scale: __motionParam(logo, "Scale").getValue() } : null,
+          endCard: card ? { start: card.start.seconds, end: card.end.seconds } : null,
+          tail: { removed: tailRemoved, trimmed: tailTrimmed, left: tailLeft } });
+      } catch (e) { return JSON.stringify({ success: false, error: e.toString() }); }`)
+    );
+    built.push({ id, title, ...result });
+  }
+
+  const ok = built.filter((b) => b.success);
+  for (const b of ok) {
+    if (b.frameTicks !== TICKS_2997 || b.width !== 1080 || b.height !== 1920) warnings.push(`#${b.id}: settings read back ${b.width}x${b.height} @ ${b.frameTicks} ticks — check the sequence settings.`);
+    if (b.tail?.left?.length) warnings.push(`#${b.id}: could not clear under the end card: ${b.tail.left.join('; ')}`);
+    if (b.logo && Math.abs(b.logo.end - b.contentSeconds) > 0.05) warnings.push(`#${b.id}: logo covers ${b.logo.start.toFixed(2)}–${b.logo.end.toFixed(2)}s of ${b.contentSeconds.toFixed(2)}s — the logo media is shorter than the short.`);
+  }
+  return {
+    success: ok.length === built.length,
+    master: probe.name,
+    built,
+    warnings,
+    next: 'Proof-watch in Premiere. Still to do per short: captions, the first-frame thumbnail card, per-speaker reframing. Nothing was exported.'
+  };
 }
