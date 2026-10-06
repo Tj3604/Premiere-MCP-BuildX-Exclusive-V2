@@ -1339,7 +1339,7 @@ export class PremiereProTools {
     }
 
     if (isEditTool(name)) {
-      return await executeEditTool(name, args);
+      return await executeEditTool(name, args, (script) => this.bridge.executeScript(script));
     }
 
     const localToolNames = new Set(this.getLocalTools().map((localTool) => localTool.name));

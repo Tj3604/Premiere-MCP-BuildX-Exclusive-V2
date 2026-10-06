@@ -1,8 +1,8 @@
 /**
- * Cut-list files beside a transcript: <name>.cuts.json (machine, editable
+ * Review files beside a transcript. Cuts: <name>.cuts.json (machine, editable
  * `approved` flags) + <name>.cuts.md (review sheet), and <name>.keeps.json for
- * scripts/plan-cut.mjs once approved. Shared by the find_cuts tool and
- * scripts/find-cuts.mjs.
+ * scripts/plan-cut.mjs once approved. Punch-ins: <name>.punchins.json + .md.
+ * Shared by the edit tools and scripts/find-cuts.mjs.
  */
 
 import { existsSync } from 'node:fs';
@@ -20,6 +20,16 @@ import {
   summarize,
   wordsFrom
 } from './cleanup.js';
+import {
+  DEFAULT_EASE_SECONDS,
+  DEFAULT_MAX_HOLD_SECONDS,
+  DEFAULT_MIN_GAP_SECONDS,
+  DEFAULT_PUNCH_SCALE_PERCENT,
+  PunchIn,
+  punchInsMarkdown,
+  PunchOptions,
+  suggestPunchIns
+} from './punchins.js';
 
 export interface CutListFile {
   description: string;
@@ -121,4 +131,51 @@ export async function applyCutList(
     keptSeconds: Math.round(keptSeconds * 1000) / 1000,
     keeps
   };
+}
+
+export interface PunchListFile {
+  description: string;
+  transcriptPath: string;
+  scalePercent: number;
+  options: Required<PunchOptions>;
+  createdAt: string;
+  punchIns: PunchIn[];
+}
+
+export function punchListPath(transcriptPath: string): string {
+  return `${cutListBase(transcriptPath)}.punchins.json`;
+}
+
+/** Same rule as the cut list: an existing .punchins.json is kept unless force. */
+export async function createPunchList(
+  transcriptPath: string,
+  options: PunchOptions & { scalePercent?: number } = {},
+  { write = true, force = false }: { write?: boolean; force?: boolean } = {}
+): Promise<{ jsonPath: string; mdPath: string; written: boolean; list: PunchListFile }> {
+  const words = wordsFrom(JSON.parse(await readFile(transcriptPath, 'utf8')));
+  if (words.length === 0) throw new Error(`No timed words in ${transcriptPath}`);
+  const resolved: Required<PunchOptions> = {
+    minGapSeconds: options.minGapSeconds ?? DEFAULT_MIN_GAP_SECONDS,
+    easeSeconds: options.easeSeconds ?? DEFAULT_EASE_SECONDS,
+    maxHoldSeconds: options.maxHoldSeconds ?? DEFAULT_MAX_HOLD_SECONDS,
+    pauseSeconds: options.pauseSeconds ?? 0.6
+  };
+  const scalePercent = options.scalePercent ?? DEFAULT_PUNCH_SCALE_PERCENT;
+  const list: PunchListFile = {
+    description: 'Optional punch-in suggestions (eased Scale pushes) from WhisperX word timings. None are applied until chosen with apply_punch_ins.',
+    transcriptPath,
+    scalePercent,
+    options: resolved,
+    createdAt: new Date().toISOString(),
+    punchIns: suggestPunchIns(words, resolved)
+  };
+  const jsonPath = punchListPath(transcriptPath);
+  const mdPath = jsonPath.replace(/\.json$/, '.md');
+  let written = false;
+  if (write && (force || !existsSync(jsonPath))) {
+    await writeAtomic(jsonPath, JSON.stringify(list, null, 2) + '\n');
+    await writeAtomic(mdPath, punchInsMarkdown(path.basename(cutListBase(transcriptPath)), list.punchIns, scalePercent));
+    written = true;
+  }
+  return { jsonPath, mdPath, written, list };
 }
