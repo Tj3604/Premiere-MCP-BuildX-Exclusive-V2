@@ -659,7 +659,13 @@ describe('scoring and final status', () => {
 
 describe('first-pass versus final score', () => {
   it('records the first pass before repair and the final score after', async () => {
-    const { runner } = makeRunner(logoOutsideSafeZone());
+    const state = logoOutsideSafeZone();
+    // The standard end card has run 8.008s since 2026-10-06; the fixture's 5s card is a
+    // retired one and would (correctly) hold the final score below 100.
+    const card = state.tracks!.videoTracks[1]!.clips[0]!;
+    card.endTime = card.startTime + 8.008;
+    card.duration = 8.008;
+    const { runner } = makeRunner(state);
     const report = await runner.run({ ...NO_VISUAL, autoFix: true });
     expect(report.firstPassScore.percent).toBeLessThan(100);
     expect(report.finalScore.percent).toBe(100);
