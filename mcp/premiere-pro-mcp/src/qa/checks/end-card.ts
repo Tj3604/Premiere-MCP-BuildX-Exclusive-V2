@@ -2,8 +2,8 @@
  * End card check.
  *
  * Every BuildX short ends on the standard card — the CTA policy is that a new one
- * is never authored, only this one appended. The card is 5.00 seconds at
- * 1080x1920 natively.
+ * is never authored, only this one appended. Since 2026-10-06 that is the
+ * checklist card (buildx-cta-adu-journey-9x16-ig-v3.mov), 8.008 seconds at 1080x1920.
  *
  * Appending it is not treated as an auto-fix: it requires importing an asset and
  * placing a clip, which is neither a single write nor trivially reversible.
@@ -69,7 +69,7 @@ export const endCardCheck: QaCheck = {
     if (Math.abs(last.clip.duration - expected) > tolerance) {
       issues.push({
         code: 'end_card_duration',
-        message: `End card runs ${last.clip.duration.toFixed(2)}s, expected ${expected.toFixed(2)}s (±${tolerance}s). The card is fully revealed by ~3.7s, so a short one cuts the offer off.`,
+        message: `End card runs ${last.clip.duration.toFixed(2)}s, expected ${expected.toFixed(2)}s (±${tolerance}s). A trimmed card cuts the offer off; a 5.0s one is a retired card.`,
         timeSeconds: last.clip.startTime,
         autoFixable: false,
         data: { actual: last.clip.duration, expected, tolerance }
