@@ -49,7 +49,9 @@ reconciled with each other.** They are one conversation, not three.
 
 **SZ2 was a fourth gating question and is now closed** (2026-08-11): the logo sat inside the
 title-safe band, where the iPhone Dynamic Island was covering it. Resolved to
-`[0.5, 0.1530]` / scale 40. See `safe-zones.md`.
+`[0.5, 0.1530]` / scale 40. That was then superseded on 2026-10-06: 1080 × 1920 shorts use the
+upper-right placement (x858 y308, scale 31), with its 41px right-edge breach approved. See
+`safe-zones.md`.
 
 **SZ3 is closed** (2026-08-11). The side margin moved from 51px (and 80px in some cards) to
 **108px**, the 9:16 edge-safe line, across **all 31 compositions** — 14 in the first pass,

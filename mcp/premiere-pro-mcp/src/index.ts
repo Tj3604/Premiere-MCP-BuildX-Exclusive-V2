@@ -33,6 +33,7 @@ import { PremiereProResources } from './resources/index.js';
 import { PremiereProPrompts } from './prompts/index.js';
 import { PremiereProBridge } from './bridge/index.js';
 import { Logger } from './utils/logger.js';
+import { telemetry } from './telemetry/telemetry.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 class MCPPremiereProServer {
@@ -184,7 +185,15 @@ class MCPPremiereProServer {
       
       const transport = new StdioServerTransport();
       await this.server.connect(transport);
-      
+
+      // Telemetry is best-effort: a store that will not open is reported and
+      // then ignored, never a reason to fail startup.
+      if (telemetry.isEnabled()) {
+        this.logger.info(`Performance telemetry active: ${telemetry.getDatabasePath()}`);
+      } else {
+        this.logger.info('Performance telemetry is off for this run');
+      }
+
       this.logger.info('MCP Adobe Premiere Pro Server started successfully');
     } catch (error) {
       this.logger.error('Failed to start server:', error);
@@ -194,6 +203,8 @@ class MCPPremiereProServer {
 
   async stop(): Promise<void> {
     try {
+      // Flush buffered telemetry before the process goes away.
+      telemetry.shutdown();
       await this.bridge.cleanup();
       this.logger.info('MCP Adobe Premiere Pro Server stopped');
     } catch (error) {

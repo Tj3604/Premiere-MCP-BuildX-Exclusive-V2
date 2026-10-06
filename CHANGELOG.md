@@ -7,6 +7,185 @@ documented here.
 
 ------------------------------------------------------------------------
 
+# Version 2.6.1
+
+Released 2026-10-06. The first live-bridge run of the QA layer found that the one-frame gap
+auto-fix desynced audio and cascaded. Fixed and re-verified live.
+
+-   **`move_clip` keeps sync.** It moves linked track items with the clip by default
+    (`includeLinked`), snaps to the sequence frame grid, reads every item back, and rolls the
+    whole move back if any item misses. New optional `sequenceId`.
+-   **New `extend_clip_tail` tool.** It lengthens a clip into empty space with a real trim
+    (`outPoint` then `end`), linked items included. It refuses stills, nested sequences,
+    collisions, and extensions past `maxOutPointSeconds`, and it has a `dryRun` that reports
+    media paths and in/out points.
+-   **The gap fix extends instead of moving.** It first extends the previous clip into the gap
+    when ffprobe proves a handle, so nothing downstream moves and a chain of short clips
+    closes cleanly. It falls back to moving the following clip only when that clip is last on
+    its track and nothing on another track is aligned to either of its edges. Anything else
+    is declined with both reasons.
+-   **Fixes are planned from fresh state.** The runner applies one fix at a time and takes
+    the next issue from the re-run, never the first-pass snapshot. A fix counts as verified
+    only when its own issue is gone and its read-back raised no error.
+-   **Approved logo placements.** The 1080 × 1920 shorts logo (upper-right, x858 y308,
+    scale 31) is now the documented standard, approved by Thomas on 2026-10-06. QA passes it
+    despite its 41px right-edge breach instead of nudging every short. It is
+    `approvedLogoPlacements` on every vertical profile, with a 2px / 0.5-scale match
+    tolerance. CLAUDE.md, design-system.md and safe-zones.md all updated; they still said
+    centred, scale 40.
+-   **`MediaStreamInfo` carries per-stream durations** (`videoDurationSeconds`,
+    `audioDurationSeconds`). The container duration overruns the video.
+-   14 new tests (203 total; the 16 pre-existing `jest is not defined` failures are
+    unchanged).
+
+------------------------------------------------------------------------
+
+# Version 2.6
+
+Released 2026-08-24.
+
+Adds an automated QA layer that verifies an edit actually landed, and
+applies a small set of conservative fixes.
+
+## A successful tool call is not evidence
+
+-   Every check reads project state back, inspects the exported file, or
+    reports that it could not verify. **ERROR is never folded into PASS**,
+    and a required check that could not execute makes the whole run
+    `FAILED` rather than merely imperfect.
+-   A response carrying `accepted: true` is treated as **no data**, not as
+    a result.
+-   There is deliberately **no final status meaning approved**. The best
+    outcome is `READY_FOR_REVIEW`, which still expects a person to look.
+
+## Thirteen VERIFIED checks, two EXPERIMENTAL, one UNAVAILABLE
+
+-   Verified: sequence resolution, frame rate, timeline gaps and overlaps,
+    duration, audio presence, logo presence and safe zone, graphics, end
+    card, export file, export black frames, export audio levels.
+-   Frame rates are compared as **integer timebases**, never floats.
+    Timeline gaps are measured in **whole frames**.
+-   **Premiere caption tracks are UNAVAILABLE**, not unimplemented.
+    `captionTracks` is `undefined` in ExtendScript, so the check reports
+    SKIPPED with that reason. Only a burned-in overlay clip is detectable.
+
+## Visual QA does what a machine can, and says so
+
+-   Frames come from the **exported file via ffmpeg**; Premiere's own
+    `export_frame` is a documented-unreliable fallback and the report says
+    when it was used.
+-   Black-frame screening is objective and the threshold is **measured**:
+    H.264 limited-range black reads luma 16, a dark shot ~25, ordinary
+    content ~126. The line sits at 20.
+-   Everything subjective comes back as REVIEW **with frame paths
+    attached**. Visual QA never changes the edit.
+
+## Two auto-fixes, both confirmed by reading state back
+
+-   `fix_logo_safe_zone` moves the logo the **smallest distance** that
+    clears the safe zone, never rescaling it, and deliberately does not
+    snap to a canonical position — the documented centred placement and a
+    later upper-right variant disagree, and a fix should not pick a side.
+-   `fix_one_frame_gap` closes a gap of **exactly one frame**, the known
+    frame-maths artefact. Larger gaps may be deliberate and are left alone.
+-   **A fix is only believed if the check then passes.** A tool that
+    reports success while changing nothing is recorded as a failed fix.
+    One attempt per issue, twenty per run; nothing loops.
+
+## New: `get_param_value`
+
+-   A read-only counterpart to `set_param_value`. The stock server could
+    only read a parameter back by writing one first, which is no use for
+    verifying state you did not set.
+
+## Seven QA tools and QA telemetry
+
+-   `run_buildx_qa`, `run_technical_qa`, `run_visual_qa`,
+    `apply_safe_qa_fixes`, `rerun_failed_qa_checks`, `get_last_qa_report`,
+    `get_qa_failures`.
+-   Telemetry gains a `qa_runs` table and QA columns on sessions,
+    recording first-pass and final scores, fixes attempted and successful,
+    and which checks failed. **The first-pass score is the interesting
+    one** — it measures how often the system is right unaided.
+
+------------------------------------------------------------------------
+
+# Version 2.5
+
+Released 2026-08-24.
+
+Adds performance telemetry: how long an edit took, how much of that was
+the machine, and how much of it was a person.
+
+## Total elapsed, automated processing and human active time are three different numbers
+
+-   **They are never derived from one another.** Total elapsed is wall
+    clock. Automated processing is machine work. Human active time is a
+    person prompting, reviewing, approving, correcting or driving
+    Premiere by hand. A 30-minute unattended export is thirty minutes of
+    automated processing and **zero** minutes of human labour.
+-   **Overlapping spans are merged, not summed**, so two operations
+    running at once cannot push a total past the wall clock.
+-   Human time and manual corrections are recorded explicitly, because
+    they cannot be inferred. GUI fallbacks count as human time —
+    clicking is a person working.
+
+## One wrapper instruments all 283 tools
+
+-   `PremiereProTools.executeTool` is the single dispatch point, so tool
+    counts, failures, timeouts, retries and per-operation durations are
+    captured there rather than in hundreds of individual tools.
+-   `executeTool` returns `{success:false}` instead of throwing, so
+    failure is read out of the payload, not just caught. A response
+    carrying the expanded dispatcher's `accepted: true` signature is
+    flagged in the operation's metadata.
+-   A repeat call of a tool that just failed is recognised as a retry
+    without anyone saying so.
+-   **The wrapped call runs outside all telemetry error handling.**
+    Instrumentation can neither change a tool's result nor swallow its
+    failure.
+
+## Local SQLite, no new dependency
+
+-   The store is `mcp/premiere-pro-mcp/data/telemetry.sqlite`, created on
+    first use and gitignored. **Nothing is transmitted anywhere** — no
+    analytics provider, no cloud, no network call.
+-   It uses `node:sqlite`, the runtime's built-in driver, so telemetry
+    adds no npm dependency and no native build. Needs Node 22.5+; below
+    that it reports itself unavailable and every call becomes a no-op.
+-   Operation rows are buffered and flushed in batched transactions, so a
+    busy timeline build does not fsync once per tool call.
+
+## Telemetry is non-critical infrastructure
+
+-   Every entry point is wrapped. A telemetry failure is recorded in
+    `telemetry_errors` where possible, logged to stderr, and swallowed.
+    **A broken telemetry store never interrupts an edit.**
+
+## Fifteen new tools, and a shell reporter
+
+-   `start_telemetry_session`, `end_telemetry_session`,
+    `get_telemetry_status`, `start_workflow_stage`, `end_workflow_stage`,
+    `start_human_activity`, `stop_human_activity`,
+    `record_manual_correction`, `record_qa_check`, `record_gui_fallback`,
+    `set_session_baseline`, `get_performance_report`,
+    `get_recent_performance`, `get_monthly_performance`,
+    `configure_telemetry`.
+-   `npm run telemetry` reads the same store from the shell — last
+    session, last N, or a monthly summary.
+
+## Baselines are optional, and the money figure is capacity, not cash
+
+-   A session can carry `baselineHumanMinutes`. With one, the report adds
+    human time saved and a reduction percentage; **without one the
+    section is omitted rather than guessed.**
+-   `hourlyLaborCost` is configuration, never hardcoded. The result is
+    labelled **estimated labor-equivalent capacity recovered** — hours
+    saved × hourly cost — and it is capacity freed for other work, not
+    cash saved.
+
+------------------------------------------------------------------------
+
 # Version 2.4
 
 Released 2026-08-18.

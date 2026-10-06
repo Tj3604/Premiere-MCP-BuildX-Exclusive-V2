@@ -88,7 +88,25 @@ Checked against the values above. **Three placements currently sit outside the s
 
 ---
 
-## Logo placement — RESOLVED 2026-08-11
+## Logo placement — current standard (2026-10-06)
+
+> **1080 × 1920 shorts: upper-right, Position `[0.79444, 0.16042]` (x858, y308), Scale 31.**
+> Confirmed by Thomas on 2026-10-06, in use since 2026-08-17.
+
+| Edge | Logo | Safe line | Verdict |
+|---|---|---|---|
+| Top | 248px | ≥ 192px | ✅ clear of the Dynamic Island band by 56px |
+| Right | 1013px | ≤ 972px | ⚠️ **41px past — approved exception** |
+
+The right-edge breach is a deliberate brand call, not an error: **do not nudge it.** The QA
+layer carries this as an *approved placement* (`SHORTS_LOGO_PLACEMENT` in
+`mcp/premiere-pro-mcp/src/qa/config.ts`). A logo exactly here passes; anything else that
+crosses a line is still nudged. If a platform's right-hand action rail ever covers it, revisit
+this decision rather than overriding it per edit.
+
+The history below explains how the top edge was settled.
+
+## Logo placement — RESOLVED 2026-08-11 (superseded for 1080 × 1920)
 
 **The reason, stated plainly: on iPhone the Dynamic Island sits at the top of the screen and
 was covering the BuildX logo.** That is what the title-safe band exists to protect against.

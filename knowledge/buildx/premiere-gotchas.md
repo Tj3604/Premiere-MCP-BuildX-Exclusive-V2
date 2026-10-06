@@ -90,7 +90,9 @@ the wrong project. Nothing warns you.
   times in ten. Check the panel before debugging anything else.
 - After restarting Premiere, stopping and restarting the bridge is enough — the extension
   stays installed.
-- A panel that looks stuck can be right-clicked → `Reload`.
+- A panel that looks stuck: close it (≡ menu → Close Panel) and reopen from `Window >
+  Extensions`. There is no right-click `Reload` in this setup. The panel auto-starts the
+  bridge on load (since 2026-10-06), verified live: the log shows "Auto-starting bridge...".
 
 *Startup procedure and the fastest liveness check: `CLAUDE.md`.*
 
@@ -130,6 +132,22 @@ Worse, it cannot be corrected afterwards — `set_sequence_resolution` and
   ways* — source points are floored, timeline positions are rounded. Getting this wrong
   produces a one-frame black gap between every clip, invisible in the tool response and
   obvious on playback. The derivation and the script that handles it are in `CLAUDE.md`.
+
+### Moving and trimming track items from ExtendScript (verified live 2026-10-06)
+
+- **`trackItem.move()` moves only that item. Its linked audio stays put**, so moving a video
+  clip slips sync by the size of the move. `trackItem.getLinkedItems()` works in Premiere
+  2026 and returns the clip *and* its linked items. `move_clip` now moves them together by
+  default, snaps to the frame grid, reads every item back, and rolls back if any one misses.
+- **Neither `end` nor `outPoint` alone trims a clip.** Setting `end` changes the timeline end
+  but not the source out, and setting `outPoint` does the reverse. Each one alone desyncs
+  source from timeline. **Set `outPoint` first and then `end`, by the same amount: that pair
+  is a real trim.** `extend_clip_tail` does exactly this, with linked items.
+- **Premiere does not refuse an out point past the end of the media.** It accepted
+  `out = 180` on a 179-frame file. Prove a handle from the file itself, using ffprobe
+  **stream** durations. The container lies: AAC padding made a 5.972s video read 6.000s.
+- `end` on a still still hangs ExtendScript (see Media and rendering), so `extend_clip_tail`
+  refuses stills by file extension before writing anything.
 
 ---
 

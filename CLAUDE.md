@@ -15,10 +15,13 @@ Premiere tools fail silently-ish (they time out) unless the bridge is live. Ever
 1. Premiere Pro is open with a project loaded.
 2. `Window > Extensions > MCP Bridge (CEP)` panel is open.
 3. Temp directory is `/tmp/premiere-mcp-bridge`.
-4. **Start Bridge** has been clicked (panel shows it running).
+4. The bridge is running. It auto-starts when the panel loads (log: "Auto-starting bridge...");
+   click **Start Bridge** only if someone pressed Stop.
 
 If tool calls hang or time out, this is the cause ~90% of the time. Check the panel first,
-before debugging anything else. Right-click the panel → `Reload` if it looks stuck.
+before debugging anything else. If it looks stuck, close the panel (≡ menu → Close Panel)
+and reopen it from `Window > Extensions` — there is no right-click Reload. The panel
+**auto-starts** on load (since 2026-10-06), so reopening it is enough; no Start click needed.
 
 **The bridge follows whatever project is frontmost in Premiere, and it has silently switched
 projects mid-session.** Call `get_project_info` and confirm the project name before every
@@ -238,14 +241,15 @@ handles both conversions. **Do not hand-compute in/out points.**
 Every BuildX project contains `BuildX Logo WHITE.PNG.png`. Put it on **V3** on every edit,
 without being asked.
 
-For a 1080x1920 sequence: Position `[0.5, 0.1530]`, Scale **40**. **Values for other
-sequence formats, and how to derive a new one, are in `knowledge/buildx/design-system.md`** —
-the normalized position is the same for any 9:16 sequence, only the scale changes.
+For a 1080x1920 short: **upper-right, Position `[0.79444, 0.16042]` (x858, y308), Scale 31.**
+This is the house standard, confirmed by Thomas on 2026-10-06. **Values for other sequence
+formats are in `knowledge/buildx/design-system.md`.**
 
-> **Why 0.1530 and not the old 0.0385417:** the top **192px** of a 9:16 frame is title-safe —
-> on iPhone the Dynamic Island covers it, and it was hiding the logo. `0.1530` at scale 40
-> puts the logo's top edge at 216px, 24px clear of that line. The old `0.0385417` / scale 54
-> put it at **−31px**, cropped off the top of frame entirely. **Do not revert it.**
+> **It crosses the right safe line on purpose.** At scale 31 the logo's right edge lands at
+> x1013, 41px past the 972 edge-safe line; the top edge (248px) clears the 192px title-safe
+> band. Thomas chose this placement, so **do not "correct" it**. QA passes it as an approved
+> placement and never nudges it. The older centred `[0.5, 0.1530]` / scale 40 and the
+> original `0.0385417` / scale 54 (cropped off the top at −31px) are both superseded.
 > See `knowledge/buildx/safe-zones.md`.
 
 Use `set_param_value` (added locally — see below), not `set_clip_position`/`set_clip_scale`,
@@ -261,8 +265,8 @@ an array, clears any existing keyframes so the value is genuinely static, and re
 value read back from Premiere:
 
 ```
-set_param_value {"clipId":"...","componentName":"Motion","paramName":"Position","value":[0.5,0.1530]}
-set_param_value {"clipId":"...","componentName":"Motion","paramName":"Scale","value":40}
+set_param_value {"clipId":"...","componentName":"Motion","paramName":"Position","value":[0.79444444,0.16041667]}
+set_param_value {"clipId":"...","componentName":"Motion","paramName":"Scale","value":31}
 ```
 
 `add_keyframe` was also fixed to `JSON.stringify` its value, so it now handles 2D params too.
@@ -323,6 +327,73 @@ as `foo.png.png`.
 
 The fuller set — sequence creation, bulk delete, markers, export mechanics, and every tool
 behaviour verified by actually calling it — is in `knowledge/buildx/premiere-gotchas.md`.
+
+## Performance telemetry — start a session, mark your own time
+
+Every tool call is timed automatically. What the machine cannot see is **you**, so two
+things have to be said out loud.
+
+**At the start of an edit:**
+
+```
+start_telemetry_session {"projectName":"X1234 (surname) — Shorts",
+                         "workflowType":"podcast_short",
+                         "baselineHumanMinutes":83}
+```
+
+`baselineHumanMinutes` is optional and is how long this used to take by hand. Without it the
+report simply omits the time-saved comparison rather than inventing one.
+
+**Whenever the human is actually working** — reviewing a cut, approving a graphic, fixing
+something in Premiere by hand:
+
+```
+start_human_activity {"reason":"reviewing the rough cut"}
+stop_human_activity  {}
+```
+
+**Automated processing time is not human labour.** A 20-minute export while nobody is
+watching is machine time. If human time is never marked, the report will say the edit cost
+zero human minutes — which is the one number that must not be wrong.
+
+Also record, as they happen: `record_manual_correction` (with the reason),
+`record_gui_fallback` (every computer-use operation — clicking is human time),
+`record_qa_check`, and `start_workflow_stage` / `end_workflow_stage` around
+transcription, analysis, cut_planning, timeline_build, graphics, qa and export.
+
+**At the end:** `end_telemetry_session {"status":"success"}` returns the finished report.
+
+Retries, failures, timeouts and tool counts need no calls — the dispatcher records them.
+Storage is a local SQLite file at `mcp/premiere-pro-mcp/data/telemetry.sqlite`; nothing is
+transmitted anywhere. Telemetry can never break an edit: if it fails, it goes quiet.
+
+Full documentation, including the monthly report and what the ROI figure does and does not
+mean, is in [README.md](README.md#performance-telemetry).
+
+## Automated QA — run it before you say "done"
+
+A tool call returning success is not evidence. Before reporting an edit complete, run QA:
+
+```
+run_buildx_qa {"sequenceId":"...","workflow":"podcast_short","exportPath":"/abs/out.mp4"}
+```
+
+It reads project state back and inspects the exported file, applies only fixes that are
+objective and reversible, re-verifies each one by reading state again, and returns a status of
+`READY_FOR_REVIEW`, `REVIEW_REQUIRED`, `BLOCKED` or `FAILED`. **There is no status meaning
+approved** — the best outcome still expects a human to look.
+
+Do not report "Done." Report what QA found:
+
+> Edit complete. Technical QA: 12/12 passed. Visual QA: 1 review item.
+> Status: REVIEW_REQUIRED.
+
+`run_technical_qa` and `run_visual_qa` never mutate anything. `get_qa_failures` returns just
+what needs attention. Full documentation, including which checks are VERIFIED, EXPERIMENTAL
+and UNAVAILABLE, is in [README.md](README.md#automated-qa).
+
+**Caption tracks cannot be checked at all** — `captionTracks` is `undefined` in ExtendScript.
+QA reports that honestly rather than passing. Confirm captions visually.
 
 ## Useful MCP tools
 

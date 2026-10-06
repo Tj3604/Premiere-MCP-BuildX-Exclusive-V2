@@ -617,5 +617,10 @@
     window.clearLog = function() { if (window.bridge) window.bridge.clearLog(); };
     document.addEventListener('DOMContentLoaded', function() {
         window.bridge = new MCPPremiereBridge();
+        // Auto-start: begin watching the temp directory as soon as the panel loads,
+        // so opening Premiere (with this panel docked) is all it takes. Stop Bridge
+        // still pauses it for the session.
+        window.bridge.log('Auto-starting bridge...', 'info');
+        window.bridge.startBridge();
     });
 })();

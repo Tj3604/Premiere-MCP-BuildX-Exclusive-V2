@@ -13,7 +13,8 @@
     "uninstall:mac": "bash ./scripts/uninstall-macos.sh",
     "test": "jest",
     "lint": "eslint src --ext .ts",
-    "format": "prettier --write src/**/*.ts"
+    "format": "prettier --write src/**/*.ts",
+    "telemetry": "node scripts/telemetry-report.mjs"
   },
   "keywords": [
     "mcp",

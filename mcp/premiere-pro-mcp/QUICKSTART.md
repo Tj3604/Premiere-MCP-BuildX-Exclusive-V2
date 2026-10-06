@@ -79,7 +79,7 @@ That sweep creates disposable `Sweep ...` sequences so the live bridge is actual
 - no project is open
 - the CEP panel is not started
 - the temp directory in the panel is not `/tmp/premiere-mcp-bridge`
-- the panel needs a right-click `Reload` after bridge updates
+- the panel needs closing and reopening (≡ menu → Close Panel, then `Window > Extensions`) after bridge updates — there is no right-click `Reload`
 - diagnostics are available from the CEP panel via `Run Diagnostics`
 
 ### `codex mcp add` fails

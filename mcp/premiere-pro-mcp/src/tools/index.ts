@@ -18,6 +18,9 @@ import {
   waitForRenderComplete,
 } from '../utils/compress.js';
 import { executeExpandedTool, getExpandedTools, isExpandedTool } from './expanded.js';
+import { telemetry } from '../telemetry/telemetry.js';
+import { executeTelemetryTool, getTelemetryTools, isTelemetryTool } from '../telemetry/tools.js';
+import { executeQaTool, getQaTools, isQaTool } from '../qa/tools.js';
 
 export interface MCPTool {
   name: string;
@@ -347,11 +350,28 @@ export class PremiereProTools {
       },
       {
         name: 'move_clip',
-        description: 'Moves a clip to a different position on the timeline.',
+        description: 'Moves a clip to a different position on the same track. By default its linked track items (e.g. the audio of a video clip) move with it, as dragging does in Premiere, so A/V sync is kept. The target time is snapped to the sequence frame grid, every moved item is read back, and if any item fails to land the whole move is rolled back and reported as a failure.',
         inputSchema: z.object({
           clipId: z.string().describe('The ID of the clip to move'),
-          newTime: z.number().describe('The new time position in seconds'),
-          newTrackIndex: z.number().optional().describe('The new track index (if moving to different track)')
+          newTime: z.number().describe('The new time position in seconds (snapped to the nearest sequence frame)'),
+          sequenceId: z.string().optional().describe('Optional sequence ID to search. If omitted, searches the active sequence first, then all sequences.'),
+          includeLinked: z.boolean().optional().describe('Move linked track items (the clip\'s audio/video counterpart) by the same amount. Default true — set false only to deliberately slip sync.'),
+          newTrackIndex: z.number().optional().describe('Not supported: clips cannot change track via ExtendScript. Ignored.')
+        })
+      },
+      {
+        name: 'extend_clip_tail',
+        description: 'Lengthens a clip by whole frames at its tail, into empty timeline space, by trimming its source out point and its timeline end together (a real trim, not a stretch). Linked items (the clip\'s audio) are extended with it by default so sync holds. Refuses stills (writing end on a still hangs ExtendScript), nested sequences, and any extension that would run into another clip; every item is read back and the whole edit rolled back if any item does not land. Premiere does NOT refuse an out point past the end of the media, so pass maxOutPointSeconds (per track type, from ffprobe stream durations) to prove a handle exists. Use dryRun to read each item\'s media path and in/out points without writing.',
+        inputSchema: z.object({
+          clipId: z.string().describe('The ID of the clip to extend'),
+          frames: z.number().int().min(1).max(10).describe('Whole sequence frames to add at the tail'),
+          sequenceId: z.string().optional().describe('Optional sequence ID to search. If omitted, searches the active sequence first, then all sequences.'),
+          includeLinked: z.boolean().optional().describe('Extend linked track items too. Default true.'),
+          dryRun: z.boolean().optional().describe('Report each item (media path, in/out, start/end) without writing anything.'),
+          maxOutPointSeconds: z.object({
+            video: z.number().optional(),
+            audio: z.number().optional()
+          }).optional().describe('Refuse if a new source out point would pass this, per track type, in seconds — the media\'s real stream duration.')
         })
       },
       {
@@ -900,6 +920,15 @@ export class PremiereProTools {
         })
       },
       {
+        name: 'get_param_value',
+        description: 'Reads a clip parameter WITHOUT modifying it — the read-only counterpart to set_param_value. Use it to verify that a position or scale actually landed, rather than trusting the write call that set it.',
+        inputSchema: z.object({
+          clipId: z.string().describe('The ID of the clip'),
+          componentName: z.string().describe('The display name of the component (e.g., "Motion")'),
+          paramName: z.string().describe('The display name of the parameter (e.g., "Position", "Scale")')
+        })
+      },
+      {
         name: 'remove_keyframe',
         description: 'Removes a keyframe from a clip component parameter at a specific time.',
         inputSchema: z.object({
@@ -1227,13 +1256,41 @@ export class PremiereProTools {
 
   getAvailableTools(): MCPTool[] {
     const localTools = this.getLocalTools();
+    const telemetryTools = getTelemetryTools() as MCPTool[];
+    const qaTools = getQaTools() as MCPTool[];
+    const claimed = new Set([
+      ...localTools.map((tool) => tool.name),
+      ...telemetryTools.map((tool) => tool.name),
+      ...qaTools.map((tool) => tool.name)
+    ]);
     return [
       ...localTools,
-      ...getExpandedTools(new Set(localTools.map((tool) => tool.name)))
+      ...telemetryTools,
+      ...qaTools,
+      ...getExpandedTools(claimed)
     ];
   }
 
+  /**
+   * Single entry point for every tool call, and therefore the one place
+   * telemetry needs to hook. The wrapped dispatch runs outside all telemetry
+   * error handling, so instrumentation can neither change a result nor swallow
+   * a failure. Telemetry's own tools are not instrumented — recording a manual
+   * correction is not a Premiere operation.
+   */
   async executeTool(name: string, args: Record<string, any>): Promise<any> {
+    if (isTelemetryTool(name)) {
+      return await this.dispatchTool(name, args);
+    }
+    if (isQaTool(name)) {
+      // A QA pass is a composite of many tool calls, each instrumented on its own
+      // way through executeTool. Timing the wrapper as well would double count.
+      return await this.dispatchTool(name, args);
+    }
+    return await telemetry.instrumentToolCall(name, () => this.dispatchTool(name, args), args);
+  }
+
+  private async dispatchTool(name: string, args: Record<string, any>): Promise<any> {
     const tool = this.getAvailableTools().find(t => t.name === name);
     if (!tool) {
       return {
@@ -1255,6 +1312,19 @@ export class PremiereProTools {
     }
 
     this.logger.info(`Executing tool: ${name} with args:`, args);
+
+    if (isTelemetryTool(name)) {
+      return executeTelemetryTool(name, args);
+    }
+
+    if (isQaTool(name)) {
+      // QA reads Premiere back through the public tool surface, so every read it
+      // performs is subject to the same validation and instrumentation as any
+      // other call — including the accepted:true stub detection.
+      return await executeQaTool(name, args, (toolName, toolArgs) =>
+        this.executeTool(toolName, toolArgs as Record<string, any>)
+      );
+    }
 
     const localToolNames = new Set(this.getLocalTools().map((localTool) => localTool.name));
     if (!localToolNames.has(name) && isExpandedTool(name)) {
@@ -1320,8 +1390,10 @@ export class PremiereProTools {
           return await this.addToTimelineBatch(args.sequenceId, args.clips);
         case 'remove_from_timeline':
           return await this.removeFromTimeline(args.clipId, args.sequenceId, args.deleteMode);
+        case 'extend_clip_tail':
+          return await this.extendClipTail(args.clipId, args.frames, args.sequenceId, args.includeLinked, args.dryRun, args.maxOutPointSeconds);
         case 'move_clip':
-          return await this.moveClip(args.clipId, args.newTime, args.newTrackIndex);
+          return await this.moveClip(args.clipId, args.newTime, args.sequenceId, args.includeLinked);
         case 'trim_clip':
           return await this.trimClip(args.clipId, args.inPoint, args.outPoint, args.duration);
         case 'split_clip':
@@ -1483,6 +1555,8 @@ export class PremiereProTools {
           return await this.addKeyframe(args.clipId, args.componentName, args.paramName, args.time, args.value);
         case 'set_param_value':
           return await this.setParamValue(args.clipId, args.componentName, args.paramName, args.value);
+        case 'get_param_value':
+          return await this.getParamValue(args.clipId, args.componentName, args.paramName);
         case 'remove_keyframe':
           return await this.removeKeyframe(args.clipId, args.componentName, args.paramName, args.time);
         case 'get_keyframes':
@@ -2804,28 +2878,262 @@ export class PremiereProTools {
     return await this.bridge.executeScript(script);
   }
 
-  private async moveClip(clipId: string, newTime: number, _newTrackIndex?: number): Promise<any> {
+  private async moveClip(clipId: string, newTime: number, sequenceId?: string, includeLinked?: boolean): Promise<any> {
     const script = `
       try {
-        var info = __findClip("${clipId}");
+        var TICKS_PER_SECOND = 254016000000;
+        var info = __findClip(${JSON.stringify(clipId)}, ${sequenceId ? JSON.stringify(sequenceId) : 'null'});
         if (!info) return JSON.stringify({ success: false, error: "Clip not found" });
-        var clip = info.clip;
-        var oldTime = clip.start.seconds;
-        var shiftAmount = ${newTime} - oldTime;
-        clip.move(shiftAmount);
+        var seq = info.sequence;
+        var frameTicks = Number(seq.timebase);
+        if (!(frameTicks > 0)) return JSON.stringify({ success: false, error: "Sequence has no usable timebase" });
+
+        // Snap the target to the frame grid so the move never lands between frames.
+        var oldTicks = Number(info.clip.start.ticks);
+        var targetTicks = Math.round((${Number(newTime)} * TICKS_PER_SECOND) / frameTicks) * frameTicks;
+        var shiftTicks = targetTicks - oldTicks;
+
+        // The clip itself first, then every linked item (getLinkedItems includes the clip).
+        var items = [info.clip];
+        if (${includeLinked === false ? 'false' : 'true'}) {
+          var linked = null;
+          try { linked = info.clip.getLinkedItems(); } catch (linkError) { linked = null; }
+          if (linked) {
+            for (var l = 0; l < linked.numItems; l++) {
+              if (linked[l].nodeId !== info.clip.nodeId) items.push(linked[l]);
+            }
+          }
+        }
+
+        var records = [];
+        for (var i = 0; i < items.length; i++) {
+          var located = __findClipInSequence(seq, items[i].nodeId);
+          records.push({
+            item: items[i],
+            clipId: items[i].nodeId,
+            name: items[i].name,
+            trackType: located ? located.trackType : "unknown",
+            trackIndex: located ? located.trackIndex : -1,
+            oldTicks: Number(items[i].start.ticks)
+          });
+        }
+
+        function shiftItem(item, ticks) {
+          var t = new Time();
+          t.ticks = String(ticks);
+          item.move(t);
+        }
+
+        if (shiftTicks !== 0) {
+          for (var m = 0; m < records.length; m++) shiftItem(records[m].item, shiftTicks);
+        }
+
+        // Read every item back by nodeId. Linked items keep their relative offset,
+        // so each must have moved by exactly shiftTicks.
+        var misses = [];
+        for (var r = 0; r < records.length; r++) {
+          var back = __findClipInSequence(seq, records[r].clipId);
+          records[r].newTicks = back ? Number(back.clip.start.ticks) : null;
+          if (records[r].newTicks === null || records[r].newTicks - records[r].oldTicks !== shiftTicks) {
+            misses.push(records[r].name + " (" + records[r].trackType + ")");
+          }
+        }
+
+        if (misses.length > 0) {
+          // Undo whatever did move, so a half-applied move never leaves sync broken.
+          for (var u = 0; u < records.length; u++) {
+            if (records[u].newTicks !== null && records[u].newTicks !== records[u].oldTicks) {
+              shiftItem(records[u].item, records[u].oldTicks - records[u].newTicks);
+            }
+          }
+          return JSON.stringify({ success: false, error: "Move did not land for: " + misses.join(", ") + ". Rolled back." });
+        }
+
+        var moved = [];
+        for (var o = 0; o < records.length; o++) {
+          moved.push({
+            clipId: records[o].clipId,
+            name: records[o].name,
+            trackType: records[o].trackType,
+            trackIndex: records[o].trackIndex,
+            oldTime: records[o].oldTicks / TICKS_PER_SECOND,
+            newTime: records[o].newTicks / TICKS_PER_SECOND
+          });
+        }
         return JSON.stringify({
           success: true,
-          message: "Clip moved successfully",
-          clipId: "${clipId}",
-          oldTime: oldTime,
-          newTime: ${newTime},
-          trackIndex: info.trackIndex
+          message: "Clip moved" + (moved.length > 1 ? " with " + (moved.length - 1) + " linked item(s)" : ""),
+          clipId: ${JSON.stringify(clipId)},
+          shiftSeconds: shiftTicks / TICKS_PER_SECOND,
+          oldTime: records[0].oldTicks / TICKS_PER_SECOND,
+          newTime: records[0].newTicks / TICKS_PER_SECOND,
+          trackIndex: info.trackIndex,
+          moved: moved
         });
       } catch (e) {
         return JSON.stringify({
           success: false,
           error: e.toString()
         });
+      }
+    `;
+
+    return await this.bridge.executeScript(script);
+  }
+
+  private async extendClipTail(
+    clipId: string,
+    frames: number,
+    sequenceId?: string,
+    includeLinked?: boolean,
+    dryRun?: boolean,
+    maxOutPointSeconds?: { video?: number; audio?: number }
+  ): Promise<any> {
+    const frameCount = Math.floor(Number(frames));
+    if (!(frameCount >= 1 && frameCount <= 10)) {
+      return { success: false, error: 'frames must be a whole number from 1 to 10' };
+    }
+    const maxVideo = typeof maxOutPointSeconds?.video === 'number' ? maxOutPointSeconds.video : null;
+    const maxAudio = typeof maxOutPointSeconds?.audio === 'number' ? maxOutPointSeconds.audio : null;
+    const script = `
+      try {
+        var TICKS_PER_SECOND = 254016000000;
+        var STILL = /\\.(png|jpe?g|tiff?|psd|gif|bmp|heic|webp|ai|eps|dpx|exr|tga)$/i;
+        var info = __findClip(${JSON.stringify(clipId)}, ${sequenceId ? JSON.stringify(sequenceId) : 'null'});
+        if (!info) return JSON.stringify({ success: false, error: "Clip not found" });
+        var seq = info.sequence;
+        var frameTicks = Number(seq.timebase);
+        if (!(frameTicks > 0)) return JSON.stringify({ success: false, error: "Sequence has no usable timebase" });
+        var deltaTicks = ${frameCount} * frameTicks;
+        var maxOut = { video: ${maxVideo === null ? 'null' : maxVideo}, audio: ${maxAudio === null ? 'null' : maxAudio} };
+
+        var items = [info.clip];
+        if (${includeLinked === false ? 'false' : 'true'}) {
+          var linked = null;
+          try { linked = info.clip.getLinkedItems(); } catch (linkError) { linked = null; }
+          if (linked) {
+            for (var l = 0; l < linked.numItems; l++) {
+              if (linked[l].nodeId !== info.clip.nodeId) items.push(linked[l]);
+            }
+          }
+        }
+
+        function describe(item, located) {
+          var path = "";
+          var nested = false;
+          try { path = item.projectItem ? String(item.projectItem.getMediaPath() || "") : ""; } catch (pathError) { path = ""; }
+          try { nested = item.projectItem && item.projectItem.isSequence ? !!item.projectItem.isSequence() : false; } catch (seqError) { nested = false; }
+          return {
+            item: item,
+            track: located ? located.track : null,
+            clipId: item.nodeId,
+            name: item.name,
+            trackType: located ? located.trackType : "unknown",
+            trackIndex: located ? located.trackIndex : -1,
+            mediaPath: path,
+            isStill: STILL.test(path),
+            isNested: nested,
+            inTicks: Number(item.inPoint.ticks),
+            outTicks: Number(item.outPoint.ticks),
+            startTicks: Number(item.start.ticks),
+            endTicks: Number(item.end.ticks)
+          };
+        }
+        function publish(record) {
+          return {
+            clipId: record.clipId,
+            name: record.name,
+            trackType: record.trackType,
+            trackIndex: record.trackIndex,
+            mediaPath: record.mediaPath,
+            isStill: record.isStill,
+            inPoint: record.inTicks / TICKS_PER_SECOND,
+            outPoint: record.outTicks / TICKS_PER_SECOND,
+            startTime: record.startTicks / TICKS_PER_SECOND,
+            endTime: record.endTicks / TICKS_PER_SECOND
+          };
+        }
+
+        var records = [];
+        for (var i = 0; i < items.length; i++) {
+          records.push(describe(items[i], __findClipInSequence(seq, items[i].nodeId)));
+        }
+        var before = [];
+        for (var b = 0; b < records.length; b++) before.push(publish(records[b]));
+        if (${dryRun ? 'true' : 'false'}) return JSON.stringify({ success: true, dryRun: true, items: before });
+
+        // Refuse anything that is not a plain, roomy, in-media extension, before writing.
+        var problems = [];
+        for (var p = 0; p < records.length; p++) {
+          var rec = records[p];
+          if (rec.isStill) problems.push(rec.name + " is a still (writing end on a still hangs ExtendScript)");
+          if (rec.isNested) problems.push(rec.name + " is a nested sequence");
+          var limit = rec.trackType === "audio" ? maxOut.audio : maxOut.video;
+          if (limit !== null && (rec.outTicks + deltaTicks) / TICKS_PER_SECOND > limit + 0.0005) {
+            problems.push(rec.name + " (" + rec.trackType + ") has no handle: new out " + ((rec.outTicks + deltaTicks) / TICKS_PER_SECOND).toFixed(4) + "s passes media end " + limit.toFixed(4) + "s");
+          }
+          if (rec.track) {
+            var newEnd = rec.endTicks + deltaTicks;
+            for (var c = 0; c < rec.track.clips.numItems; c++) {
+              var other = rec.track.clips[c];
+              if (other.nodeId === rec.clipId) continue;
+              var otherStart = Number(other.start.ticks);
+              var otherEnd = Number(other.end.ticks);
+              if (otherStart < newEnd && otherEnd > rec.endTicks) {
+                problems.push(rec.name + " (" + rec.trackType + ") would run into " + other.name);
+              }
+            }
+          }
+        }
+        if (problems.length > 0) {
+          return JSON.stringify({ success: false, error: problems.join("; "), items: before });
+        }
+
+        function setTicks(item, field, ticks) {
+          var t = new Time();
+          t.ticks = String(ticks);
+          item[field] = t;
+        }
+
+        // Out point first, then end: verified live 2026-10-06 that this pair is a
+        // true trim. Either setter alone desyncs source and timeline.
+        for (var w = 0; w < records.length; w++) {
+          setTicks(records[w].item, "outPoint", records[w].outTicks + deltaTicks);
+          setTicks(records[w].item, "end", records[w].endTicks + deltaTicks);
+        }
+
+        var misses = [];
+        var after = [];
+        for (var r = 0; r < records.length; r++) {
+          var back = __findClipInSequence(seq, records[r].clipId);
+          if (!back) { misses.push(records[r].name + " (not found)"); continue; }
+          var now = describe(back.clip, back);
+          after.push(publish(now));
+          var tolerance = frameTicks / 2;
+          if (Math.abs(now.endTicks - (records[r].endTicks + deltaTicks)) > tolerance ||
+              Math.abs(now.outTicks - (records[r].outTicks + deltaTicks)) > tolerance ||
+              Math.abs(now.startTicks - records[r].startTicks) > tolerance ||
+              Math.abs((now.endTicks - now.startTicks) - (now.outTicks - now.inTicks)) > tolerance) {
+            misses.push(records[r].name + " (" + records[r].trackType + ")");
+          }
+        }
+
+        if (misses.length > 0) {
+          for (var u = 0; u < records.length; u++) {
+            setTicks(records[u].item, "end", records[u].endTicks);
+            setTicks(records[u].item, "outPoint", records[u].outTicks);
+          }
+          return JSON.stringify({ success: false, error: "Extension did not land for: " + misses.join(", ") + ". Rolled back.", items: before });
+        }
+
+        return JSON.stringify({
+          success: true,
+          message: "Extended by ${frameCount} frame(s)" + (records.length > 1 ? " with " + (records.length - 1) + " linked item(s)" : ""),
+          items: before,
+          after: after
+        });
+      } catch (e) {
+        return JSON.stringify({ success: false, error: e.toString() });
       }
     `;
 
@@ -5624,6 +5932,47 @@ export class PremiereProTools {
           paramName: ${JSON.stringify(paramName)},
           time: ${time},
           value: ${JSON.stringify(value)}
+        });
+      } catch (e) {
+        return JSON.stringify({ success: false, error: e.toString() });
+      }
+    `;
+    return await this.bridge.executeScript(script);
+  }
+
+  /**
+   * Read-only parameter access. Added because the stock server has no way to read
+   * a 2D parameter back: set_param_value returns the value it just wrote, which
+   * is no use for verifying state you did not set. QA needs to confirm where the
+   * logo actually sits without moving it first.
+   */
+  private async getParamValue(clipId: string, componentName: string, paramName: string): Promise<any> {
+    const script = `
+      try {
+        var info = __findClip(${JSON.stringify(clipId)});
+        if (!info) return JSON.stringify({ success: false, error: "Clip not found" });
+        var clip = info.clip;
+        for (var i = 0; i < clip.components.numItems; i++) {
+          var comp = clip.components[i];
+          if (comp.displayName === ${JSON.stringify(componentName)}) {
+            for (var j = 0; j < comp.properties.numItems; j++) {
+              var prop = comp.properties[j];
+              if (prop.displayName === ${JSON.stringify(paramName)}) {
+                return JSON.stringify({
+                  success: true,
+                  clipId: ${JSON.stringify(clipId)},
+                  componentName: ${JSON.stringify(componentName)},
+                  paramName: ${JSON.stringify(paramName)},
+                  value: prop.getValue(),
+                  isTimeVarying: prop.isTimeVarying()
+                });
+              }
+            }
+          }
+        }
+        return JSON.stringify({
+          success: false,
+          error: "Parameter " + ${JSON.stringify(paramName)} + " not found in component " + ${JSON.stringify(componentName)}
         });
       } catch (e) {
         return JSON.stringify({ success: false, error: e.toString() });

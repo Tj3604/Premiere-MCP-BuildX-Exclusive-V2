@@ -82,6 +82,15 @@ hooks/*.mov
 # The tracked template is .mcp.json.example.
 .mcp.json
 
+# Performance telemetry. The SQLite store holds project names and per-session
+# timings for this machine only; it is never shared and never leaves the box.
+# telemetry.config.json holds the local hourly labour cost.
+mcp/premiere-pro-mcp/data/
+
+# Live-test sandboxes (test media, scratch projects) and hand-made backups.
+sandbox/
+*.bak-*
+
 # -------------------------------------------------------------------------
 # .gitignore does NOT untrack files that are already committed. To stop
 # tracking something that is already in the repo:
