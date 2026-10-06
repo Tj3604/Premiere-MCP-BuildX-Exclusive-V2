@@ -1,10 +1,11 @@
 /**
  * Silence and filler cut list from WhisperX word timings.
  *
- * Produces suggestions only — nothing here touches Premiere. Each suggestion is a
- * source range to remove, marked `cut` (safe to take) or `review` (often a real
- * word: "like", "you know"). Approved suggestions become keep-ranges for
- * scripts/plan-cut.mjs, which owns all frame math.
+ * Optional tightening pass — the first build always uses the full take. Nothing
+ * here touches Premiere. Each suggestion is a source range to remove, marked `cut`
+ * (safe to take) or `review` (often a real word: "like", "you know"). Every
+ * suggestion starts unapproved; only the ones someone approves become
+ * keep-ranges for scripts/plan-cut.mjs, which owns all frame math.
  *
  * Whisper tends to drop "um"/"uh" from its text, so a hesitation usually shows up
  * here as a pause rather than a filler. Both end up in the list.
@@ -32,7 +33,7 @@ export interface CutSuggestion {
   reason: string;
   before: string;
   after: string;
-  /** Pre-set from action: cut = true, review = false. Edit before applying. */
+  /** Always starts false — cuts are opt-in. `action` is only the recommendation. */
   approved: boolean;
 }
 
@@ -158,7 +159,7 @@ export function findCuts(words: TimedWord[], options: CutOptions = {}): CutSugge
       start: round(r.start),
       end: round(r.end),
       seconds: round(r.end - r.start),
-      approved: r.action === 'cut'
+      approved: false
     }));
 }
 
@@ -211,13 +212,13 @@ function tc(seconds: number): string {
 /** The human review sheet. */
 export function cutsMarkdown(name: string, cuts: CutSuggestion[], summary: CutSummary): string {
   const lines = [
-    `> Cut list for ${name}: pauses and fillers found in the WhisperX word timings. Suggestions only — nothing has been cut.`,
+    `> Cut list for ${name}: pauses and fillers found in the WhisperX word timings. Optional — nothing is approved or cut until you choose.`,
     '',
     `# Cuts — ${name}`,
     '',
     `${summary.cut} to cut (${summary.cutSeconds}s), ${summary.review} to review (${summary.reviewSeconds}s), from ${summary.sourceSeconds}s of source.`,
     '',
-    'Set `approved` in the matching .cuts.json (or pass --approve / --reject ids), then run find-cuts with --apply.',
+    'Nothing is approved yet. Pick cuts with `--apply <name>.cuts.json --approve 3,4` (or `--approve cuts` for every row marked cut), or set `approved` in the .cuts.json.',
     '',
     '| # | Action | At | Length | Why | Context |',
     '|---|---|---|---|---|---|'

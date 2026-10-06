@@ -64,7 +64,7 @@ export async function createCutList(
   const summary = summarize(cuts, durationSeconds);
   const base = cutListBase(transcriptPath);
   const list: CutListFile = {
-    description: 'Silence/filler cut suggestions from WhisperX word timings. Set approved true/false per cut, then run scripts/find-cuts.mjs --apply.',
+    description: 'Optional silence/filler cut suggestions from WhisperX word timings. All start unapproved; set approved true on the ones to take, then run scripts/find-cuts.mjs --apply.',
     transcriptPath,
     durationSeconds,
     options: {
@@ -97,14 +97,18 @@ export interface ApplyResult {
 /** Applies approve/reject overrides, then writes <name>.keeps.json for plan-cut. */
 export async function applyCutList(
   cutsJsonPath: string,
-  { approve = [], reject = [] }: { approve?: number[]; reject?: number[] } = {}
+  {
+    approve = [],
+    reject = [],
+    approveCuts = false
+  }: { approve?: number[]; reject?: number[]; /** Take every suggestion whose action is `cut`. */ approveCuts?: boolean } = {}
 ): Promise<ApplyResult> {
   const list: CutListFile = JSON.parse(await readFile(cutsJsonPath, 'utf8'));
   const ids = new Set(list.cuts.map((c) => c.id));
   for (const id of [...approve, ...reject]) if (!ids.has(id)) throw new Error(`No cut #${id} in ${cutsJsonPath}`);
   const cuts = list.cuts.map((c) => ({
     ...c,
-    approved: approve.includes(c.id) ? true : reject.includes(c.id) ? false : c.approved
+    approved: reject.includes(c.id) ? false : approve.includes(c.id) || (approveCuts && c.action === 'cut') ? true : c.approved
   }));
   const keeps = keepRanges(cuts, list.durationSeconds);
   const keptSeconds = keeps.reduce((a, k) => a + (k.end - k.start), 0);

@@ -2,16 +2,22 @@
 /**
  * Silence and filler cut list from a WhisperX transcript — review first, cut later.
  *
+ * Optional. The first build always uses the full take; this is a tightening pass
+ * run only when asked, and nothing is cut unless you approve it.
+ *
  * 1. Find:   node scripts/find-cuts.mjs transcripts/<name>.words.json \
  *                 [--min-pause 0.6] [--keep-pause 0.15] [--media <file> | --duration <s>] [--force]
- *            Writes transcripts/<name>.cuts.json + <name>.cuts.md. Pauses and um/uh are
- *            pre-approved; "like" / "you know" are marked review and NOT approved.
+ *            Writes transcripts/<name>.cuts.json + <name>.cuts.md. Every suggestion
+ *            starts unapproved. Pauses and um/uh are marked `cut` (recommended);
+ *            "like" / "you know" are marked `review`.
  *            Never overwrites an existing .cuts.json (edited approvals) without --force.
  *
- * 2. Review: read <name>.cuts.md. Flip `approved` in <name>.cuts.json, or use step 3's flags.
+ * 2. Review: read <name>.cuts.md. Set `approved` in <name>.cuts.json, or use step 3's flags.
  *
  * 3. Apply:  node scripts/find-cuts.mjs --apply transcripts/<name>.cuts.json \
- *                 [--approve 4,9] [--reject 2]
+ *                 [--approve 4,9 | --approve cuts | --approve cuts,9] [--reject 2]
+ *            `cuts` takes every row marked cut. With no --approve and nothing set
+ *            in the file, the keep list is the whole take.
  *            Writes <name>.keeps.json and prints the plan-cut command. Nothing
  *            touches Premiere until you run plan-cut and place its calls.
  *
@@ -30,7 +36,7 @@ function ids(value) {
   return String(value ?? '')
     .split(',')
     .map((s) => s.trim())
-    .filter(Boolean)
+    .filter((s) => s && s !== 'cuts')
     .map((s) => {
       const n = Number(s);
       if (!Number.isInteger(n)) throw new Error(`Not a cut id: ${s}`);
@@ -47,7 +53,11 @@ function parseArgs(argv) {
     else if (a === '--keep-pause') args.keepPause = Number(argv[++i]);
     else if (a === '--duration') args.duration = Number(argv[++i]);
     else if (a === '--media') args.media = argv[++i];
-    else if (a === '--approve') args.approve = ids(argv[++i]);
+    else if (a === '--approve') {
+      const v = argv[++i];
+      args.approve = ids(v);
+      args.approveCuts = String(v).split(',').map((s) => s.trim()).includes('cuts');
+    }
     else if (a === '--reject') args.reject = ids(argv[++i]);
     else if (a === '--force') args.force = true;
     else if (a.startsWith('--')) throw new Error(`Unknown option ${a}`);
@@ -71,7 +81,11 @@ async function main() {
   const files = await import(pathToFileURL(DIST).href);
 
   if (args.apply) {
-    const result = await files.applyCutList(path.resolve(args.apply), { approve: args.approve, reject: args.reject });
+    const result = await files.applyCutList(path.resolve(args.apply), {
+      approve: args.approve,
+      reject: args.reject,
+      approveCuts: args.approveCuts
+    });
     const transcript = args.apply.replace(/\.cuts\.json$/i, '.words.json');
     console.log(
       JSON.stringify(
@@ -79,6 +93,7 @@ async function main() {
           ok: true,
           keepsPath: result.keepsPath,
           approvedCuts: result.approved,
+          note: result.approved.length === 0 ? 'No cuts approved — the keep list is the whole take.' : undefined,
           removedSeconds: result.removedSeconds,
           keptSeconds: result.keptSeconds,
           keepRanges: result.keeps.length,

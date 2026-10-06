@@ -16,7 +16,7 @@ export const EDIT_TOOLS: EditTool[] = [
   {
     name: 'find_cuts',
     description:
-      'Silence and filler cut list from a WhisperX .words.json: pauses longer than minPauseSeconds and fillers (um/uh marked cut; "like"/"you know" marked review, since they are often real words). Writes <name>.cuts.json + <name>.cuts.md beside the transcript for review and never touches Premiere. Approved cuts become plan-cut keep-ranges via `node scripts/find-cuts.mjs --apply <name>.cuts.json`.',
+      'OPTIONAL tightening pass — only run when the user asks for silence/filler removal. The first build always uses the full take; never apply these cuts by default. Lists pauses longer than minPauseSeconds and fillers (um/uh recommended cut; "like"/"you know" review, since they are often real words) from a WhisperX .words.json. Writes <name>.cuts.json + <name>.cuts.md beside the transcript with every suggestion unapproved, and never touches Premiere. The user picks cuts with `node scripts/find-cuts.mjs --apply <name>.cuts.json --approve <ids|cuts>`, which writes plan-cut keep-ranges.',
     inputSchema: z.object({
       transcriptPath: z.string().min(1).describe('Absolute path to the WhisperX <name>.words.json.'),
       minPauseSeconds: z.number().min(0.1).max(10).optional().describe('Pauses longer than this are cut. Default 0.6.'),

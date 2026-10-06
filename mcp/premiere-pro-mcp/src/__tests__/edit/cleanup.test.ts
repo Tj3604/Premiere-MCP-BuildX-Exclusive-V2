@@ -28,15 +28,20 @@ describe('findCuts', () => {
 
   it('marks um as cut and eats the gaps either side, leaving a breath', () => {
     const um = cuts.find((c) => c.text === 'um,')!;
-    expect(um).toMatchObject({ kind: 'filler', action: 'cut', approved: true });
+    expect(um).toMatchObject({ kind: 'filler', action: 'cut', approved: false });
     expect(um.start).toBeCloseTo(0.75); // So, ends 0.7 + half of 0.1
     expect(um.end).toBeCloseTo(1.25); // the starts 1.3 - 0.05
   });
 
-  it('marks like and you know as review, not approved', () => {
+  it('marks like and you know as review', () => {
     const review = cuts.filter((c) => c.action === 'review').map((c) => c.text);
     expect(review).toEqual(['like', 'you know.']);
-    expect(cuts.filter((c) => c.action === 'review').every((c) => !c.approved)).toBe(true);
+  });
+
+  it('approves nothing by default — cuts are opt-in', () => {
+    expect(cuts.length).toBeGreaterThan(0);
+    expect(cuts.every((c) => !c.approved)).toBe(true);
+    expect(keepRanges(cuts, 4.8)).toEqual([{ start: 0, end: 4.8 }]);
   });
 
   it('cuts a long pause down to the breath and ignores short gaps', () => {
@@ -65,7 +70,10 @@ describe('findCuts', () => {
 
 describe('keepRanges', () => {
   it('is the source minus approved cuts only', () => {
-    const cuts = findCuts(WORDS, { minPauseSeconds: 0.6, keepPauseSeconds: 0.1 });
+    const cuts = findCuts(WORDS, { minPauseSeconds: 0.6, keepPauseSeconds: 0.1 }).map((c) => ({
+      ...c,
+      approved: c.action === 'cut'
+    }));
     const keeps = keepRanges(cuts, 4.8);
     expect(keeps).toEqual([
       { start: 0, end: 0.75 },
@@ -104,9 +112,16 @@ describe('cut list files', () => {
     const second = await createCutList(transcript);
     expect(second.written).toBe(false);
 
+    const untouched = await applyCutList(first.cutsJson);
+    expect(untouched.approved).toEqual([]);
+    expect(untouched.keeps).toEqual([{ start: 0, end: 4.8 }]);
+
+    const recommended = await applyCutList(first.cutsJson, { approveCuts: true });
+    expect(recommended.approved).toEqual(first.list.cuts.filter((c) => c.action === 'cut').map((c) => c.id));
+
     const likeId = first.list.cuts.find((c) => c.text === 'like')!.id;
     const umId = first.list.cuts.find((c) => c.text === 'um,')!.id;
-    const applied = await applyCutList(first.cutsJson, { approve: [likeId], reject: [umId] });
+    const applied = await applyCutList(first.cutsJson, { approve: [likeId], reject: [umId], approveCuts: true });
     expect(applied.approved).toContain(likeId);
     expect(applied.approved).not.toContain(umId);
     expect(JSON.parse(await readFile(applied.keepsPath, 'utf8'))).toEqual(applied.keeps);
