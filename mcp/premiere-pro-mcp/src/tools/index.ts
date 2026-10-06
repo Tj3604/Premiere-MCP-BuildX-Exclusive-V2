@@ -21,6 +21,7 @@ import { executeExpandedTool, getExpandedTools, isExpandedTool } from './expande
 import { telemetry } from '../telemetry/telemetry.js';
 import { executeTelemetryTool, getTelemetryTools, isTelemetryTool } from '../telemetry/tools.js';
 import { executeQaTool, getQaTools, isQaTool } from '../qa/tools.js';
+import { executeLibraryTool, getLibraryTools, isLibraryTool } from '../library/tools.js';
 
 export interface MCPTool {
   name: string;
@@ -1258,15 +1259,18 @@ export class PremiereProTools {
     const localTools = this.getLocalTools();
     const telemetryTools = getTelemetryTools() as MCPTool[];
     const qaTools = getQaTools() as MCPTool[];
+    const libraryTools = getLibraryTools() as MCPTool[];
     const claimed = new Set([
       ...localTools.map((tool) => tool.name),
       ...telemetryTools.map((tool) => tool.name),
-      ...qaTools.map((tool) => tool.name)
+      ...qaTools.map((tool) => tool.name),
+      ...libraryTools.map((tool) => tool.name)
     ]);
     return [
       ...localTools,
       ...telemetryTools,
       ...qaTools,
+      ...libraryTools,
       ...getExpandedTools(claimed)
     ];
   }
@@ -1324,6 +1328,10 @@ export class PremiereProTools {
       return await executeQaTool(name, args, (toolName, toolArgs) =>
         this.executeTool(toolName, toolArgs as Record<string, any>)
       );
+    }
+
+    if (isLibraryTool(name)) {
+      return await executeLibraryTool(name, args);
     }
 
     const localToolNames = new Set(this.getLocalTools().map((localTool) => localTool.name));
