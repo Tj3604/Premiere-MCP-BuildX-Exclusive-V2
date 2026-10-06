@@ -30,6 +30,8 @@ import {
   PunchOptions,
   suggestPunchIns
 } from './punchins.js';
+import { readBrollIndex } from '../broll/index.js';
+import { BrollOptions, brollMarkdown, BrollSuggestion, suggestBroll } from '../broll/match.js';
 
 export interface CutListFile {
   description: string;
@@ -178,4 +180,42 @@ export async function createPunchList(
     written = true;
   }
   return { jsonPath, mdPath, written, list };
+}
+
+export interface BrollListFile {
+  description: string;
+  transcriptPath: string;
+  libraryRoot: string;
+  options: BrollOptions;
+  createdAt: string;
+  suggestions: BrollSuggestion[];
+}
+
+/** <name>.broll.json + .md beside the transcript; existing list kept unless force. */
+export async function createBrollList(
+  transcriptPath: string,
+  privateDir: string,
+  options: BrollOptions = {},
+  { write = true, force = false }: { write?: boolean; force?: boolean } = {}
+): Promise<{ jsonPath: string; mdPath: string; written: boolean; list: BrollListFile; libraryClips: number }> {
+  const words = wordsFrom(JSON.parse(await readFile(transcriptPath, 'utf8')));
+  const index = await readBrollIndex(privateDir);
+  const list: BrollListFile = {
+    description: 'Optional b-roll suggestions matched from the private b-roll tag index. Paths are relative to libraryRoot. None are placed until chosen.',
+    transcriptPath,
+    libraryRoot: index.root,
+    options,
+    createdAt: new Date().toISOString(),
+    suggestions: suggestBroll(words, index.clips, options)
+  };
+  const base = cutListBase(transcriptPath);
+  const jsonPath = `${base}.broll.json`;
+  const mdPath = `${base}.broll.md`;
+  let written = false;
+  if (write && (force || !existsSync(jsonPath))) {
+    await writeAtomic(jsonPath, JSON.stringify(list, null, 2) + '\n');
+    await writeAtomic(mdPath, brollMarkdown(path.basename(base), list.suggestions));
+    written = true;
+  }
+  return { jsonPath, mdPath, written, list, libraryClips: index.clips.length };
 }

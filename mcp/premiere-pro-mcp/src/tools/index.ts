@@ -21,7 +21,7 @@ import { executeExpandedTool, getExpandedTools, isExpandedTool } from './expande
 import { telemetry } from '../telemetry/telemetry.js';
 import { executeTelemetryTool, getTelemetryTools, isTelemetryTool } from '../telemetry/tools.js';
 import { executeQaTool, getQaTools, isQaTool } from '../qa/tools.js';
-import { executeLibraryTool, getLibraryTools, isLibraryTool } from '../library/tools.js';
+import { executeLibraryTool, getLibraryTools, isLibraryTool, privateDirFromEnv } from '../library/tools.js';
 import { executeEditTool, getEditTools, isEditTool } from '../edit/tools.js';
 
 export interface MCPTool {
@@ -1339,7 +1339,9 @@ export class PremiereProTools {
     }
 
     if (isEditTool(name)) {
-      return await executeEditTool(name, args, (script) => this.bridge.executeScript(script));
+      return await executeEditTool(name, args, (script) => this.bridge.executeScript(script), {
+        privateDir: privateDirFromEnv()
+      });
     }
 
     const localToolNames = new Set(this.getLocalTools().map((localTool) => localTool.name));

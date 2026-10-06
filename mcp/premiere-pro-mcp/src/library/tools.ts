@@ -14,6 +14,11 @@ import { readTranscriptText } from './transcript.js';
 // dist/library/tools.js -> premiere-pro-mcp -> mcp -> repo root.
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 
+/** $BUILDX_PRIVATE_DIR, or <repo>/private. */
+export function privateDirFromEnv(): string {
+  return resolvePrivateDir(process.env, path.join(REPO_ROOT, 'private'));
+}
+
 export interface LibraryTool {
   name: string;
   description: string;

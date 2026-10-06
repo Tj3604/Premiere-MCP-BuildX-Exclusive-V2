@@ -5,7 +5,7 @@
 
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
-import { createCutList, createPunchList, PunchListFile } from './files.js';
+import { createBrollList, createCutList, createPunchList, PunchListFile } from './files.js';
 import { punchKeyframes } from './punchins.js';
 
 /** Runs ExtendScript through the bridge (helpers like __findClip are prepended). */
@@ -55,6 +55,22 @@ export const EDIT_TOOLS: EditTool[] = [
       ids: z.array(z.number().int().min(1)).min(1).describe('Punch-in ids the user approved.'),
       sequenceId: z.string().optional().describe('Sequence holding the clip. Default: search all.')
     })
+  },
+  {
+    name: 'suggest_broll',
+    description:
+      'OPTIONAL — only run when the user asks for b-roll suggestions. Matches what is said in a WhisperX .words.json against the private b-roll tag index ($BUILDX_PRIVATE_DIR/broll/index.json, built by scripts/broll-tag.mjs) and suggests the top clips per phrase. Never covers the hook, keeps cutaways minGapSeconds apart, leaves out Bedrock-watermark and third-party-logo clips unless includeFlagged, and leaves out vertical clips for 16x9. Writes <name>.broll.json + .md with every suggestion unapproved; places nothing. Per broll.md, decide first whether to cut away at all — when the delivery is the content, stay on the speaker.',
+    inputSchema: z.object({
+      transcriptPath: z.string().min(1).describe('Absolute path to the WhisperX <name>.words.json.'),
+      format: z.enum(['9x16', '16x9']).optional().describe('Target sequence shape.'),
+      minGapSeconds: z.number().min(1).max(120).optional().describe('Seconds between cutaways, at least. Default 5.'),
+      hookSeconds: z.number().min(0).optional().describe('No coverage before this. Default: end of the first sentence.'),
+      clipsPerSuggestion: z.number().int().min(1).max(10).optional().describe('Candidate clips per phrase. Default 3.'),
+      includeFlagged: z.boolean().optional().describe('Include watermark / third-party-logo clips. Default false.'),
+      prefer: z.string().optional().describe('Prefer this job\'s own footage — a job number or name in the clip path, e.g. "817" or "X1252".'),
+      write: z.boolean().optional().describe('Write the .broll files. Default true.'),
+      force: z.boolean().optional().describe('Replace an existing .broll.json. Default false.')
+    })
   }
 ];
 
@@ -68,8 +84,19 @@ export function getEditTools(): EditTool[] {
   return EDIT_TOOLS;
 }
 
-export async function executeEditTool(name: string, args: Record<string, any>, runScript?: RunScript): Promise<any> {
+export interface EditContext {
+  /** $BUILDX_PRIVATE_DIR (or <repo>/private) — where the b-roll index lives. */
+  privateDir?: string;
+}
+
+export async function executeEditTool(
+  name: string,
+  args: Record<string, any>,
+  runScript?: RunScript,
+  context: EditContext = {}
+): Promise<any> {
   if (name === 'suggest_punch_ins') return await suggestPunchInsTool(args);
+  if (name === 'suggest_broll') return await suggestBrollTool(args, context);
   if (name === 'apply_punch_ins') {
     if (!runScript) return { success: false, error: 'apply_punch_ins needs the Premiere bridge.' };
     return await applyPunchInsTool(args, runScript);
@@ -237,4 +264,40 @@ async function applyPunchInsTool(args: Record<string, any>, runScript: RunScript
       eased: typeof applied.sample === 'number' ? applied.sample < linearSample - 1e-3 : null
     }
   };
+}
+
+async function suggestBrollTool(args: Record<string, any>, context: EditContext): Promise<any> {
+  if (!context.privateDir) return { success: false, error: 'BuildX private dir is not configured — set BUILDX_PRIVATE_DIR on the MCP server.' };
+  try {
+    const result = await createBrollList(
+      args.transcriptPath,
+      context.privateDir,
+      {
+        format: args.format,
+        minGapSeconds: args.minGapSeconds,
+        hookSeconds: args.hookSeconds,
+        clipsPerSuggestion: args.clipsPerSuggestion,
+        includeFlagged: args.includeFlagged,
+        prefer: args.prefer
+      },
+      { write: args.write ?? true, force: args.force ?? false }
+    );
+    return {
+      success: true,
+      libraryClips: result.libraryClips,
+      libraryRoot: result.list.libraryRoot,
+      count: result.list.suggestions.length,
+      suggestions: result.list.suggestions,
+      brollJson: result.jsonPath,
+      brollMd: result.mdPath,
+      written: result.written,
+      note: result.written
+        ? `Nothing placed. Review ${result.mdPath}.`
+        : (args.write ?? true)
+          ? `${result.jsonPath} already exists and was left alone. Pass force:true to replace it.`
+          : 'Not written (write:false).'
+    };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
 }
