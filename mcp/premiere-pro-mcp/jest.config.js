@@ -16,6 +16,8 @@ export default {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   moduleNameMapper: {
+    // The one import.meta user; see src/utils/package-root.ts.
+    '^(\\.{1,2}/)+utils/package-root(\\.js)?$': '<rootDir>/src/__tests__/support/package-root.ts',
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   extensionsToTreatAsEsm: ['.ts'],

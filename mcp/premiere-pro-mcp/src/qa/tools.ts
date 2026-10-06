@@ -7,7 +7,7 @@
  */
 
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { PACKAGE_ROOT } from '../utils/package-root.js';
 import { z } from 'zod';
 import { telemetry } from '../telemetry/telemetry.js';
 import { listWorkflows, resolveWorkflowConfig } from './config.js';
@@ -16,7 +16,6 @@ import { QaRunner, loadLastReport, persistReport, QA_CHECKS } from './qa-runner.
 import { renderQaFailures, renderQaReport } from './reports.js';
 import type { QaReport, QaRunOptions } from './types.js';
 
-const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const QA_REPORT_DIR = path.join(PACKAGE_ROOT, 'data', 'qa');
 
 export interface QaTool {

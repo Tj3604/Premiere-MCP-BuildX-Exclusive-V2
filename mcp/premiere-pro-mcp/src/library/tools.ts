@@ -4,15 +4,13 @@
  */
 
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { REPO_ROOT } from '../utils/package-root.js';
 import { z } from 'zod';
 import { listEntries, resolvePrivateDir } from './index.js';
 import { buildHookBank, checkHook, DEFAULT_MIN_VIEWS, DEFAULT_SIMILARITY_THRESHOLD } from './hooks.js';
 import { findSimilarVideos } from './search.js';
 import { readTranscriptText } from './transcript.js';
 
-// dist/library/tools.js -> premiere-pro-mcp -> mcp -> repo root.
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 
 /** $BUILDX_PRIVATE_DIR, or <repo>/private. */
 export function privateDirFromEnv(): string {

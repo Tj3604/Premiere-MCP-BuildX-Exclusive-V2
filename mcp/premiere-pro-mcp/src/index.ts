@@ -17,7 +17,7 @@
  */
 
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { REPO_ROOT } from './utils/package-root.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -39,8 +39,6 @@ import { telemetry } from './telemetry/telemetry.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { resolvePrivateDir } from './library/index.js';
 
-// dist/index.js -> premiere-pro-mcp -> mcp -> repo root.
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
 class MCPPremiereProServer {
   private server: Server;

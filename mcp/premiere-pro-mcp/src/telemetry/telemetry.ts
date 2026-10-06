@@ -11,7 +11,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { PACKAGE_ROOT } from '../utils/package-root.js';
 import { Logger } from '../utils/logger.js';
 import { TelemetryDatabase } from './database.js';
 import { SessionManager, type Clock } from './session.js';
@@ -38,7 +38,6 @@ import type {
   WorkflowStage
 } from './types.js';
 
-const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEFAULT_DB_PATH = path.join(PACKAGE_ROOT, 'data', 'telemetry.sqlite');
 const CONFIG_PATH = path.join(PACKAGE_ROOT, 'data', 'telemetry.config.json');
 
