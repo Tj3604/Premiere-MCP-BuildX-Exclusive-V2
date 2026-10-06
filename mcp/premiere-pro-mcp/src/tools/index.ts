@@ -21,8 +21,9 @@ import { executeExpandedTool, getExpandedTools, isExpandedTool } from './expande
 import { telemetry } from '../telemetry/telemetry.js';
 import { executeTelemetryTool, getTelemetryTools, isTelemetryTool } from '../telemetry/tools.js';
 import { executeQaTool, getQaTools, isQaTool } from '../qa/tools.js';
-import { executeLibraryTool, getLibraryTools, isLibraryTool, privateDirFromEnv } from '../library/tools.js';
+import { executeLibraryTool, getLibraryTools, isLibraryTool, knowledgeDirFromRepo, privateDirFromEnv } from '../library/tools.js';
 import { executeEditTool, getEditTools, isEditTool } from '../edit/tools.js';
+import { executeCaptionTool, getCaptionTools, isCaptionTool } from '../captions/tools.js';
 
 export interface MCPTool {
   name: string;
@@ -1262,12 +1263,14 @@ export class PremiereProTools {
     const qaTools = getQaTools() as MCPTool[];
     const libraryTools = getLibraryTools() as MCPTool[];
     const editTools = getEditTools() as MCPTool[];
+    const captionTools = getCaptionTools() as MCPTool[];
     const claimed = new Set([
       ...localTools.map((tool) => tool.name),
       ...telemetryTools.map((tool) => tool.name),
       ...qaTools.map((tool) => tool.name),
       ...libraryTools.map((tool) => tool.name),
-      ...editTools.map((tool) => tool.name)
+      ...editTools.map((tool) => tool.name),
+      ...captionTools.map((tool) => tool.name)
     ]);
     return [
       ...localTools,
@@ -1275,6 +1278,7 @@ export class PremiereProTools {
       ...qaTools,
       ...libraryTools,
       ...editTools,
+      ...captionTools,
       ...getExpandedTools(claimed)
     ];
   }
@@ -1336,6 +1340,12 @@ export class PremiereProTools {
 
     if (isLibraryTool(name)) {
       return await executeLibraryTool(name, args);
+    }
+
+    if (isCaptionTool(name)) {
+      return await executeCaptionTool(name, args, (script) => this.bridge.executeScript(script), {
+        knowledgeDir: knowledgeDirFromRepo()
+      });
     }
 
     if (isEditTool(name)) {

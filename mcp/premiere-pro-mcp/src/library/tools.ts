@@ -19,6 +19,11 @@ export function privateDirFromEnv(): string {
   return resolvePrivateDir(process.env, path.join(REPO_ROOT, 'private'));
 }
 
+/** <repo>/knowledge. */
+export function knowledgeDirFromRepo(): string {
+  return path.join(REPO_ROOT, 'knowledge');
+}
+
 export interface LibraryTool {
   name: string;
   description: string;
