@@ -23,6 +23,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { requireTools } from './doctor.mjs';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(PROJECT_ROOT, 'mcp/premiere-pro-mcp/dist');
@@ -128,6 +129,7 @@ async function main() {
   }
 
   if (args.frames) {
+    requireTools(['ffmpeg', 'ffprobe']);
     // A folder ("ADU/FINISHED") or a name prefix ("ADU/FINISHED/817_INTERIOR").
     const prefix = args.frames;
     const chosen = existing.clips.filter((c) => c.path.startsWith(prefix)).slice(0, args.limit);

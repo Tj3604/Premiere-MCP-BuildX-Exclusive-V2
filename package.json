@@ -4,8 +4,10 @@
   "private": true,
   "description": "Prompt-driven Premiere Pro editing. Scripts are .mjs (explicit ESM); no type field so nothing else in the tree is reinterpreted.",
   "scripts": {
+    "test": "npm --prefix mcp/premiere-pro-mcp test && node --test scripts/__tests__/*.test.mjs",
     "check": "node scripts/check-sequence.mjs",
-    "audit-tools": "node scripts/audit-tools.mjs"
+    "audit-tools": "node scripts/audit-tools.mjs",
+    "doctor": "node scripts/doctor.mjs"
   },
   "dependencies": {
     "@chatoctopus/timeline": "^0.3.0"

@@ -105,3 +105,8 @@ sandbox/
 # The MCP reads it via BUILDX_PRIVATE_DIR. Never commit it: the repo is public.
 # =========================
 private/
+
+# Moved to private/ (H7): customer manifest/plan and caption drafts
+SHORTS-MANIFEST-LEMON.md
+shorts-lemon-plan.json
+captions/*.srt

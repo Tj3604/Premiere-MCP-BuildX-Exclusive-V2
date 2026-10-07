@@ -192,6 +192,11 @@ export function isExpandedTool(name: string): boolean {
   return (expandedToolNames as readonly string[]).includes(name);
 }
 
+/** PREMIERE_MCP_ALLOW_RAW_SCRIPTS=1 / true / yes turns execute_extendscript on. */
+export function rawScriptsAllowed(env: NodeJS.ProcessEnv = process.env): boolean {
+  return /^(1|true|yes|on)$/i.test(String(env.PREMIERE_MCP_ALLOW_RAW_SCRIPTS ?? '').trim());
+}
+
 export async function executeExpandedTool(
   bridge: PremiereProTransport,
   name: string,
@@ -209,6 +214,17 @@ export async function executeExpandedTool(
     }
 
     if (name === 'execute_extendscript') {
+      // Arbitrary code in Premiere with the user's rights. Off unless the server
+      // is started with PREMIERE_MCP_ALLOW_RAW_SCRIPTS=1. (The server's own tools
+      // build their scripts internally and never come through here.)
+      if (!rawScriptsAllowed()) {
+        return {
+          success: false,
+          tool: name,
+          error:
+            'execute_extendscript is disabled. Start the MCP server with PREMIERE_MCP_ALLOW_RAW_SCRIPTS=1 to allow raw ExtendScript (e.g. claude mcp add ... -e PREMIERE_MCP_ALLOW_RAW_SCRIPTS=1).'
+        };
+      }
       const script = String(args.script ?? args.code ?? '');
       if (!script.trim()) {
         return { success: false, error: 'execute_extendscript requires script or code' };
@@ -727,10 +743,13 @@ function buildExpandedToolScript(name: string, args: Record<string, any>): strin
         case "get_clip_markers":
         case "get_sequence_markers_by_type":
         case "get_next_edit_point":
-          return ok({ available: true, project: app.project ? app.project.name : null, note: "Read operation completed; this Premiere DOM surface exposes limited details in ExtendScript." });
+          // These used to answer success with a canned note and no data. Say so plainly.
+          return fail("not implemented: " + toolName + " has no working Premiere implementation in this server", { tool: toolName, notImplemented: true });
 
         default:
-          return ok({ accepted: true, name: toolName, args: args, note: "Expanded tool dispatched through the native Premiere bridge. No copied upstream implementation is used." });
+          // Used to return success with accepted:true while doing nothing (verified live:
+          // delete_project_item "succeeded" and the item stayed). Fail honestly instead.
+          return fail("not implemented: " + toolName + " has no working Premiere implementation in this server", { tool: toolName, notImplemented: true });
       }
     } catch (error) {
       return fail(error && error.message ? error.message : error, { name: toolName });

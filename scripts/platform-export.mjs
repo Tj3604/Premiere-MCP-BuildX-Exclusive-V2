@@ -14,12 +14,14 @@ import { existsSync, statSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { requireTools } from './doctor.mjs';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(PROJECT_ROOT, 'mcp/premiere-pro-mcp/dist/export/platforms.js');
 
 async function main() {
   const argv = process.argv.slice(2);
+  requireTools(['ffmpeg', 'ffprobe']);
   const onlyAt = argv.indexOf('--only');
   const only = onlyAt >= 0 ? argv[onlyAt + 1].split(',') : undefined;
   const input = argv.find((a, i) => !a.startsWith('--') && (onlyAt < 0 || i !== onlyAt + 1));

@@ -37,6 +37,7 @@ import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { requireTools } from './doctor.mjs';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const LIBRARY_DIST = path.join(PROJECT_ROOT, 'mcp/premiere-pro-mcp/dist/library/index.js');
@@ -139,6 +140,7 @@ function applySet(entry, assignment) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  requireTools(['ffprobe']);
   if (!args.input || !args.transcript || !args.slug || !args.title) {
     console.error('Usage: node scripts/library-add.mjs <export.mp4> --transcript <words.json> --slug <slug> --title "<Title>"');
     process.exit(2);

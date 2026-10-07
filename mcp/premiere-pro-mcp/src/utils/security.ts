@@ -30,16 +30,18 @@ export function validateFilePath(filePath: string, allowedDirs?: string[]): { va
       return { valid: false, error: 'Path must be a non-empty string' };
     }
 
+    // Check for traversal BEFORE normalising: normalize()/resolve() fold "a/../b"
+    // into "b", so a check afterwards never sees it. Segments, not substrings —
+    // "Short 01..final.mp4" is a legal name.
+    if (filePath.split(/[\\/]+/).includes('..')) {
+      return { valid: false, error: 'Path traversal detected' };
+    }
+
     // Convert to absolute path
     const absolutePath = isAbsolute(filePath) ? filePath : resolve(filePath);
 
-    // Normalize to prevent ../ attacks
+    // Normalize the separators and dots that remain
     const normalizedPath = normalize(absolutePath);
-
-    // Check for path traversal attempts
-    if (normalizedPath.includes('..')) {
-      return { valid: false, error: 'Path traversal detected' };
-    }
 
     // If allowed directories specified, check if path is within them
     if (allowedDirs && allowedDirs.length > 0) {

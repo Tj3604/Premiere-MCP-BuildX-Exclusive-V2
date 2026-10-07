@@ -33,7 +33,7 @@ import {
 import { PremiereProTools } from './tools/index.js';
 import { PremiereProResources } from './resources/index.js';
 import { PremiereProPrompts } from './prompts/index.js';
-import { PremiereProBridge } from './bridge/index.js';
+import { createPremiereHost, type PremiereHost } from './bridge/premiere-host.js';
 import { Logger } from './utils/logger.js';
 import { telemetry } from './telemetry/telemetry.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -45,7 +45,7 @@ class MCPPremiereProServer {
   private tools: PremiereProTools;
   private resources: PremiereProResources;
   private prompts: PremiereProPrompts;
-  private bridge: PremiereProBridge;
+  private bridge: PremiereHost;
   private logger: Logger;
 
   constructor() {
@@ -66,7 +66,7 @@ class MCPPremiereProServer {
       }
     );
 
-    this.bridge = new PremiereProBridge();
+    this.bridge = createPremiereHost();
     this.tools = new PremiereProTools(this.bridge);
     this.resources = new PremiereProResources(this.bridge, {
       privateDir: resolvePrivateDir(process.env, path.join(REPO_ROOT, 'private')),
