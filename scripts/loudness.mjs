@@ -19,6 +19,7 @@ import { existsSync, statSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { requireTools } from './doctor.mjs';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(PROJECT_ROOT, 'mcp/premiere-pro-mcp/dist/audio/loudness.js');
@@ -41,6 +42,7 @@ const fmt = (n) => (typeof n === 'number' ? n.toFixed(1).padStart(6) : '     –
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  requireTools(['ffmpeg', 'ffprobe']);
   if (!args.input) {
     console.error('Usage: node scripts/loudness.mjs <file|folder> [--target -14] [--true-peak -1] [--measure-only] [--force]');
     process.exit(2);

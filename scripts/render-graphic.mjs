@@ -17,6 +17,7 @@ import { spawn } from 'node:child_process';
 import { mkdir, rm, access } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { requireTools } from './doctor.mjs';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RENDERS_DIR = path.join(PROJECT_ROOT, 'renders');
@@ -57,6 +58,7 @@ async function exists(p) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.alpha) requireTools(['ffmpeg']);
 
   if (!args.dir) {
     console.error('Usage: node scripts/render-graphic.mjs <composition-dir> [--alpha] [--fps 30] [--quality high] [--name x]');

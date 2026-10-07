@@ -28,6 +28,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { requireTools } from './doctor.mjs';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(PROJECT_ROOT, 'mcp/premiere-pro-mcp/dist/edit/files.js');
@@ -67,6 +68,7 @@ function parseArgs(argv) {
 }
 
 function probeDuration(file) {
+  requireTools(['ffprobe']);
   const out = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', file], {
     encoding: 'utf8'
   });

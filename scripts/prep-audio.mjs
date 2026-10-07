@@ -51,6 +51,7 @@ import { existsSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { requireTools } from './doctor.mjs';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -152,6 +153,7 @@ async function measure(wav) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  requireTools(['ffmpeg', 'ffprobe']);
   if (!args.input) {
     console.error('Usage: node scripts/prep-audio.mjs <media> [--force-denoise] [--no-trim]');
     process.exit(1);
@@ -208,6 +210,7 @@ async function main() {
     if (shouldDenoise) {
       const dnDir = path.join(workDir, 'dn');
       await mkdir(dnDir, { recursive: true });
+      requireTools(['deepFilter']);
       await run(resolveBinary('deepFilter'), ['-o', dnDir, current]);
       const produced = (await readdir(dnDir)).find((f) => f.endsWith('.wav'));
       if (!produced) throw new Error('DeepFilterNet produced no output.');

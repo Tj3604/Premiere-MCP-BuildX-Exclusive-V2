@@ -34,6 +34,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { requireTools } from './doctor.mjs';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -117,6 +118,7 @@ function loadEnv() {
  */
 function resolveWhisperx(needPyannote) {
   const binary = needPyannote ? 'whisperx-pyannote' : 'whisperx';
+  requireTools([binary]);
   const local = path.join(homedir(), '.local', 'bin', binary);
   return existsSync(local) ? local : binary; // fall back to PATH
 }
@@ -220,6 +222,7 @@ function groupIntoSentences(words) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  requireTools(['ffmpeg']);
 
   if (!args.input) {
     console.error('Usage: node scripts/transcribe-x.mjs <media-file> [--model large-v3] [--diarize]');

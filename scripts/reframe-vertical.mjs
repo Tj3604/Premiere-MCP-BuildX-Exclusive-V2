@@ -40,6 +40,7 @@ import { existsSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { requireTools } from './doctor.mjs';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -97,6 +98,7 @@ function resolveBinary(name) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  requireTools(['verthor', 'ffmpeg']);
   if (!args.input) {
     console.error('Usage: node scripts/reframe-vertical.mjs <input> [--two-person] [--debug]');
     process.exit(1);
