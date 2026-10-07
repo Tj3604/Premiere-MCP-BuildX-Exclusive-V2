@@ -27,6 +27,7 @@ import { executeCaptionTool, getCaptionTools, isCaptionTool } from '../captions/
 import { executeZoneTool, getZoneTools, isZoneTool } from '../qa/zone-tool.js';
 import { executeAudioTool, getAudioTools, isAudioTool } from '../audio/tools.js';
 import { executeExportTool, getExportTools, isExportTool } from '../export/tools.js';
+import { REPO_ROOT } from '../utils/package-root.js';
 
 export interface MCPTool {
   name: string;
@@ -1355,7 +1356,7 @@ export class PremiereProTools {
     }
 
     if (isExportTool(name)) {
-      return await executeExportTool(name, args);
+      return await executeExportTool(name, args, { repoRoot: REPO_ROOT, privateDir: privateDirFromEnv() });
     }
 
     if (isAudioTool(name)) {
