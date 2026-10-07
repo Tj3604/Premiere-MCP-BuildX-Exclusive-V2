@@ -5,3 +5,5 @@
  */
 
 process.env.BUILDX_TELEMETRY_DB = ':memory:';
+// No automatic time-log writes into the real folder from tests.
+process.env.BUILDX_TIME_LOG_AUTO = '0';

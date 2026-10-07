@@ -177,6 +177,14 @@ export const TELEMETRY_TOOLS: TelemetryTool[] = [
     inputSchema: z.object({})
   },
   {
+    name: 'export_time_log',
+    description:
+      'Writes the weekly per-video time log for the Content Desk: buildx-time-<weekStart>.json in $BUILDX_TIME_LOG_DIR (default ~/Claude Video Editor/time-logs). Defaults to the current Monday-to-Sunday week; any date moves to its Monday. Returns the file path. The current week is also rewritten automatically on export, on session end and every 15 minutes while active.',
+    inputSchema: z.object({
+      weekStart: z.string().optional().describe('YYYY-MM-DD — any day of the week to log. Default: this week.')
+    })
+  },
+  {
     name: 'get_weekly_report',
     description:
       'Weekly report from local telemetry: shorts made (vertical exports by file, sequences built, platform versions), time per stage and human vs machine time, the tools that failed most with their top error, and QA (runs by status, export-gate overrides with reasons). Says plainly what was not recorded. Reads only.',
@@ -382,6 +390,16 @@ export function executeTelemetryTool(name: string, args: Record<string, any>): a
     case 'get_current_video': {
       const video = telemetry.getCurrentVideo();
       return { success: true, current: video, note: video ? undefined : 'No current video — work is untracked until set_current_video.' };
+    }
+
+    case 'export_time_log': {
+      try {
+        const out = telemetry.exportTimeLog(args.weekStart);
+        if (!out) return { success: false, error: 'Telemetry is disabled — there is nothing to log.' };
+        return { success: true, path: out.path, weekStart: out.log.weekStart, weekEnd: out.log.weekEnd, videos: out.log.videos.length, untrackedActiveMin: out.log.untrackedActiveMin };
+      } catch (error) {
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
+      }
     }
 
     case 'get_weekly_report': {

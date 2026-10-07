@@ -18,6 +18,7 @@ import { TelemetryDatabase } from './database.js';
 import { SessionManager, type Clock } from './session.js';
 import { OperationTracker } from './operations.js';
 import { VideoTracker, type VideoRecord, type VideoType } from './videos.js';
+import { buildTimeLog, timeLogDir, writeTimeLog, type TimeLog } from './time-log.js';
 import {
   buildMonthlySummary,
   computeBaseline,
@@ -150,6 +151,9 @@ export class Telemetry {
   private readonly now: Clock;
   private activeSessionId: string | null = null;
   private readonly videos: VideoTracker;
+  private lastToolMs = 0;
+  private lastTimeLogWriteMs = 0;
+  private timeLogTimer: NodeJS.Timeout | null = null;
   private started = false;
 
   constructor(options: TelemetryOptions = {}) {
@@ -247,6 +251,7 @@ export class Telemetry {
         if (target === this.activeSessionId) this.activeSessionId = null;
         this.operations.clearRetryState(target);
         this.db.flush();
+        this.autoWriteTimeLog('session-end');
         return record;
       },
       null
@@ -378,7 +383,44 @@ export class Telemetry {
     if (!this.ensureStarted()) return;
     const failed = (error !== null && error !== undefined) || analyseResult(result).failed;
     this.videos.recordTool(name, startedMs, this.now(), !failed);
-    if (!failed && name === 'export_platform_versions') this.videos.markCurrentExported();
+    this.lastToolMs = this.now();
+    if (!failed && name === 'export_platform_versions' && this.videos.markCurrentExported()) {
+      this.autoWriteTimeLog('export');
+    } else if (this.now() - this.lastTimeLogWriteMs >= TIME_LOG_EVERY_MS) {
+      this.autoWriteTimeLog('active');
+    }
+    this.startTimeLogTimer();
+  }
+
+  // ---- weekly time log ----
+
+  /** Writes the time log for a week (default: this week) and returns the file and its content. */
+  exportTimeLog(weekStart?: string): { path: string; log: TimeLog } | null {
+    if (!this.ensureStarted()) return null;
+    this.db.flush();
+    const log = buildTimeLog((sql, params) => this.db.query(sql, params ?? []), weekStart, this.now());
+    const file = writeTimeLog(log, timeLogDir());
+    this.lastTimeLogWriteMs = this.now();
+    return { path: file, log };
+  }
+
+  /**
+   * Keeps the current week's file current without being asked: after an export,
+   * when a session ends, and every 15 minutes while there is activity. Off when
+   * BUILDX_TIME_LOG_AUTO=0 (the test setup sets it). Never throws.
+   */
+  private autoWriteTimeLog(reason: 'export' | 'session-end' | 'active' | 'timer'): void {
+    if (process.env.BUILDX_TIME_LOG_AUTO === '0') return;
+    this.safe(`timeLog.${reason}`, () => this.exportTimeLog(), null);
+  }
+
+  private startTimeLogTimer(): void {
+    if (this.timeLogTimer || process.env.BUILDX_TIME_LOG_AUTO === '0') return;
+    this.timeLogTimer = setInterval(() => {
+      if (this.now() - this.lastToolMs < TIME_LOG_ACTIVE_MS) this.autoWriteTimeLog('timer');
+    }, TIME_LOG_EVERY_MS);
+    // Never keep the server alive just to write a log.
+    this.timeLogTimer.unref?.();
   }
 
   private settleToolCall(handle: OperationHandle | null, result: unknown, error: unknown, name?: string, args?: unknown): void {
@@ -445,7 +487,9 @@ export class Telemetry {
 
   markVideoExported(id: string): VideoRecord | null {
     if (!this.ensureStarted()) return null;
-    return this.videos.markExported(id);
+    const video = this.videos.markExported(id);
+    this.autoWriteTimeLog('export');
+    return video;
   }
 
   getCurrentVideo(): VideoRecord | null {
@@ -673,6 +717,11 @@ export class Telemetry {
 }
 
 export const UNATTRIBUTED = '(unattributed)';
+
+/** Rewrite the current week's time log at least this often while active. */
+const TIME_LOG_EVERY_MS = 15 * 60 * 1000;
+/** "Active" for the timer: a tool call within this long. */
+const TIME_LOG_ACTIVE_MS = 10 * 60 * 1000;
 
 /** Names tool arguments without storing media paths or transcript content wholesale. */
 function argSummary(args: unknown): Record<string, unknown> {
