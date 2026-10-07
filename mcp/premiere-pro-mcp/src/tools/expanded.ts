@@ -192,6 +192,11 @@ export function isExpandedTool(name: string): boolean {
   return (expandedToolNames as readonly string[]).includes(name);
 }
 
+/** PREMIERE_MCP_ALLOW_RAW_SCRIPTS=1 / true / yes turns execute_extendscript on. */
+export function rawScriptsAllowed(env: NodeJS.ProcessEnv = process.env): boolean {
+  return /^(1|true|yes|on)$/i.test(String(env.PREMIERE_MCP_ALLOW_RAW_SCRIPTS ?? '').trim());
+}
+
 export async function executeExpandedTool(
   bridge: PremiereProTransport,
   name: string,
@@ -209,6 +214,17 @@ export async function executeExpandedTool(
     }
 
     if (name === 'execute_extendscript') {
+      // Arbitrary code in Premiere with the user's rights. Off unless the server
+      // is started with PREMIERE_MCP_ALLOW_RAW_SCRIPTS=1. (The server's own tools
+      // build their scripts internally and never come through here.)
+      if (!rawScriptsAllowed()) {
+        return {
+          success: false,
+          tool: name,
+          error:
+            'execute_extendscript is disabled. Start the MCP server with PREMIERE_MCP_ALLOW_RAW_SCRIPTS=1 to allow raw ExtendScript (e.g. claude mcp add ... -e PREMIERE_MCP_ALLOW_RAW_SCRIPTS=1).'
+        };
+      }
       const script = String(args.script ?? args.code ?? '');
       if (!script.trim()) {
         return { success: false, error: 'execute_extendscript requires script or code' };

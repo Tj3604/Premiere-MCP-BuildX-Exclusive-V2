@@ -69,7 +69,10 @@ export function qaBlockers(report: any): string[] {
   return lines.length ? lines : [`QA ${status}`];
 }
 
-export async function runGate(args: GateArgs, call: ToolCaller): Promise<GateResult> {
+/** Runs ExtendScript through the bridge directly (not via execute_extendscript, which may be disabled). */
+export type RunScript = (script: string) => Promise<any>;
+
+export async function runGate(args: GateArgs, call: ToolCaller, runScript?: RunScript): Promise<GateResult> {
   const workflow = args.workflow ?? 'podcast_short';
   const steps: GateStep[] = [];
   const blockers: string[] = [];
@@ -110,10 +113,11 @@ export async function runGate(args: GateArgs, call: ToolCaller): Promise<GateRes
   let render: any;
   if ((args.renderMethod ?? 'ame') === 'direct') {
     if (!args.presetPath) throw new Error('renderMethod "direct" needs presetPath (an .epr).');
+    if (!runScript) throw new Error('renderMethod "direct" needs the Premiere bridge.');
     render = parse(
-      await call('execute_extendscript', {
-        script: `var s = __findSequence(${JSON.stringify(args.sequenceId)}); if (!s) return JSON.stringify({ success: false, error: "Sequence not found" }); var r = s.exportAsMediaDirect(${JSON.stringify(args.outputPath)}, ${JSON.stringify(args.presetPath)}, 0); return JSON.stringify({ success: String(r) === "No Error", result: String(r) });`
-      })
+      await runScript(
+        `var s = __findSequence(${JSON.stringify(args.sequenceId)}); if (!s) return JSON.stringify({ success: false, error: "Sequence not found" }); var r = s.exportAsMediaDirect(${JSON.stringify(args.outputPath)}, ${JSON.stringify(args.presetPath)}, 0); return JSON.stringify({ success: String(r) === "No Error", result: String(r) });`
+      )
     );
     if (render?.success) {
       const cap = parse(await call('compress_export', { filePath: args.outputPath }));
@@ -179,11 +183,11 @@ export const GATE_TOOLS = [
 export const isGateTool = (name: string) => name === 'export_with_gate';
 export const getGateTools = () => GATE_TOOLS;
 
-export async function executeGateTool(name: string, args: Record<string, any>, call: ToolCaller): Promise<any> {
+export async function executeGateTool(name: string, args: Record<string, any>, call: ToolCaller, runScript?: RunScript): Promise<any> {
   if (name !== 'export_with_gate') return { success: false, error: `Unknown tool '${name}'` };
   if (existsSync(args.outputPath)) return { success: false, error: `${args.outputPath} already exists — renders never overwrite (Premiere loses the media link). Pick a new name.` };
   try {
-    const r = await runGate(args as GateArgs, call);
+    const r = await runGate(args as GateArgs, call, runScript);
     // success says the gate ran (as run_buildx_qa does); the verdict is status.
     // A block or a render with problems is not a tool failure in telemetry.
     return { success: r.status !== 'FAILED', ...r };

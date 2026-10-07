@@ -610,12 +610,12 @@ export class PremiereProBridge implements PremiereProTransport {
   async addToTimeline(sequenceId: string, projectItemId: string, trackIndex: number, time: number, linkAudio: boolean = true, sourceInPoint?: number, sourceOutPoint?: number): Promise<PremiereProClip> {
     const script = `
       try {
-        var sequence = __findSequence("${sequenceId}");
+        var sequence = __findSequence(${JSON.stringify(sequenceId)});
         if (!sequence) {
           return JSON.stringify({ success: false, error: "Sequence not found" });
         }
 
-        var projectItem = __findProjectItem("${projectItemId}");
+        var projectItem = __findProjectItem(${JSON.stringify(projectItemId)});
         if (!projectItem) {
           return JSON.stringify({ success: false, error: "Project item not found" });
         }
@@ -631,13 +631,13 @@ export class PremiereProBridge implements PremiereProTransport {
           trackKind = "audio";
           track = sequence.audioTracks[${trackIndex}];
           if (!track) {
-            return JSON.stringify({ success: false, error: "Audio track not found at index ${trackIndex}", audioTrackCount: sequence.audioTracks.numTracks });
+            return JSON.stringify({ success: false, error: "Audio track not found at index " + ${JSON.stringify(String(trackIndex))}, audioTrackCount: sequence.audioTracks.numTracks });
           }
         } else {
           trackKind = "video";
           track = sequence.videoTracks[${trackIndex}];
           if (!track) {
-            return JSON.stringify({ success: false, error: "Video track not found at index ${trackIndex}", videoTrackCount: sequence.videoTracks.numTracks });
+            return JSON.stringify({ success: false, error: "Video track not found at index " + ${JSON.stringify(String(trackIndex))}, videoTrackCount: sequence.videoTracks.numTracks });
           }
         }
 
@@ -884,16 +884,15 @@ export class PremiereProBridge implements PremiereProTransport {
 
   async renderSequence(sequenceId: string, outputPath: string, presetPath: string, range: 'entire' | 'inout' | 'workarea' = 'entire'): Promise<any> {
     // Escape backslashes and quotes in paths so JSX string-eval is safe
-    const safePath = (s: string) => s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
     const script = `
       try {
         // Premiere 2026 dropped getSequenceByID; iterate via __findSequence helper.
         // Fail hard if the requested sequence isn't found — silently falling back to
         // app.project.activeSequence would queue/render the wrong timeline while still
         // reporting success, masking caller bugs (stale IDs, etc.).
-        var sequence = __findSequence("${sequenceId}");
+        var sequence = __findSequence(${JSON.stringify(sequenceId)});
         if (!sequence) {
-          return JSON.stringify({ success: false, error: "Sequence not found by id: ${sequenceId}" });
+          return JSON.stringify({ success: false, error: "Sequence not found by id: " + ${JSON.stringify(String(sequenceId))} });
         }
         if (typeof app.encoder === "undefined") {
           return JSON.stringify({ success: false, error: "app.encoder not available in this Premiere build" });
@@ -905,7 +904,7 @@ export class PremiereProBridge implements PremiereProTransport {
         // Queue range constants on app.encoder: ENCODE_ENTIRE / ENCODE_IN_TO_OUT / ENCODE_WORKAREA
         // Selectable so a single short can be exported from a longer sequence by
         // setting the work area (or in/out points) first.
-        var requested = "${range}";
+        var requested = ${JSON.stringify(range)};
         var range;
         if (requested === "workarea") {
           range = (typeof app.encoder.ENCODE_WORKAREA !== "undefined") ? app.encoder.ENCODE_WORKAREA : 2;
@@ -918,8 +917,8 @@ export class PremiereProBridge implements PremiereProTransport {
         // 5th arg "removeOnCompletion": 1=remove, 0=keep. We use 1 to avoid AME queue clutter.
         var jobID = app.encoder.encodeSequence(
           sequence,
-          "${safePath(outputPath)}",
-          "${safePath(presetPath)}",
+          ${JSON.stringify(outputPath)},
+          ${JSON.stringify(presetPath)},
           range,
           1
         );
@@ -928,8 +927,8 @@ export class PremiereProBridge implements PremiereProTransport {
           return JSON.stringify({
             success: false,
             error: "encodeSequence returned no jobID — preset path may be invalid or AME not connected",
-            outputPath: "${safePath(outputPath)}",
-            presetPath: "${safePath(presetPath)}"
+            outputPath: ${JSON.stringify(outputPath)},
+            presetPath: ${JSON.stringify(presetPath)}
           });
         }
 
@@ -940,8 +939,8 @@ export class PremiereProBridge implements PremiereProTransport {
           success: true,
           queued: true,
           jobID: String(jobID),
-          outputPath: "${safePath(outputPath)}",
-          presetPath: "${safePath(presetPath)}"
+          outputPath: ${JSON.stringify(outputPath)},
+          presetPath: ${JSON.stringify(presetPath)}
         });
       } catch (e) {
         return JSON.stringify({ success: false, error: "encodeSequence threw: " + e.toString() });
