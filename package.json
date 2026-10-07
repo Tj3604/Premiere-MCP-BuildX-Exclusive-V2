@@ -4,6 +4,7 @@
   "private": true,
   "description": "Prompt-driven Premiere Pro editing. Scripts are .mjs (explicit ESM); no type field so nothing else in the tree is reinterpreted.",
   "scripts": {
+    "test": "npm --prefix mcp/premiere-pro-mcp test",
     "check": "node scripts/check-sequence.mjs",
     "audit-tools": "node scripts/audit-tools.mjs"
   },
