@@ -184,7 +184,9 @@ export async function executeGateTool(name: string, args: Record<string, any>, c
   if (existsSync(args.outputPath)) return { success: false, error: `${args.outputPath} already exists — renders never overwrite (Premiere loses the media link). Pick a new name.` };
   try {
     const r = await runGate(args as GateArgs, call);
-    return { success: r.status === 'RENDERED', ...r };
+    // success says the gate ran (as run_buildx_qa does); the verdict is status.
+    // A block or a render with problems is not a tool failure in telemetry.
+    return { success: r.status !== 'FAILED', ...r };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
