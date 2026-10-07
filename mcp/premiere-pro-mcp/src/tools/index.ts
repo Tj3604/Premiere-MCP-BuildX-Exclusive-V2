@@ -1351,7 +1351,7 @@ export class PremiereProTools {
     }
 
     if (isAudioTool(name)) {
-      return await executeAudioTool(name, args);
+      return await executeAudioTool(name, args, (script) => this.bridge.executeScript(script));
     }
 
     if (isZoneTool(name)) {
