@@ -179,6 +179,8 @@ export interface PremiereProEffect {
 }
 
 export class PremiereProBridge implements PremiereProTransport {
+  /** The CEP panel + ExtendScript host (see premiere-host.ts). */
+  readonly kind = 'cep' as const;
   private logger: Logger;
   private communicationMethod: 'uxp' | 'extendscript' | 'file';
   private tempDir: string;
