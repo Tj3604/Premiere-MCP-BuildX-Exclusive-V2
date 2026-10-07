@@ -12,6 +12,7 @@
 import { z } from 'zod';
 import { telemetry } from './telemetry.js';
 import { buildWeeklyReport, openReadOnly, renderWeeklyReport, weekWindow } from './weekly.js';
+import { VIDEO_TYPES } from './videos.js';
 import { WORKFLOW_STAGES, type HumanActivityKind, type SessionStatus } from './types.js';
 
 /** Structurally identical to MCPTool; declared here to avoid a circular import. */
@@ -154,6 +155,26 @@ export const TELEMETRY_TOOLS: TelemetryTool[] = [
     inputSchema: z.object({
       limit: z.number().optional().describe('How many sessions to list. Defaults to 10.')
     })
+  },
+  {
+    name: 'set_current_video',
+    description:
+      'Call at the start of editing a video. Every tool call and workflow stage after this counts toward that video (for the weekly time log) until set_current_video is called again. Re-using an id updates its title/type.',
+    inputSchema: z.object({
+      id: z.string().min(1).describe('Stable video id, e.g. "x1460-short-07" or "ep12".'),
+      title: z.string().min(1).describe('Working title.'),
+      type: z.enum(VIDEO_TYPES).describe('short | podcast | longform | ad | testimonial | other')
+    })
+  },
+  {
+    name: 'mark_video_exported',
+    description: 'Marks a video exported (today). Done automatically when export_platform_versions succeeds for the current video.',
+    inputSchema: z.object({ id: z.string().min(1) })
+  },
+  {
+    name: 'get_current_video',
+    description: 'Which video tool calls are currently counting toward, if any.',
+    inputSchema: z.object({})
   },
   {
     name: 'get_weekly_report',
@@ -336,6 +357,31 @@ export function executeTelemetryTool(name: string, args: Record<string, any>): a
         report: telemetry.renderRecentSessions(limit),
         sessions: telemetry.getRecentSessions(limit)
       };
+    }
+
+    case 'set_current_video': {
+      try {
+        const video = telemetry.setCurrentVideo(args.id, args.title, args.type);
+        if (!video) return { success: false, error: 'Telemetry is disabled — nothing is being tracked.' };
+        return { success: true, current: video, note: 'Tool calls and stages now count toward this video.' };
+      } catch (error) {
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
+      }
+    }
+
+    case 'mark_video_exported': {
+      try {
+        const video = telemetry.markVideoExported(args.id);
+        if (!video) return { success: false, error: 'Telemetry is disabled.' };
+        return { success: true, video };
+      } catch (error) {
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
+      }
+    }
+
+    case 'get_current_video': {
+      const video = telemetry.getCurrentVideo();
+      return { success: true, current: video, note: video ? undefined : 'No current video — work is untracked until set_current_video.' };
     }
 
     case 'get_weekly_report': {

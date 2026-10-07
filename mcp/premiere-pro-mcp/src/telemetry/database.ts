@@ -14,6 +14,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { PACKAGE_ROOT } from '../utils/package-root.js';
 import { Logger } from '../utils/logger.js';
+import { VIDEO_SCHEMA } from './videos.js';
 
 /** Minimal shape of the bits of node:sqlite we use. */
 interface SqliteStatement {
@@ -192,6 +193,8 @@ export class TelemetryDatabase {
       }
       db.exec('PRAGMA synchronous = NORMAL;');
       db.exec(SCHEMA);
+      // Per-video time tracking: new tables only, the ones above are unchanged.
+      db.exec(VIDEO_SCHEMA);
       this.migrate(db);
       db.prepare('INSERT OR REPLACE INTO schema_meta (key, value) VALUES (?, ?)').run(
         'schema_version',
