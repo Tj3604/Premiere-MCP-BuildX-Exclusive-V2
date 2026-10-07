@@ -27,6 +27,7 @@ import { executeCaptionTool, getCaptionTools, isCaptionTool } from '../captions/
 import { executeZoneTool, getZoneTools, isZoneTool } from '../qa/zone-tool.js';
 import { executeAudioTool, getAudioTools, isAudioTool } from '../audio/tools.js';
 import { executeExportTool, getExportTools, isExportTool } from '../export/tools.js';
+import { executePublishTool, getPublishTools, isPublishTool } from '../publish/tools.js';
 import { REPO_ROOT } from '../utils/package-root.js';
 
 export interface MCPTool {
@@ -1271,6 +1272,7 @@ export class PremiereProTools {
     const zoneTools = getZoneTools() as MCPTool[];
     const audioTools = getAudioTools() as MCPTool[];
     const exportTools = getExportTools() as MCPTool[];
+    const publishTools = getPublishTools() as MCPTool[];
     const claimed = new Set([
       ...localTools.map((tool) => tool.name),
       ...telemetryTools.map((tool) => tool.name),
@@ -1280,7 +1282,8 @@ export class PremiereProTools {
       ...captionTools.map((tool) => tool.name),
       ...zoneTools.map((tool) => tool.name),
       ...audioTools.map((tool) => tool.name),
-      ...exportTools.map((tool) => tool.name)
+      ...exportTools.map((tool) => tool.name),
+      ...publishTools.map((tool) => tool.name)
     ]);
     return [
       ...localTools,
@@ -1292,6 +1295,7 @@ export class PremiereProTools {
       ...zoneTools,
       ...audioTools,
       ...exportTools,
+      ...publishTools,
       ...getExpandedTools(claimed)
     ];
   }
@@ -1353,6 +1357,10 @@ export class PremiereProTools {
 
     if (isLibraryTool(name)) {
       return await executeLibraryTool(name, args);
+    }
+
+    if (isPublishTool(name)) {
+      return await executePublishTool(name, args, { privateDir: privateDirFromEnv() });
     }
 
     if (isExportTool(name)) {
