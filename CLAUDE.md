@@ -347,6 +347,22 @@ start_telemetry_session {"projectName":"X1234 (surname) — Shorts",
 `baselineHumanMinutes` is optional and is how long this used to take by hand. Without it the
 report simply omits the time-saved comparison rather than inventing one.
 
+**At the start of editing a video, call `set_current_video`** — and again whenever you switch
+to a different video. Every tool call and stage after it counts toward that video in the weekly
+time log:
+
+```
+set_current_video {"id":"x1460-short-07","title":"The Living Room","type":"short"}
+```
+
+`type` is `short | podcast | longform | ad | testimonial | other`. A successful
+`export_platform_versions` marks the current video exported (or call `mark_video_exported`).
+
+**On Fridays, run `export_time_log` and tell Thomas the file path it returns.** The current
+week's `buildx-time-<weekStart>.json` also rewrites itself — on export, at session end and every
+15 minutes while editing — in `$BUILDX_TIME_LOG_DIR` (default `~/Claude Video Editor/time-logs`),
+which the Content Desk reads.
+
 **Whenever the human is actually working** — reviewing a cut, approving a graphic, fixing
 something in Premiere by hand:
 
@@ -421,7 +437,8 @@ cuts, punch-ins, b-roll and ducking run only when asked. Full list in
 | A new graphic | `scripts/graphic-from-template.mjs` (never edit `graphics/`), then `check_safe_zones` |
 | Music under dialogue (longform only) | `plan_ducking` → `apply_ducking`, prove by render |
 | Delivery | `export_with_gate` → `normalize_loudness` if flagged → `export_platform_versions` → `pick_cover_frames` → `upload_metadata_brief` + `save_upload_metadata` |
-| End of week | `get_weekly_report` |
+| Starting / switching to a video | `set_current_video` (time log attribution) |
+| End of week | `get_weekly_report`; on Fridays `export_time_log` → tell Thomas the path |
 
 Private data (library, b-roll index, private notes, models) lives in `private/` or
 `$BUILDX_PRIVATE_DIR` and is **never committed — the repo is public.** Keep customer names,
