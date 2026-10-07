@@ -7,6 +7,7 @@
 
 import { z } from 'zod';
 import { spawn } from 'child_process';
+import { existsSync } from 'node:fs';
 import type { PremiereProTransport } from '../bridge/types.js';
 import { Logger } from '../utils/logger.js';
 import { createMotionDemoAssets } from '../utils/demoAssets.js';
@@ -25,6 +26,7 @@ import { executeLibraryTool, getLibraryTools, isLibraryTool, knowledgeDirFromRep
 import { executeEditTool, getEditTools, isEditTool } from '../edit/tools.js';
 import { executeCaptionTool, getCaptionTools, isCaptionTool } from '../captions/tools.js';
 import { executeZoneTool, getZoneTools, isZoneTool } from '../qa/zone-tool.js';
+import { executeGateTool, getGateTools, isGateTool } from '../qa/gate.js';
 import { executeAudioTool, getAudioTools, isAudioTool } from '../audio/tools.js';
 import { executeExportTool, getExportTools, isExportTool } from '../export/tools.js';
 import { executePublishTool, getPublishTools, isPublishTool } from '../publish/tools.js';
@@ -1273,6 +1275,7 @@ export class PremiereProTools {
     const audioTools = getAudioTools() as MCPTool[];
     const exportTools = getExportTools() as MCPTool[];
     const publishTools = getPublishTools() as MCPTool[];
+    const gateTools = getGateTools() as MCPTool[];
     const claimed = new Set([
       ...localTools.map((tool) => tool.name),
       ...telemetryTools.map((tool) => tool.name),
@@ -1283,7 +1286,8 @@ export class PremiereProTools {
       ...zoneTools.map((tool) => tool.name),
       ...audioTools.map((tool) => tool.name),
       ...exportTools.map((tool) => tool.name),
-      ...publishTools.map((tool) => tool.name)
+      ...publishTools.map((tool) => tool.name),
+      ...gateTools.map((tool) => tool.name)
     ]);
     return [
       ...localTools,
@@ -1296,6 +1300,7 @@ export class PremiereProTools {
       ...audioTools,
       ...exportTools,
       ...publishTools,
+      ...gateTools,
       ...getExpandedTools(claimed)
     ];
   }
@@ -1357,6 +1362,10 @@ export class PremiereProTools {
 
     if (isLibraryTool(name)) {
       return await executeLibraryTool(name, args);
+    }
+
+    if (isGateTool(name)) {
+      return await executeGateTool(name, args, (toolName, toolArgs) => this.executeTool(toolName, toolArgs as Record<string, any>));
     }
 
     if (isPublishTool(name)) {
@@ -4920,79 +4929,53 @@ export class PremiereProTools {
     };
   }
 
+  /**
+   * One frame at an exact sequence time. QE's exportFrame* takes the CTI timecode,
+   * not seconds — passing seconds landed on whatever frame was showing. So: make the
+   * sequence active, park the playhead at the time, read the CTI timecode back and
+   * export at that. QE appends its own extension, so the base name is passed without
+   * one and the real path is returned once the file exists.
+   */
   private async exportFrame(sequenceId: string, time: number, outputPath: string, format = 'png'): Promise<any> {
+    const ext = format === 'jpg' ? '.jpg' : format === 'tiff' ? '.tif' : '.png';
+    const base = outputPath.replace(/\.(png|jpe?g|tiff?)$/i, '');
+    const actualPath = `${base}${ext}`;
     const script = `
       try {
-        var sequence = __findSequence("${sequenceId}");
-        if (!sequence) return JSON.stringify({ success: false, error: "Sequence not found by id: ${sequenceId}" });
-
-        if (sequence.openInTimeline) {
-          try { sequence.openInTimeline(); } catch (e0) {}
-        }
-
+        var sequence = __findSequence(${JSON.stringify(sequenceId)});
+        if (!sequence) return JSON.stringify({ success: false, error: "Sequence not found by id: " + ${JSON.stringify(sequenceId)} });
+        app.project.activeSequence = sequence;
+        try { if (sequence.openInTimeline) sequence.openInTimeline(); } catch (e0) {}
         app.enableQE();
-        var qeSequence = qe.project.getActiveSequence();
-        if (!qeSequence) {
-          return JSON.stringify({ success: false, error: "QE active sequence not available for frame export" });
-        }
-
-        var methodName = "${format}" === "jpg" ? "exportFrameJPEG" : ("${format}" === "tiff" ? "exportFrameTiff" : "exportFramePNG");
-        if (typeof qeSequence[methodName] !== "function") {
-          return JSON.stringify({
-            success: false,
-            error: "Frame export format '" + "${format}" + "' is not supported by the available Premiere API"
-          });
-        }
-
-        var timeNumber = ${time};
-        var timeString = String(timeNumber);
-        var timeTicks = timeString;
-        try {
-          var exportTime = new Time();
-          exportTime.seconds = timeNumber;
-          timeTicks = exportTime.ticks;
-        } catch (e1) {}
-
-        var exportError = null;
-        function tryExport(arg1, arg2) {
-          try {
-            qeSequence[methodName](arg1, arg2);
-            return true;
-          } catch (e2) {
-            exportError = e2.toString();
-            return false;
-          }
-        }
-
-        var exported =
-          tryExport(timeNumber, "${outputPath}") ||
-          tryExport("${outputPath}", timeNumber) ||
-          tryExport(timeString, "${outputPath}") ||
-          tryExport("${outputPath}", timeString) ||
-          tryExport(timeTicks, "${outputPath}") ||
-          tryExport("${outputPath}", timeTicks);
-
-        if (!exported) {
-          return JSON.stringify({
-            success: false,
-            error: exportError || "Frame export failed"
-          });
-        }
-
-        return JSON.stringify({
-          success: true,
-          message: "Frame exported successfully",
-          sequenceId: "${sequenceId}",
-          time: ${time},
-          outputPath: "${outputPath}",
-          format: "${format}"
-        });
+        var q = qe.project.getActiveSequence();
+        if (!q) return JSON.stringify({ success: false, error: "QE active sequence not available for frame export" });
+        if (q.name !== sequence.name) return JSON.stringify({ success: false, error: "QE is on '" + q.name + "', not '" + sequence.name + "' — open the sequence and retry" });
+        var methodName = ${JSON.stringify(format)} === "jpg" ? "exportFrameJPEG" : (${JSON.stringify(format)} === "tiff" ? "exportFrameTiff" : "exportFramePNG");
+        if (typeof q[methodName] !== "function") return JSON.stringify({ success: false, error: "Frame export format '" + ${JSON.stringify(format)} + "' is not supported by the available Premiere API" });
+        sequence.setPlayerPosition(__secondsToTicks(${Number(time)}));
+        var tc = q.CTI.timecode;
+        q[methodName](tc, ${JSON.stringify(base)});
+        return JSON.stringify({ success: true, timecode: tc, playerSeconds: sequence.getPlayerPosition().seconds });
       } catch (e) {
         return JSON.stringify({ success: false, error: e.toString() });
       }
     `;
-
-    return await this.bridge.executeScript(script);
+    const raw = await this.bridge.executeScript(script);
+    const result = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (!result?.success) return result;
+    // The write is asynchronous on Premiere's side.
+    for (let i = 0; i < 50 && !existsSync(actualPath); i++) await new Promise((r) => setTimeout(r, 100));
+    if (!existsSync(actualPath)) return { success: false, error: `Premiere reported the export but ${actualPath} did not appear` };
+    return {
+      success: true,
+      message: 'Frame exported',
+      sequenceId,
+      time,
+      timecode: result.timecode,
+      playerSeconds: result.playerSeconds,
+      outputPath: actualPath,
+      format
+    };
   }
 
   // Advanced Features Implementation
