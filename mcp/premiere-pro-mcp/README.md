@@ -267,6 +267,17 @@ The `97` exposed tools are grouped roughly like this:
 
 Use MCP introspection in your client to see the full tool catalog and exact schemas.
 
+**BuildX tools (v3)** — library, editing, captions, audio, export, QA and reporting:
+`find_similar_videos`, `list_hooks`, `check_hook`, `find_cuts`, `suggest_punch_ins`,
+`apply_punch_ins`, `suggest_broll`, `find_short_candidates`, `build_short_sequences`,
+`make_captions`, `place_captions`, `check_safe_zones`, `measure_loudness`, `normalize_loudness`,
+`plan_ducking`, `apply_ducking`, `export_platform_versions`, `pick_cover_frames`,
+`upload_metadata_brief`, `save_upload_metadata`, `export_with_gate`, `get_weekly_report`.
+Resources: `buildx://knowledge/index`, `buildx://knowledge/file/<path>`,
+`buildx://private/knowledge/<path>`, `buildx://library/index`, `buildx://library/schema`,
+`buildx://library/entry/<slug>`. What each does and how to set them up: the repository
+[README](../../README.md#buildx-feature-upgrades-v3).
+
 ## Real Limits
 
 This project is much more usable than the original prototype, but it is not magic.

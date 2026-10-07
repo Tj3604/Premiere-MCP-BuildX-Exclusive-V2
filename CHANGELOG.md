@@ -7,6 +7,57 @@ documented here.
 
 ------------------------------------------------------------------------
 
+# Version 3.0.0 — BuildX feature upgrades
+
+Built 2026-10-06/07 on `feature-upgrades`, one commit per step. Every editing feature is
+opt-in and reviewable; nothing overwrites a file; customer data stays in gitignored `private/`.
+
+**Knowledge**
+-   **A1 Video library** — one private JSON entry per finished video; schema in
+    `knowledge/library/video-entry.schema.json`; `scripts/library-add.mjs`,
+    `library-import-transcripts.mjs`; resources `buildx://library/index|schema|entry/<slug>`.
+-   **A2 `find_similar_videos`** — TF-IDF over past transcripts.
+-   **A3 `list_hooks`, `check_hook`, `scripts/library-import-youtube.mjs`** — hooks ranked by
+    YouTube Studio retention / stayed-to-watch; too-close warnings.
+-   **A4 Knowledge index** — `knowledge/INDEX.md` + `buildx://knowledge/index`, `…/file/<path>`,
+    `buildx://private/knowledge/<path>`.
+
+**Edit automation**
+-   **B1 `find_cuts`** — optional pause/filler cut list; the first build keeps the full take.
+-   **B2 `suggest_punch_ins` / `apply_punch_ins`** — optional eased Scale pushes (hold→bezier).
+-   **B3 `scripts/broll-tag.mjs`, `suggest_broll`** — optional b-roll matching from a private tag index.
+-   **B4 `find_short_candidates` / `build_short_sequences`** — podcast → ranked short windows →
+    1080×1920 29.97 sequences with logo and end card.
+
+**Captions and graphics**
+-   **C1 `make_captions` / `place_captions`** — single-line cues fitted by measured Poppins Bold 75
+    width; caption track placed by script.
+-   **C2 `graphics-template/`** — tokens + lower third, question card, standard end card;
+    `scripts/graphic-from-template.mjs`.
+-   **C3 `check_safe_zones`** — Shorts / TikTok / Reels UI zones, measured by visible pixels.
+
+**Audio**
+-   **D1 `measure_loudness` / `normalize_loudness`** — −14 LUFS / −1 dBTP via gain + true-peak limiter.
+-   **D2 `plan_ducking` / `apply_ducking`** — optional music-bed ducking for longforms.
+
+**Export and publishing**
+-   **E1 `export_platform_versions`** — YouTube Shorts / Reels / TikTok MP4s.
+-   **E2 `pick_cover_frames`** — five thumbnail candidates, blink-checked.
+-   **E3 `upload_metadata_brief` / `save_upload_metadata`** — per-platform text, checked before saving.
+
+**QA and reporting**
+-   **F1 `export_with_gate`** — QA before and after render; overrides need a reason.
+    `export_frame` now hits the exact frame and returns the real path.
+-   **F2 `get_weekly_report`** — shorts made, stage time, failing tools, QA overrides.
+
+**Fixes along the way**
+-   QA expects the 8.008 s checklist end card.
+-   All test suites load (one `import.meta` helper mapped in Jest): 436 tests run, all pass.
+-   Tests use an in-memory telemetry database; telemetry records export deliverables
+    (file name and size only).
+
+------------------------------------------------------------------------
+
 # Version 2.6.1
 
 Released 2026-10-06. The first live-bridge run of the QA layer found that the one-frame gap

@@ -36,8 +36,10 @@ cd mcp/premiere-pro-mcp && npm run setup:doctor
 ## BuildX knowledge — read before starting work
 
 Permanent BuildX knowledge lives in `knowledge/buildx/`. It is **not** loaded automatically.
-Read the relevant file before beginning the task. If multiple files are listed, read them in
-the order shown.
+**Check `knowledge/INDEX.md` first** (MCP resource `buildx://knowledge/index`): it lists every
+knowledge file — tracked and private — with what it covers and when to open it, so you read only
+what the task needs. Then read the relevant file before beginning the task. If multiple files
+are listed, read them in the order shown.
 
 | Before you… | Read |
 |---|---|
@@ -184,14 +186,14 @@ where the two disagree, live observation wins.**
 Computer use (the `computer-use` MCP) drives Premiere's GUI by screenshot and click. It is the
 **last-resort tier**, below the bridge and the working MCP tools. Full runbook: [`gui/SETUP.md`](gui/SETUP.md).
 
-**The four sanctioned operations.** Each is GUI-only because no working API exists:
+**The four sanctioned operations** — GUI only for the part that has no working API:
 
 | Operation | Why |
 |---|---|
-| **Caption creation** | `sequence.captionTracks` is **`undefined`** in ExtendScript — verified live 2026-08-18. There is no scripting surface at all, not a broken one |
+| **Caption styling** | `sequence.captionTracks` is **`undefined`** in ExtendScript — verified live 2026-08-18. A caption *track* can now be placed by script (`place_captions`, which keeps cue 1 at its real time), but its Track Style (**Thomas Default**) is still one GUI click per sequence, and tracks cannot be read back |
 | FCPXML import | `import_sequences` is a no-op |
-| Sequence creation @ 29.97 / 1080×1920 | all four sequence tools are no-ops |
-| Export / Media Encoder queueing | all encode tools are no-ops |
+| Sequence creation @ 29.97 / 1080×1920 | the four generic sequence tools are no-ops. **Short sequences cut from a master are scripted** by `build_short_sequences` (createSubsequence + settings, verified live) |
+| Export / Media Encoder queueing | the generic encode tools are no-ops. `export_sequence` and `export_with_gate` (`renderMethod: "direct"` = `exportAsMediaDirect`) do render |
 
 Plus **visual verification** — independently confirming a mutation actually happened.
 
@@ -302,8 +304,9 @@ compress_export  {"filePath":"/abs/already-rendered.mp4"}
 ## Verify overlays visually with `export_frame`
 
 `export_frame` is real and is the fastest way to confirm an overlay actually landed —
-tool success proves nothing. Note it **appends** its own extension, so `foo.png` is written
-as `foo.png.png`.
+tool success proves nothing. It parks the playhead and exports at that exact frame (fixed
+2026-10-07: it used to pass raw seconds and land on whatever frame was showing), and it returns
+the real file path — `foo.png` is written as `foo.png`.
 
 ## Gotchas found the hard way
 
@@ -395,6 +398,35 @@ and UNAVAILABLE, is in [README.md](README.md#automated-qa).
 **Caption tracks cannot be checked at all** — `captionTracks` is `undefined` in ExtendScript.
 QA reports that honestly rather than passing. Confirm captions visually.
 
+**Export through the gate.** `export_with_gate` runs technical QA (and, for vertical workflows,
+`check_safe_zones`) before rendering and **blocks on any failure**; `override:true` needs an
+`overrideReason`, which is recorded in telemetry. After the render it checks loudness and black
+frames; problems keep the file and are reported. Report its `status`, not "done".
+
+## BuildX v3 tools — which one when
+
+Suggestion tools write a review sheet (`<name>.<kind>.md`) beside the transcript with **nothing
+approved**; apply only the ids the user picks. **The first build never uses the optional ones** —
+cuts, punch-ins, b-roll and ducking run only when asked. Full list in
+[README.md](README.md#buildx-feature-upgrades-v3).
+
+| When | Use |
+|---|---|
+| Before editing a new piece | `find_similar_videos` (past examples), `buildx://knowledge/index` |
+| Writing or picking a hook | `check_hook` (too close to a past one?), `list_hooks` |
+| Long episode → shorts | `find_short_candidates`, then `build_short_sequences` for approved ids |
+| Asked to tighten a take | `find_cuts` → `scripts/find-cuts.mjs --apply` → `plan-cut.mjs` |
+| Asked for punch-ins / b-roll | `suggest_punch_ins` → `apply_punch_ins`; `suggest_broll` |
+| Captions | `make_captions` → review the flags → `place_captions` → Thomas Default in the GUI |
+| A new graphic | `scripts/graphic-from-template.mjs` (never edit `graphics/`), then `check_safe_zones` |
+| Music under dialogue (longform only) | `plan_ducking` → `apply_ducking`, prove by render |
+| Delivery | `export_with_gate` → `normalize_loudness` if flagged → `export_platform_versions` → `pick_cover_frames` → `upload_metadata_brief` + `save_upload_metadata` |
+| End of week | `get_weekly_report` |
+
+Private data (library, b-roll index, private notes, models) lives in `private/` or
+`$BUILDX_PRIVATE_DIR` and is **never committed — the repo is public.** Keep customer names,
+addresses and transcripts of unreleased videos out of tracked files, test fixtures included.
+
 ## Useful MCP tools
 
 `list_sequences`, `get_project_info`, `list_project_items` — orient before editing.
@@ -402,7 +434,7 @@ QA reports that honestly rather than passing. Confirm captions visually.
 `add_to_timeline` (`sourceInPoint`/`sourceOutPoint`/`insertMode`) — the core placement tool.
 `razor_timeline_at_time`, `split_clip`, `trim_clip` — surgical fixes. (`ripple_delete` is
 listed as a no-op in `TOOL-RELIABILITY.md` — don't reach for it until it has been tested.)
-`apply_effect`, `add_transition` — treatment. `export_sequence` — delivery.
+`apply_effect`, `add_transition` — treatment. `export_with_gate` (or `export_sequence`) — delivery.
 `save_project`, `undo` — safety.
 
 Prefer assembling with `add_to_timeline` + source in/out over razor-then-delete. It is one
