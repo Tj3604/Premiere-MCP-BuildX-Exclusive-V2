@@ -122,7 +122,19 @@ export function chainFor(gainDb: number, limitDbfs: number | null): string {
 export async function normalizeLoudness(
   file: string,
   target: LoudnormTarget = DEFAULT_TARGET,
-  { force = false }: { force?: boolean } = {}
+  {
+    force = false,
+    output: outputOverride,
+    audioOnly = false,
+    aacKbps = 320
+  }: {
+    force?: boolean;
+    /** Write here instead of "<name>-14LUFS.<ext>" beside the source. */
+    output?: string;
+    /** Audio only (e.g. an .m4a for platform encodes to stream-copy). */
+    audioOnly?: boolean;
+    aacKbps?: number;
+  } = {}
 ): Promise<NormalizeResult> {
   const codecIn = await audioCodecOf(file);
   if (!codecIn) throw new Error(`No audio stream in ${file}`);
@@ -134,9 +146,10 @@ export async function normalizeLoudness(
   // PCM in (ProRes/broadcast masters) stays PCM; everything else goes to AAC 320k,
   // which overshoots by up to ~0.5 dB, hence the extra margin under the ceiling.
   const pcm = /^pcm_/.test(codecIn);
-  const audioArgs = pcm ? ['-c:a', 'pcm_s24le'] : ['-c:a', 'aac', '-b:a', '320k'];
-  const margin = pcm ? 0.3 : 0.8;
-  const output = outputPathFor(file, target);
+  const audioArgs = pcm && !audioOnly ? ['-c:a', 'pcm_s24le'] : ['-c:a', 'aac', '-b:a', `${aacKbps}k`];
+  const margin = pcm && !audioOnly ? 0.3 : 0.8;
+  const output = outputOverride ?? outputPathFor(file, target);
+  const videoArgs = audioOnly ? ['-vn'] : ['-map', '0:v?', '-c:v', 'copy'];
 
   let gain = target.lufs - before.integratedLufs;
   let limit = target.truePeak - margin;
@@ -149,7 +162,7 @@ export async function normalizeLoudness(
     limited = before.truePeakDbtp + gain > limit;
     await run(
       'ffmpeg',
-      ['-nostdin', '-hide_banner', '-y', '-i', file, '-map', '0:v?', '-map', '0:a:0', '-c:v', 'copy', '-af', chainFor(gain, limited ? limit : null), ...audioArgs, '-ar', '48000', '-movflags', '+faststart', output],
+      ['-nostdin', '-hide_banner', '-y', '-i', file, ...videoArgs, '-map', '0:a:0', '-af', chainFor(gain, limited ? limit : null), ...audioArgs, '-ar', '48000', '-movflags', '+faststart', output],
       { maxBuffer: 64 * 1024 * 1024 }
     );
     after = await measureLoudness(output, target);
@@ -168,5 +181,5 @@ export async function normalizeLoudness(
     : limited
       ? `+${round1(gain)} dB with the loudest peaks limited by ${peakReductionDb} dB.${peakReductionDb > 6 ? ' That is heavy limiting — a louder mix from Premiere would sound better.' : ''}`
       : `Linear gain of ${gain > 0 ? '+' : ''}${round1(gain)} dB, no limiting needed.`;
-  return { file, output, before, after, gainDb: round1(gain), mode: limited ? 'limited' : 'linear', peakReductionDb, passes, audioCodec: pcm ? 'pcm_s24le' : 'aac 320k', note };
+  return { file, output, before, after, gainDb: round1(gain), mode: limited ? 'limited' : 'linear', peakReductionDb, passes, audioCodec: pcm && !audioOnly ? 'pcm_s24le' : `aac ${aacKbps}k`, note };
 }
