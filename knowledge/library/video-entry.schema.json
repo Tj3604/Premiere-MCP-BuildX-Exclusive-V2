@@ -1,0 +1,100 @@
+{
+  "description": "Schema for one BuildX video library entry. Entries live in $BUILDX_PRIVATE_DIR/library/entries/<slug>.json (gitignored); this file holds no customer data.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "buildx://library/schema",
+  "title": "BuildX video library entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "slug",
+    "title",
+    "hookLine",
+    "transcriptPath",
+    "lengthSeconds",
+    "cutCount",
+    "graphicsUsed",
+    "captionStyle",
+    "platformLinks",
+    "publishDate",
+    "performance",
+    "exportPath",
+    "addedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "slug": {
+      "description": "Stable identity and filename. Lowercase kebab-case.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "title": { "description": "Human title, as delivered.", "type": "string", "minLength": 1 },
+    "hookLine": {
+      "description": "The opening spoken line, exact words from the transcript.",
+      "type": "string"
+    },
+    "transcriptPath": {
+      "description": "WhisperX <name>.words.json for this export, absolute path.",
+      "type": "string"
+    },
+    "lengthSeconds": { "type": "number", "minimum": 0 },
+    "cutCount": {
+      "description": "Picture cuts in the export (PySceneDetect adaptive). Null if not measured.",
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "graphicsUsed": {
+      "description": "Graphic types on screen, e.g. thumbnail-card, logo, lower-third, info-chip, plan-card, end-card.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "captionStyle": {
+      "description": "Caption preset name, e.g. 'Thomas Default'. Null if uncaptioned.",
+      "type": ["string", "null"]
+    },
+    "platformLinks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "youtube": { "type": ["string", "null"] },
+        "instagram": { "type": ["string", "null"] },
+        "tiktok": { "type": ["string", "null"] },
+        "facebook": { "type": ["string", "null"] }
+      }
+    },
+    "publishDate": {
+      "description": "YYYY-MM-DD. Null until published.",
+      "type": ["string", "null"],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "performance": {
+      "description": "Filled in after publishing. Every value is null until measured.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["views7d", "views30d", "avgViewDurationSeconds", "retentionPercent", "stayedToWatchPercent", "measuredAt"],
+      "properties": {
+        "views7d": { "type": ["integer", "null"], "minimum": 0 },
+        "views30d": { "type": ["integer", "null"], "minimum": 0 },
+        "avgViewDurationSeconds": { "type": ["number", "null"], "minimum": 0 },
+        "retentionPercent": {
+          "description": "Average percentage viewed. Over 100 means the Short looped.",
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "stayedToWatchPercent": {
+          "description": "YouTube Shorts 'Stayed to watch', 0-100. The hook metric.",
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "measuredAt": {
+          "description": "YYYY-MM-DD the numbers were read.",
+          "type": ["string", "null"],
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      }
+    },
+    "exportPath": { "description": "The finished export this entry was made from.", "type": "string" },
+    "addedAt": { "description": "ISO timestamp the entry was created.", "type": "string" }
+  }
+}

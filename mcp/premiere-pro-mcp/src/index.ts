@@ -16,6 +16,8 @@
  * - Metadata management
  */
 
+import path from 'node:path';
+import { REPO_ROOT } from './utils/package-root.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -35,6 +37,8 @@ import { PremiereProBridge } from './bridge/index.js';
 import { Logger } from './utils/logger.js';
 import { telemetry } from './telemetry/telemetry.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+import { resolvePrivateDir } from './library/index.js';
+
 
 class MCPPremiereProServer {
   private server: Server;
@@ -64,7 +68,10 @@ class MCPPremiereProServer {
 
     this.bridge = new PremiereProBridge();
     this.tools = new PremiereProTools(this.bridge);
-    this.resources = new PremiereProResources(this.bridge);
+    this.resources = new PremiereProResources(this.bridge, {
+      privateDir: resolvePrivateDir(process.env, path.join(REPO_ROOT, 'private')),
+      knowledgeDir: path.join(REPO_ROOT, 'knowledge')
+    });
     this.prompts = new PremiereProPrompts();
 
     this.setupHandlers();

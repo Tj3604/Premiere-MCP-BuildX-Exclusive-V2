@@ -11,6 +11,7 @@
 
 import { z } from 'zod';
 import { telemetry } from './telemetry.js';
+import { buildWeeklyReport, openReadOnly, renderWeeklyReport, weekWindow } from './weekly.js';
 import { WORKFLOW_STAGES, type HumanActivityKind, type SessionStatus } from './types.js';
 
 /** Structurally identical to MCPTool; declared here to avoid a circular import. */
@@ -152,6 +153,14 @@ export const TELEMETRY_TOOLS: TelemetryTool[] = [
     description: 'Lists the most recent telemetry sessions with elapsed and human active time.',
     inputSchema: z.object({
       limit: z.number().optional().describe('How many sessions to list. Defaults to 10.')
+    })
+  },
+  {
+    name: 'get_weekly_report',
+    description:
+      'Weekly report from local telemetry: shorts made (vertical exports by file, sequences built, platform versions), time per stage and human vs machine time, the tools that failed most with their top error, and QA (runs by status, export-gate overrides with reasons). Says plainly what was not recorded. Reads only.',
+    inputSchema: z.object({
+      week: z.string().optional().describe('Any date (YYYY-MM-DD) in the Monday-to-Sunday week to report. Default: the last 7 days.')
     })
   },
   {
@@ -327,6 +336,19 @@ export function executeTelemetryTool(name: string, args: Record<string, any>): a
         report: telemetry.renderRecentSessions(limit),
         sessions: telemetry.getRecentSessions(limit)
       };
+    }
+
+    case 'get_weekly_report': {
+      const file = telemetry.getDatabasePath();
+      if (file === ':memory:') return { success: false, error: 'Telemetry is using an in-memory database — there is nothing on disk to report on.' };
+      telemetry.flush();
+      const db = openReadOnly(file);
+      try {
+        const report = buildWeeklyReport(db, weekWindow(args.week));
+        return { success: true, report: renderWeeklyReport(report), data: report };
+      } finally {
+        db.close();
+      }
     }
 
     case 'get_monthly_performance': {

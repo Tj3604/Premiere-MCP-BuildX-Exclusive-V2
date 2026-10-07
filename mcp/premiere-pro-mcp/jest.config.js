@@ -2,6 +2,8 @@ export default {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
+  // Keep tests off the real telemetry database.
+  setupFiles: ['<rootDir>/src/__tests__/support/setup-env.ts'],
   testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
   transform: {
     '^.+\\.ts$': ['ts-jest', {
@@ -16,6 +18,8 @@ export default {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   moduleNameMapper: {
+    // The one import.meta user; see src/utils/package-root.ts.
+    '^(\\.{1,2}/)+utils/package-root(\\.js)?$': '<rootDir>/src/__tests__/support/package-root.ts',
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   extensionsToTreatAsEsm: ['.ts'],

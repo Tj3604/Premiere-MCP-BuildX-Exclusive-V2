@@ -56,6 +56,62 @@ Then open this folder in Claude and prompt in plain language:
 | `mcp/premiere-pro-mcp/src/qa/` | Automated QA — verifies an edit actually landed, and applies safe fixes |
 | `mcp/premiere-pro-mcp/scripts/telemetry-report.mjs` | Read performance reports from the shell |
 | `presets/` | Audio and colour treatment notes |
+| `graphics-template/` | Shared brand tokens + parameterised lower third, question card and end card (see `graphics-template/README.md`) |
+| `knowledge/INDEX.md` | One-page index of every knowledge file the MCP can read — the MCP checks it first |
+| `private/` | **Gitignored.** Video library, b-roll index, private notes, models. Never committed — the repo is public |
+| `scripts/library-*.mjs` | Build and update the private video library (exports, transcripts, YouTube Studio numbers) |
+| `scripts/find-cuts.mjs` · `broll-tag.mjs` · `loudness.mjs` · `platform-export.mjs` · `weekly-report.mjs` | Shell versions of the editing, audio, export and reporting tools below |
+| `scripts/graphic-from-template.mjs` | New graphic from a `graphics-template/` template |
+| `scripts/cover-frames.py` | Thumbnail candidate scoring (OpenCV + YuNet) |
+
+## BuildX feature upgrades (v3)
+
+Twenty additions on top of the Premiere bridge, built 2026-10-06/07. Everything that edits
+the timeline or writes a file is **opt-in and reviewable**: suggestion tools write a
+`<name>.<kind>.md` review sheet beside the transcript with nothing approved, and only the ids
+you approve are applied. Nothing overwrites an existing file. Nothing is "approved" — every
+export is still proof-watched in Premiere first.
+
+### Setup
+
+- **Private data** lives in `private/` (gitignored), or wherever `BUILDX_PRIVATE_DIR` points.
+  Set it on the MCP server if you keep it elsewhere:
+  ```bash
+  claude mcp remove premiere_pro -s user
+  claude mcp add premiere_pro -s user -e PREMIERE_TEMP_DIR=/tmp/premiere-mcp-bridge \
+    -e BUILDX_PRIVATE_DIR=/path/to/private -- node "$PWD/mcp/premiere-pro-mcp/dist/index.js"
+  ```
+- **ffmpeg / ffprobe** on PATH (loudness, platform versions, safe zones).
+- **Cover frames** need OpenCV Python and the YuNet face model. Defaults: the PySceneDetect uv
+  tool's Python and `private/models/yunet.onnx`; override with `BUILDX_CV_PYTHON` and
+  `BUILDX_FACE_MODEL`.
+- **WhisperX** transcripts (`scripts/transcribe-x.mjs`) feed every transcript-driven tool.
+- After pulling: `cd mcp/premiere-pro-mcp && npm run build`.
+
+### What was added
+
+| Area | Tool / script | What it does |
+|---|---|---|
+| **Library** | `scripts/library-add.mjs`, `library-import-transcripts.mjs` | One private JSON entry per finished video (hook, length, cuts, graphics, captions, links, numbers). Schema: `knowledge/library/video-entry.schema.json` |
+| | `find_similar_videos` | The 3–5 most similar past videos for a new transcript or topic |
+| | `list_hooks` · `check_hook` · `scripts/library-import-youtube.mjs` | Past hooks ranked by retention / stayed-to-watch (from a YouTube Studio CSV); warns when a new hook is too close to one already posted or queued |
+| | `knowledge/INDEX.md` · resource `buildx://knowledge/index` | What each knowledge file is for; open any with `buildx://knowledge/file/<path>` or `buildx://private/knowledge/<path>` |
+| **Editing** | `find_cuts` · `scripts/find-cuts.mjs` | *Optional.* Pauses and fillers from WhisperX timings → a cut list; the first build always keeps the full take |
+| | `suggest_punch_ins` · `apply_punch_ins` | *Optional.* Eased 110% pushes on numbers, stakes words and sentence starts |
+| | `scripts/broll-tag.mjs` · `suggest_broll` | *Optional.* Private tag index of the b-roll library (names + optional look-and-tag); clips suggested per phrase, flagged clips left out |
+| | `find_short_candidates` · `build_short_sequences` | Podcast → shorts: ranked 30–60 s windows, then 1080×1920 29.97 sequences for approved ids (logo + end card, no export) |
+| **Captions & graphics** | `make_captions` · `place_captions` | Single-line cues fitted by measured Poppins Bold 75 width, never overlapping, off frame 0; SRT + review sheet; caption track placed by script (Thomas Default is still one GUI click) |
+| | `graphics-template/` · `scripts/graphic-from-template.mjs` | Brand tokens + lower third, question card and the standard end card (wording fixed) at 9:16 or 16:9 |
+| | `check_safe_zones` | Flags graphics and captions in the Shorts / TikTok / Reels UI zones, measured by visible pixels |
+| **Audio** | `measure_loudness` · `normalize_loudness` · `scripts/loudness.mjs` | −14 LUFS / −1 dBTP by gain + true-peak limiter, measured before and after; writes `<name>-14LUFS.<ext>` |
+| | `plan_ducking` · `apply_ducking` | *Optional, not for shorts.* Music bed −18 dB in gaps, −30 dB under speech |
+| **Export & publishing** | `export_platform_versions` · `scripts/platform-export.mjs` | YouTube Shorts / Reels / TikTok MP4s in `Platform Versions/`, loudness-normalised, under 480 MB |
+| | `pick_cover_frames` | Five thumbnail candidates (face, sharpness, contrast, eyes open) in `Cover Candidates/` |
+| | `upload_metadata_brief` · `save_upload_metadata` | Title, description and hashtags per platform; checked for limits, invented figures, "drywall" and calls to action before saving |
+| **QA & reporting** | `export_with_gate` | Technical QA + safe zones before render (blocks on failure; override needs a reason, recorded), loudness + black frames after |
+| | `get_weekly_report` · `scripts/weekly-report.mjs` | Shorts made, time per stage, failing tools, QA blocks and overrides — and what was not recorded |
+
+`export_frame` now lands on the exact requested frame and returns the real file path.
 
 ## Performance Telemetry
 

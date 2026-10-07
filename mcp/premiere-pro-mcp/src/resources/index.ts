@@ -5,8 +5,34 @@
  * information about Adobe Premiere Pro projects, sequences, and media.
  */
 
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import type { PremiereProTransport } from '../bridge/types.js';
 import { Logger } from '../utils/logger.js';
+import {
+  LIBRARY_ENTRY_URI_PREFIX,
+  listEntries,
+  readEntry,
+  toIndexRow
+} from '../library/index.js';
+
+export const KNOWLEDGE_FILE_URI_PREFIX = 'buildx://knowledge/file/';
+export const PRIVATE_KNOWLEDGE_URI_PREFIX = 'buildx://private/knowledge/';
+
+/**
+ * Resolves a path from a knowledge URI inside its base dir. Plain Markdown/JSON only,
+ * and nothing that climbs out of the base — the private dir sits next to it.
+ */
+export function resolveKnowledgePath(baseDir: string, relative: string): string {
+  const rel = decodeURIComponent(relative);
+  if (!/\.(md|json)$/i.test(rel)) throw new Error(`Knowledge files are .md or .json, got '${rel}'`);
+  const base = path.resolve(baseDir);
+  const full = path.resolve(base, rel);
+  if (path.isAbsolute(rel) || !full.startsWith(base + path.sep)) {
+    throw new Error(`'${rel}' is outside ${base}`);
+  }
+  return full;
+}
 
 export interface MCPResource {
   uri: string;
@@ -15,13 +41,27 @@ export interface MCPResource {
   mimeType: string;
 }
 
+/**
+ * Where the BuildX library lives. Both are resolved by the caller (src/index.ts)
+ * so this module never touches import.meta. Omitted = library resources report
+ * that they are not configured instead of guessing a path.
+ */
+export interface ResourceDirs {
+  /** $BUILDX_PRIVATE_DIR, or <repo>/private. Gitignored. */
+  privateDir?: string;
+  /** <repo>/knowledge — the tracked schema lives here. */
+  knowledgeDir?: string;
+}
+
 export class PremiereProResources {
   private bridge: PremiereProTransport;
   private logger: Logger;
+  private dirs: ResourceDirs;
 
-  constructor(bridge: PremiereProTransport) {
+  constructor(bridge: PremiereProTransport, dirs: ResourceDirs = {}) {
     this.bridge = bridge;
     this.logger = new Logger('PremiereProResources');
+    this.dirs = dirs;
   }
 
   getAvailableResources(): MCPResource[] {
@@ -103,6 +143,24 @@ export class PremiereProResources {
         name: 'Premiere Operating Instructions',
         description: 'Attach this before editing to give the model workflow and safety guidance for using the Premiere MCP server',
         mimeType: 'text/plain'
+      },
+      {
+        uri: 'buildx://knowledge/index',
+        name: 'BuildX Knowledge Index',
+        description: `Read this first: every knowledge file the MCP can read, what it covers, when to use it, and its URI. Open a tracked file with ${KNOWLEDGE_FILE_URI_PREFIX}<path> and a private one with ${PRIVATE_KNOWLEDGE_URI_PREFIX}<path>.`,
+        mimeType: 'text/markdown'
+      },
+      {
+        uri: 'buildx://library/index',
+        name: 'BuildX Video Library Index',
+        description: `One compact row per past video (title, hook line, length, publish date, 30-day views, stayed-to-watch). Open a single video with ${LIBRARY_ENTRY_URI_PREFIX}<slug>. Reads $BUILDX_PRIVATE_DIR/library/entries.`,
+        mimeType: 'application/json'
+      },
+      {
+        uri: 'buildx://library/schema',
+        name: 'BuildX Video Library Entry Schema',
+        description: 'JSON Schema for one library entry — the fields every past video records.',
+        mimeType: 'application/schema+json'
       }
     ];
   }
@@ -149,14 +207,98 @@ export class PremiereProResources {
 
       case 'premiere://config/get_instructions':
         return this.getInstructions();
-      
+
+      case 'buildx://knowledge/index':
+        return await readFile(resolveKnowledgePath(this.requireKnowledgeDir(), 'INDEX.md'), 'utf8');
+
+      case 'buildx://library/index':
+        return await this.getLibraryIndex();
+
+      case 'buildx://library/schema':
+        return await this.getLibrarySchema();
+
       default:
+        if (uri.startsWith(LIBRARY_ENTRY_URI_PREFIX)) {
+          return await readEntry(this.requirePrivateDir(), uri.slice(LIBRARY_ENTRY_URI_PREFIX.length));
+        }
+        if (uri.startsWith(KNOWLEDGE_FILE_URI_PREFIX)) {
+          const rel = uri.slice(KNOWLEDGE_FILE_URI_PREFIX.length);
+          return await readFile(resolveKnowledgePath(this.requireKnowledgeDir(), rel), 'utf8');
+        }
+        if (uri.startsWith(PRIVATE_KNOWLEDGE_URI_PREFIX)) {
+          const rel = uri.slice(PRIVATE_KNOWLEDGE_URI_PREFIX.length);
+          const base = path.join(this.requirePrivateDir(), 'knowledge');
+          try {
+            return await readFile(resolveKnowledgePath(base, rel), 'utf8');
+          } catch (error: any) {
+            if (error?.code === 'ENOENT') {
+              throw new Error(`Private knowledge file '${rel}' is not on this machine (looked in ${base}; set BUILDX_PRIVATE_DIR).`);
+            }
+            throw error;
+          }
+        }
         throw new Error(`Resource '${uri}' not found`);
     }
   }
 
   getResource(uri: string): MCPResource | undefined {
-    return this.getAvailableResources().find((resource) => resource.uri === uri);
+    const listed = this.getAvailableResources().find((resource) => resource.uri === uri);
+    if (listed) return listed;
+    // One entry per past video, so entries are addressed by prefix rather than listed.
+    if (uri.startsWith(LIBRARY_ENTRY_URI_PREFIX) && uri.length > LIBRARY_ENTRY_URI_PREFIX.length) {
+      return {
+        uri,
+        name: `BuildX Video Library Entry ${uri.slice(LIBRARY_ENTRY_URI_PREFIX.length)}`,
+        description: 'One past video: hook, transcript path, length, cuts, graphics, captions, links and performance.',
+        mimeType: 'application/json'
+      };
+    }
+    // Knowledge files are listed in buildx://knowledge/index, not here, so the resource
+    // list stays short and the model reads the index before opening anything.
+    for (const prefix of [KNOWLEDGE_FILE_URI_PREFIX, PRIVATE_KNOWLEDGE_URI_PREFIX]) {
+      if (uri.startsWith(prefix) && uri.length > prefix.length) {
+        const rel = uri.slice(prefix.length);
+        return {
+          uri,
+          name: `BuildX Knowledge ${rel}`,
+          description: 'A knowledge file listed in buildx://knowledge/index.',
+          mimeType: rel.endsWith('.json') ? 'application/json' : 'text/markdown'
+        };
+      }
+    }
+    return undefined;
+  }
+
+  private requirePrivateDir(): string {
+    if (!this.dirs.privateDir) {
+      throw new Error('BuildX private dir is not configured — set BUILDX_PRIVATE_DIR on the MCP server.');
+    }
+    return this.dirs.privateDir;
+  }
+
+  private requireKnowledgeDir(): string {
+    if (!this.dirs.knowledgeDir) {
+      throw new Error('Knowledge dir is not configured on the MCP server.');
+    }
+    return this.dirs.knowledgeDir;
+  }
+
+  private async getLibraryIndex(): Promise<any> {
+    const privateDir = this.requirePrivateDir();
+    const { entries, skipped } = await listEntries(privateDir);
+    return {
+      privateDir,
+      count: entries.length,
+      entries: entries.map(toIndexRow),
+      skipped
+    };
+  }
+
+  private async getLibrarySchema(): Promise<string> {
+    if (!this.dirs.knowledgeDir) {
+      throw new Error('Knowledge dir is not configured on the MCP server.');
+    }
+    return await readFile(path.join(this.dirs.knowledgeDir, 'library', 'video-entry.schema.json'), 'utf8');
   }
 
   private async getProjectInfo(): Promise<any> {

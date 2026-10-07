@@ -23,7 +23,7 @@ describe('PremiereProResources', () => {
       const availableResources = resources.getAvailableResources();
 
       expect(Array.isArray(availableResources)).toBe(true);
-      expect(availableResources.length).toBe(13);
+      expect(availableResources.length).toBe(16);
     });
 
     it('should return all expected resources', () => {
@@ -43,6 +43,9 @@ describe('PremiereProResources', () => {
       expect(uris).toContain('premiere://export/presets');
       expect(uris).toContain('premiere://project/metadata');
       expect(uris).toContain('premiere://config/get_instructions');
+      expect(uris).toContain('buildx://knowledge/index');
+      expect(uris).toContain('buildx://library/index');
+      expect(uris).toContain('buildx://library/schema');
     });
 
     it('should have valid resource structure', () => {

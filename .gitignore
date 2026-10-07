@@ -99,3 +99,9 @@ sandbox/
 # earlier commit by anyone who clones. For anything that must never be
 # distributed, publish from a repository that never contained it.
 # -------------------------------------------------------------------------
+
+# =========================
+# Private BuildX data (customer names, transcripts, performance)
+# The MCP reads it via BUILDX_PRIVATE_DIR. Never commit it: the repo is public.
+# =========================
+private/

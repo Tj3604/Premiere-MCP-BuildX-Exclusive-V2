@@ -9,9 +9,10 @@
  *     SQLite file on this machine.
  */
 
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { PACKAGE_ROOT } from '../utils/package-root.js';
 import { Logger } from '../utils/logger.js';
 import { TelemetryDatabase } from './database.js';
 import { SessionManager, type Clock } from './session.js';
@@ -38,7 +39,6 @@ import type {
   WorkflowStage
 } from './types.js';
 
-const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEFAULT_DB_PATH = path.join(PACKAGE_ROOT, 'data', 'telemetry.sqlite');
 const CONFIG_PATH = path.join(PACKAGE_ROOT, 'data', 'telemetry.config.json');
 
@@ -359,7 +359,7 @@ export class Telemetry {
 
     try {
       const result = await run();
-      this.safe('instrumentToolCall.settle', () => this.settleToolCall(handle, result, null), undefined);
+      this.safe('instrumentToolCall.settle', () => this.settleToolCall(handle, result, null, name, args), undefined);
       return result;
     } catch (error) {
       this.safe('instrumentToolCall.settle', () => this.settleToolCall(handle, null, error), undefined);
@@ -367,7 +367,7 @@ export class Telemetry {
     }
   }
 
-  private settleToolCall(handle: OperationHandle | null, result: unknown, error: unknown): void {
+  private settleToolCall(handle: OperationHandle | null, result: unknown, error: unknown, name?: string, args?: unknown): void {
     if (!handle) return;
     const sessionId = handle.sessionId;
 
@@ -384,7 +384,8 @@ export class Telemetry {
       return;
     }
 
-    handle.success(analysis.metadata);
+    const made = name ? this.safe('deliverables', () => deliverables(name, args, result), null) : null;
+    handle.success(made ? { ...analysis.metadata, ...made } : analysis.metadata);
     if (sessionId) this.sessions.incrementCounter(sessionId, 'successful_calls');
   }
 
@@ -656,6 +657,57 @@ interface ResultAnalysis {
  * expanded dispatcher's catch-all, which this repo has verified does nothing —
  * it is flagged in metadata rather than counted as a real success.
  */
+export interface Deliverable {
+  /** File name only — telemetry never stores full media paths. */
+  file: string;
+  width: number | null;
+  height: number | null;
+}
+
+/** Width x height of a rendered file, or nulls when it cannot be read. */
+function probeSize(file: string): { width: number | null; height: number | null } {
+  try {
+    if (!fs.existsSync(file)) return { width: null, height: null };
+    const out = execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', file], { encoding: 'utf8', timeout: 10000 });
+    const [w, h] = out.trim().split(',').map(Number);
+    return { width: Number.isFinite(w) ? w! : null, height: Number.isFinite(h) ? h! : null };
+  } catch {
+    return { width: null, height: null };
+  }
+}
+
+/**
+ * What a successful export or build produced, so the weekly report can count
+ * shorts. Records file names and frame size only, never full paths.
+ */
+export function deliverables(name: string, args: unknown, result: unknown): Record<string, unknown> | null {
+  const a = (args ?? {}) as Record<string, any>;
+  const r = (result ?? {}) as Record<string, any>;
+  const one = (file: unknown): Deliverable | null => {
+    if (typeof file !== 'string' || !file) return null;
+    return { file: path.basename(file), ...probeSize(file) };
+  };
+  if (name === 'export_sequence') {
+    const d = one(a.outputPath);
+    return d ? { outputs: [d] } : null;
+  }
+  if (name === 'export_with_gate') {
+    const d = r.outputPath ? one(r.outputPath) : null;
+    return { gateStatus: r.status ?? null, overridden: !!r.overridden, ...(d ? { outputs: [d] } : {}) };
+  }
+  if (name === 'export_platform_versions') {
+    const outs = (Array.isArray(r.results) ? r.results : [])
+      .map((x: any) => (x?.output ? { file: path.basename(x.output), width: x.info?.width ?? null, height: x.info?.height ?? null } : null))
+      .filter(Boolean);
+    return { platformVersions: outs };
+  }
+  if (name === 'build_short_sequences') {
+    const built = (Array.isArray(r.built) ? r.built : []).filter((b: any) => b?.success);
+    return { sequencesBuilt: built.length, sequenceNames: built.map((b: any) => b.name).filter(Boolean) };
+  }
+  return null;
+}
+
 export function analyseResult(result: unknown): ResultAnalysis {
   const metadata: Record<string, unknown> = {};
   if (!result || typeof result !== 'object') return { failed: false, errorMessage: null, metadata };

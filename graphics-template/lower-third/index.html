@@ -1,0 +1,53 @@
+<!doctype html>
+<!--
+  TEMPLATE — lower third (eyebrow + name). Overlay: render with --alpha.
+  Generate an instance with scripts/graphic-from-template.mjs; do not edit {{…}} by hand.
+  9:16 sits in the free band (ends above the caption line y909, left of the action rail);
+  16:9 sits bottom-left inside title-safe. Never put a name on screen that was inferred
+  rather than confirmed (people.md).
+-->
+<html lang="en"><head><meta charset="UTF-8"/>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+/*TOKENS*/
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:{{width}}px;height:{{height}}px;overflow:hidden;background:transparent}
+#root{position:relative;width:{{width}}px;height:{{height}}px;font-family:var(--font);-webkit-font-smoothing:antialiased}
+.card{position:absolute;display:flex;align-items:stretch;gap:22px;padding:22px 34px 24px 24px;
+  background:var(--panel-soft);border-radius:14px}
+[data-format="9x16"] .card{left:var(--v-side);bottom:calc({{height}}px - var(--v-free-bottom));max-width:calc(var(--v-rail-x) - var(--v-side))}
+[data-format="16x9"] .card{left:var(--h-side);bottom:120px;max-width:1100px}
+.rule{width:8px;border-radius:4px;background:var(--gold);transform-origin:top center}
+.eyebrow{color:var(--gold);font-weight:var(--w-bold);font-size:24px;letter-spacing:var(--track-eyebrow);
+  text-transform:uppercase;white-space:nowrap}
+.name{color:var(--white);font-weight:var(--w-black);font-size:64px;line-height:1.04;letter-spacing:-.015em;
+  white-space:nowrap;margin-top:8px}
+</style></head><body>
+<div id="root" data-format="{{format}}" data-composition-id="root" data-start="0" data-width="{{width}}" data-height="{{height}}" data-duration="{{duration}}">
+  <div class="card" id="card">
+    <div class="rule" id="rule"></div>
+    <div class="txt">
+      <div class="eyebrow" id="eyebrow">{{eyebrow}}</div>
+      <div class="name" id="name">{{name}}</div>
+    </div>
+  </div>
+<script>
+/* A long name shrinks to fit the card's width rather than running off the frame. */
+(function fit(){
+  var card=document.getElementById('card'), name=document.getElementById('name');
+  var max=parseFloat(getComputedStyle(card).maxWidth)-80, size=64;
+  while(name.scrollWidth>max && size>36){ size-=2; name.style.fontSize=size+'px'; }
+})();
+window.__timelines=window.__timelines||{};
+var E="power3.out", D={{duration}};
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#card",{opacity:0,x:-28},{opacity:1,x:0,duration:.45,ease:E},0.00)
+  .fromTo("#rule",{scaleY:0},{scaleY:1,duration:.45,ease:E},0.08)
+  .fromTo("#eyebrow",{opacity:0,x:-20},{opacity:1,x:0,duration:.45,ease:E},0.18)
+  .fromTo("#name",{opacity:0,x:-26},{opacity:1,x:0,duration:.55,ease:E},0.30)
+  .to("#card",{opacity:0,x:-20,duration:.40,ease:"power2.in"},D-0.55)
+  .set("#card",{opacity:0,visibility:"hidden"},D-0.10);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

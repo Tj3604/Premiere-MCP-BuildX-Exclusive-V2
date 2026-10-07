@@ -1,0 +1,10 @@
+{
+  "description": "Lower third: gold eyebrow line over a name, on a soft panel. Overlay — render with --alpha.",
+  "alpha": true,
+  "formats": ["9x16", "16x9"],
+  "params": {
+    "eyebrow": { "required": true, "example": "BuildX President & Owner", "help": "Role or category, short." },
+    "name": { "required": true, "example": "First Last", "help": "Confirmed name only (people.md). Shrinks to fit." },
+    "duration": { "default": "5.5", "help": "Seconds." }
+  }
+}

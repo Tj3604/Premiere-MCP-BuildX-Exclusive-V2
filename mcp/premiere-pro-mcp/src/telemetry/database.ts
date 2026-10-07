@@ -12,6 +12,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { PACKAGE_ROOT } from '../utils/package-root.js';
 import { Logger } from '../utils/logger.js';
 
 /** Minimal shape of the bits of node:sqlite we use. */
@@ -176,7 +177,7 @@ export class TelemetryDatabase {
   open(): boolean {
     if (this.available) return true;
     try {
-      const require = createRequire(import.meta.url);
+      const require = createRequire(path.join(PACKAGE_ROOT, 'package.json'));
       const sqlite = require('node:sqlite') as SqliteModule;
 
       if (this.databasePath !== ':memory:') {

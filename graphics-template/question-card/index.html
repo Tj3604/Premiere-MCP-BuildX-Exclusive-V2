@@ -1,0 +1,52 @@
+<!doctype html>
+<!--
+  TEMPLATE — question / title card. Full-frame card on the BuildX panel (render
+  without --alpha). Wrap the payoff word in *asterisks* when generating and it turns
+  gold — one emphasis per card (captions.md, design-system.md).
+  9:16: the text block stays in the free band y410..880, under the logo and above the
+  captions, left of the action rail. 16:9: centred inside title-safe.
+-->
+<html lang="en"><head><meta charset="UTF-8"/>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+/*TOKENS*/
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:{{width}}px;height:{{height}}px;overflow:hidden;background:var(--panel)}
+#root{position:relative;width:{{width}}px;height:{{height}}px;font-family:var(--font);-webkit-font-smoothing:antialiased}
+.stack{position:absolute}
+[data-format="9x16"] .stack{left:var(--v-side);right:calc({{width}}px - var(--v-rail-x));top:var(--v-free-top);
+  height:calc(var(--v-free-bottom) - var(--v-free-top));display:flex;flex-direction:column;justify-content:center}
+[data-format="16x9"] .stack{left:var(--h-side);right:var(--h-side);top:180px;bottom:180px;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.bar{height:10px;width:220px;border-radius:5px;background:var(--gold);transform-origin:left center}
+[data-format="16x9"] .bar{transform-origin:center}
+.eyebrow{color:var(--gold);font-weight:var(--w-bold);font-size:26px;letter-spacing:var(--track-eyebrow);
+  text-transform:uppercase;margin-top:30px}
+.q{color:var(--white);font-weight:var(--w-black);font-size:86px;line-height:1.05;letter-spacing:-.015em;margin-top:18px}
+[data-format="16x9"] .q{font-size:96px}
+.q em{font-style:normal;color:var(--gold)}
+</style></head><body>
+<div id="root" data-format="{{format}}" data-composition-id="root" data-start="0" data-width="{{width}}" data-height="{{height}}" data-duration="{{duration}}">
+  <div class="stack" id="stack">
+    <div class="bar" id="bar"></div>
+    <div class="eyebrow" id="eyebrow">{{eyebrow}}</div>
+    <div class="q" id="q">{{question}}</div>
+  </div>
+<script>
+/* Shrink the question until the whole block fits its band — never spill into captions. */
+(function fit(){
+  var stack=document.getElementById('stack'), q=document.getElementById('q');
+  var size=parseFloat(getComputedStyle(q).fontSize);
+  while((stack.scrollHeight>stack.clientHeight || q.scrollWidth>q.clientWidth) && size>44){ size-=2; q.style.fontSize=size+'px'; }
+})();
+window.__timelines=window.__timelines||{};
+var E="power3.out", D={{duration}};
+var tl=gsap.timeline({paused:true});
+tl.fromTo("#bar",{scaleX:0},{scaleX:1,duration:.42,ease:E},0.10)
+  .fromTo("#eyebrow",{opacity:0,y:16},{opacity:1,y:0,duration:.42,ease:E},0.22)
+  .fromTo("#q",{opacity:0,y:30},{opacity:1,y:0,duration:.55,ease:E},0.34)
+  .to("#stack",{opacity:0,y:-18,duration:.30,ease:"power2.in"},D-0.40);
+window.__timelines["root"]=tl;
+if(!window.__hyperframes){tl.play();}
+</script>
+</div></body></html>

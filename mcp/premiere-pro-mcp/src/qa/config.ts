@@ -57,7 +57,9 @@ const VERTICAL_BASE: Omit<QaWorkflowConfig, 'workflow' | 'requiredChecks' | 'opt
   logoAssetPattern: 'BuildX Logo',
   approvedLogoPlacements: [SHORTS_LOGO_PLACEMENT],
   endCardPattern: 'CTA',
-  endCardDurationSeconds: 5,
+  // buildx-cta-adu-journey-9x16-ig-v3.mov (the "Start Your ADU Journey" checklist card), standard since
+  // 2026-10-06 — see $BUILDX_PRIVATE_DIR/knowledge/video-formats.md. The retired 5.0s cards now flag.
+  endCardDurationSeconds: 8.008,
   endCardDurationToleranceSeconds: 0.5,
   requiredGraphics: [],
   visualSamplePoints: [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1]
