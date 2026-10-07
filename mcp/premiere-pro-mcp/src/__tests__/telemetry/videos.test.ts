@@ -76,6 +76,14 @@ describe('video tagging', () => {
     expect(() => telemetry.markVideoExported('missing')).toThrow(/No video "missing"/);
   });
 
+  it('keeps the first export time when a video is exported again', () => {
+    const { telemetry, clock } = setup();
+    telemetry.setCurrentVideo('v1', 'V', 'short');
+    const first = telemetry.markVideoExported('v1')!.exportedMs;
+    clock.advance(3600000);
+    expect(telemetry.markVideoExported('v1')!.exportedMs).toBe(first);
+  });
+
   it('rejects an unknown type', () => {
     const { telemetry } = setup();
     expect(() => telemetry.setCurrentVideo('v1', 'V', 'vlog' as any)).toThrow(/short, podcast, longform, ad, testimonial, other/);

@@ -105,11 +105,14 @@ export class VideoTracker {
     return row?.video_id ? this.get(row.video_id) : null;
   }
 
-  /** Marks a video exported now. Throws for an unknown id. */
+  /**
+   * Marks a video exported. Keeps the FIRST export time: work after it counts as
+   * revisions, and it is the date the time log reports. Throws for an unknown id.
+   */
   markExported(id: string): VideoRecord {
     const video = this.get(id);
     if (!video) throw new Error(`No video "${id}" — set_current_video creates one.`);
-    this.db.run('UPDATE videos SET exported_ms = ?, updated_ms = ? WHERE id = ?', [this.now(), this.now(), id]);
+    this.db.run('UPDATE videos SET exported_ms = COALESCE(exported_ms, ?), updated_ms = ? WHERE id = ?', [this.now(), this.now(), id]);
     return this.get(id)!;
   }
 
