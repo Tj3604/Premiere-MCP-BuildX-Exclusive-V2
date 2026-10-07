@@ -727,10 +727,13 @@ function buildExpandedToolScript(name: string, args: Record<string, any>): strin
         case "get_clip_markers":
         case "get_sequence_markers_by_type":
         case "get_next_edit_point":
-          return ok({ available: true, project: app.project ? app.project.name : null, note: "Read operation completed; this Premiere DOM surface exposes limited details in ExtendScript." });
+          // These used to answer success with a canned note and no data. Say so plainly.
+          return fail("not implemented: " + toolName + " has no working Premiere implementation in this server", { tool: toolName, notImplemented: true });
 
         default:
-          return ok({ accepted: true, name: toolName, args: args, note: "Expanded tool dispatched through the native Premiere bridge. No copied upstream implementation is used." });
+          // Used to return success with accepted:true while doing nothing (verified live:
+          // delete_project_item "succeeded" and the item stayed). Fail honestly instead.
+          return fail("not implemented: " + toolName + " has no working Premiere implementation in this server", { tool: toolName, notImplemented: true });
       }
     } catch (error) {
       return fail(error && error.message ? error.message : error, { name: toolName });
