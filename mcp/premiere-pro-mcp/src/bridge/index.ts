@@ -13,6 +13,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { createSecureTempDir, validateFilePath } from '../utils/security.js';
 import type { PremiereProTransport } from './types.js';
 
+/** A request that got no response in time (distinct from a script error). */
+export class BridgeTimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'BridgeTimeoutError';
+  }
+}
+
 const UNSUPPORTED_MODAL_PRONE_IMPORT_EXTENSIONS = new Set([
   '.ass',
   '.ssa'
@@ -178,6 +186,15 @@ export class PremiereProBridge implements PremiereProTransport {
   private uxpProcess?: ChildProcess;
   private isInitialized = false;
   private sessionId: string;
+  /** Response files a request is currently waiting for — never swept. */
+  private readonly awaiting = new Set<string>();
+  private lastSweepMs = 0;
+  /** A response-*.json nobody is waiting for, older than this, is an orphan. */
+  orphanAgeMs = 10 * 60 * 1000;
+  /** How long to keep watching for a late response after a timeout. */
+  lateResponseWatchMs = 10 * 60 * 1000;
+  lateResponsePollMs = 1000;
+  sweepEveryMs = 60 * 1000;
 
   constructor() {
     this.logger = new Logger('PremiereProBridge');
@@ -277,6 +294,8 @@ export class PremiereProBridge implements PremiereProTransport {
     const commandFile = join(this.tempDir, `command-${commandId}.json`);
     const responseFile = join(this.tempDir, `response-${commandId}.json`);
 
+    await this.sweepOrphanResponses();
+    this.awaiting.add(responseFile);
     try {
       const fullScript = this.buildExecutableScript(script);
 
@@ -301,9 +320,69 @@ export class PremiereProBridge implements PremiereProTransport {
 
       return response;
     } catch (error) {
+      if (error instanceof BridgeTimeoutError) {
+        // Withdraw the request: the panel keeps command-*.json until it has run it, so a
+        // file left behind would run later, long after this caller gave up.
+        const withdrawn = await fs.unlink(commandFile).then(() => true, () => false);
+        this.watchForLateResponse(responseFile);
+        const note = withdrawn
+          ? ' The request was withdrawn and will not run.'
+          : ' The panel had already taken the request; Premiere may still finish it.';
+        this.logger.error(`Failed to execute script: ${error.message}${note}`);
+        throw new BridgeTimeoutError(error.message + note);
+      }
       this.logger.error(`Failed to execute script: ${error}`);
       throw error;
+    } finally {
+      this.awaiting.delete(responseFile);
     }
+  }
+
+  /** Deletes a response that lands after its request timed out, so it never lingers. */
+  private watchForLateResponse(responseFile: string): void {
+    const started = Date.now();
+    const timer = setInterval(() => {
+      fs.unlink(responseFile).then(
+        () => clearInterval(timer),
+        () => {
+          if (Date.now() - started > this.lateResponseWatchMs) clearInterval(timer);
+        }
+      );
+    }, this.lateResponsePollMs);
+    timer.unref?.();
+  }
+
+  /**
+   * Removes response-*.json files nobody is waiting for that are older than
+   * orphanAgeMs — left by crashes, restarts or timeouts before this fix. Runs at
+   * most once per sweepEveryMs. Only response files in the bridge folder.
+   */
+  async sweepOrphanResponses(force = false): Promise<number> {
+    const now = Date.now();
+    if (!force && now - this.lastSweepMs < this.sweepEveryMs) return 0;
+    this.lastSweepMs = now;
+    let removed = 0;
+    let names: string[] = [];
+    try {
+      names = await fs.readdir(this.tempDir);
+    } catch {
+      return 0;
+    }
+    for (const name of names) {
+      if (!/^response-.+\.json$/.test(name)) continue;
+      const file = join(this.tempDir, name);
+      if (this.awaiting.has(file)) continue;
+      try {
+        const stat = await fs.stat(file);
+        if (now - stat.mtimeMs > this.orphanAgeMs) {
+          await fs.unlink(file);
+          removed++;
+        }
+      } catch {
+        // Gone already, or unreadable — leave it.
+      }
+    }
+    return removed;
   }
 
   private async waitForResponse(responseFile: string, timeout = 60000): Promise<any> {
@@ -320,7 +399,7 @@ export class PremiereProBridge implements PremiereProTransport {
       }
     }
 
-    throw new Error(
+    throw new BridgeTimeoutError(
       'Bridge response timeout. Ensure Premiere Pro is open, MCP Bridge (CEP or UXP) panel is open, ' +
       'Temp Directory is set to ' + this.tempDir + ', and Start Bridge is clicked.'
     );
