@@ -1,0 +1,23 @@
+TEMPLATE 10 — ADS (YouTube ads, Comcast 30s spots)
+==================================================
+
+BRIEF
+-----
+Ad type ..................... YouTube (15 s / __ s) / Comcast 30 s / other
+Town / market ............... ______ (Comcast: bin COMCAST/<TOWN>)
+Script / VO source .......... <path>  (Buz owner VO leads)
+Footage / graphics .......... ______
+Figures on screen ........... must match verified-facts.md
+
+RECIPE
+------
+ 1. Script with the buildx-ad-scriptwriter skill if no script exists. Lead with Buz
+    (owner VO, "Walk Through One" angle). No new CTA — end on the standard card.
+ 2. Build in HyperFrames (motion-first) or Premiere (footage-first).
+ 3. Comcast spec: exactly 900 frames for a 30 s (29.97), ProRes 422 + LPCM audio.
+    Build in the master Comcast project; don't start a new one.
+ 4. Loudness to delivery spec; QA (99). STOP for review before export.
+
+DELIVERY
+--------
+  YouTube: mp4 h264.   Comcast: .mov ProRes 422 / LPCM, 900 frames exactly.

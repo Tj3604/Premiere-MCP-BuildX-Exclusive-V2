@@ -1,0 +1,25 @@
+TEMPLATE 02 — FAQ SHORTS (visitor asks, Buz answers) (9:16)
+===========================================================
+
+BRIEF
+-----
+Source ...................... <path(s)>  (open house / tour / Q&A recording)
+Premiere project / bin ...... ______
+Question audio usable? ...... yes / no (if no: on-screen question card instead)
+Delivery folder ............. ______
+
+RECIPE
+------
+ 1. Same prep as 01 (probe, LUT/WB, mirroring, WhisperX transcript with domain prompt).
+ 2. Candidate filter — ONLY real customer/visitor questions answered by Buz.
+    Exclude: ads/pitches, PM answers, walkthrough sales pitch, Buz asking himself.
+ 3. Each short: question (visitor audio or full-screen question card) → Buz's answer,
+    whole sentences only. 20–45 s. Present list, WAIT for approval.
+ 4. Build as template 01 step 5 (cover, logo, fill frame, B-roll on topic, end card).
+    Animated explainer graphics are allowed (HyperFrames → --alpha ProRes 4444, rendered
+    at the sequence fps).
+ 5. Captions per template 01 step 6. QA (99). STOP for proof-watch.
+
+DELIVERY
+--------
+  Short NN - Question Title.mp4 + transcript .txt   QA workflow: social_vertical

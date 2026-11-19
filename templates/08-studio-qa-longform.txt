@@ -1,0 +1,24 @@
+TEMPLATE 08 — STUDIO Q&A LONGFORM (S7-style, 16:9)
+==================================================
+
+BRIEF
+-----
+Session ..................... <path>   cameras: ______  mic tracks (BUZ = ____)
+Question list ............... <file> or "derive from transcript"
+Grouping .................... how many videos, which questions go together
+Graded cams ................. which cams are log/flat and need the match grade
+
+RECIPE
+------
+ 1. Multicam: sync by timecode (Media Start); no scripted multicam — cut angles directly.
+ 2. Grade-match flat/log cams to the hero cam.
+ 3. Every answer is preceded by a full-screen question card; open on the Q1 card.
+ 4. Visuals are required, not optional: B-roll and full-frame explainers, not just text
+    cards. FutureLot mentions cut to the real recording.
+ 5. Filler cuts: ripple only V1/A1; re-lay animated graphics whole afterwards.
+ 6. Tail: standard outro + ADU Journey 16x9 end card (check the current S7 tail spec).
+ 7. Logo top-right. QA (99, youtube_landscape). STOP for proof-watch.
+
+DELIVERY
+--------
+  S7 NN - Title.mp4 + .txt + _timecoded.txt + _words.json

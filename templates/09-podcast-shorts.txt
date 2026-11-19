@@ -1,0 +1,23 @@
+TEMPLATE 09 — PODCAST / STUDIO SHORTS (9:16)
+============================================
+Host is BUZ (never "Tom" / "Thomas"). Podcast: Just Build Baby.
+
+BRIEF
+-----
+Episode ..................... EP__  title: ______
+Master sequence / project ... ______
+Guest(s) .................... real name(s), confirmed spelling
+How many shorts ............. __
+Delivery folder ............. BuildX Podcast Shorts (flat) unless told otherwise
+
+RECIPE
+------
+ 1. Read PRODUCTION_ARCHITECTURE.md → SHORTS_ENGINE_SPEC.md → MULTICAM_SPEC.md.
+ 2. Mine candidates non-destructively from the master; rank; present; WAIT.
+ 3. Build: 1080x1920, punch-in per speaker, angle cuts on speaker change, no music,
+    frame-0 cover, logo, captions, ADU Journey end card.
+ 4. QA (99, podcast_short). STOP for proof-watch.
+
+DELIVERY
+--------
+  EP## Title.mp4

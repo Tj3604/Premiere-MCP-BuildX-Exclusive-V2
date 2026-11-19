@@ -1,0 +1,36 @@
+TEMPLATE 99 — QA CHECKLIST (run before saying "done")
+=====================================================
+Tool success is not evidence. Read state back; look at frames.
+
+PROJECT
+  [ ] get_project_info shows the right project (checked this step, not just at start)
+  [ ] No track cleared; Thomas's live edits still present (diff vs. before the pass)
+  [ ] No "accepted: true" result trusted as success
+
+TIMELINE
+  [ ] No gaps / 1-frame black (get_timeline_gaps)
+  [ ] Every cut on whole sentences; sequence audio re-transcribed, no cut-off words
+  [ ] No soft-focus stretch uncovered (blurdetect V1)
+  [ ] Frame 0 is the designed cover; caption 1 starts after it
+
+BRAND
+  [ ] Logo on V3, correct position/scale, unbroken until the end card
+  [ ] Ends on the ADU Journey card (9:16 ig-v3 / 16x9 v3)
+  [ ] Captions: Thomas Default, single line, ≤745 px, ≥1.2 s, in the caption band
+  [ ] No "drywall"; every figure matches verified-facts.md; names/places confirmed
+
+PICTURE
+  [ ] Fills the frame — no black bars, no blurred pad (cropdetect the export)
+  [ ] Log footage graded; white balance on interiors; nothing mirrored
+  [ ] Positive-only: no exposed/unfinished work, redos, crew in excavations
+  [ ] export_frame spot-checks of every overlay / card
+
+AUDIO
+  [ ] No music on dialogue shorts
+  [ ] No dual-open lavs, no per-word mic switching, peaks covered by backup track
+  [ ] Loudness measured (measure_loudness); no -shortest audio truncation
+
+HANDOFF
+  [ ] run_buildx_qa with the right workflow name
+  [ ] STATE.md written (what was built, sequence names, open items)
+  [ ] STOP — Thomas proof-watches. Export only on his go, to NEW unique filenames.

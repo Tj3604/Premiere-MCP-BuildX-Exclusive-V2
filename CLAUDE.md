@@ -33,6 +33,14 @@ Verify the install at any time:
 cd mcp/premiere-pro-mcp && npm run setup:doctor
 ```
 
+## Video templates — start every new video here
+
+`templates/` has one `.txt` per video type BuildX ships (tour shorts, FAQ shorts, testimonial,
+reaction, PM jobsite update, weekly recap, walkthrough longform, studio Q&A longform, podcast
+shorts, ads) plus `99-qa-checklist.txt`. **When asked to make a video, read
+`templates/00-README.txt`, then the matching template, and follow its BRIEF → RECIPE.**
+Filled-in briefs for real jobs go in `private/briefs/`, never in `templates/`.
+
 ## BuildX knowledge — read before starting work
 
 Permanent BuildX knowledge lives in `knowledge/buildx/`. It is **not** loaded automatically.

@@ -1,0 +1,26 @@
+TEMPLATE 06 — WEEKLY JOBTREAD RECAP (9:16)
+==========================================
+Use the /jobtreadrecap or /jobtread-weekly-edit skill — this is the brief.
+
+BRIEF
+-----
+Week ........................ YYYY-W__ (date range ______)
+Pull folder ................. <JOB TREAD (WEEKLY)/<week>/>
+Jobs to include ............. all / list ______    jobs to SKIP: ______ (standing skip
+                              list lives in private/)
+Mode ........................ weekly quick-cut (15 s+) / FULL BUILD (45–60 s)
+
+RECIPE
+------
+ 1. Read each job's raw daily logs — don't trust draft summaries, they invent work.
+ 2. Pick photos: progress only, positive-only rule, rotate per EXIF.
+ 3. Weekly: ≥15 s (10 s is too short). DAY nn chips, beat-cut, house text style.
+    FULL BUILD: rendering + timelapse open → THE PLAN → stage chapters → walkthrough →
+    PLAN→BUILD split → CTA.
+ 4. Logo, ADU Journey end card (ask before changing a series sign-off).
+ 5. One sequence per job in ONE Premiere project. QA (99). STOP for proof-watch.
+
+DELIVERY
+--------
+  <week>/Exports/<X#### Fam>/X#### Client - Jobsite Recap W## 9x16.mp4
+  h264 ~8 Mbps, AAC 48k                QA workflow: social_vertical

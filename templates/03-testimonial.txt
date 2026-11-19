@@ -1,0 +1,29 @@
+TEMPLATE 03 — CUSTOMER TESTIMONIAL (full cut + shorts)
+======================================================
+
+BRIEF
+-----
+Customer (first name only here; full in private/) ... ______
+Cameras + sync ............. ______ (offset if known: ____ s)
+Interviewer voice kept? .... default NO
+Deliverables ............... full cut (length target ____) and/or __ shorts
+Plan / model shown ......... model name + sq ft (must be in verified-facts.md)
+Delivery folder ............ ______
+
+RECIPE
+------
+ 1. Sync cameras by audio (record the measured offset in the STATE.md).
+ 2. NO grade: testimonials stay ungraded (no LUT / Lumetri) unless Thomas says otherwise.
+ 3. Transcribe. Remove the interviewer's voice; if a question is needed for context, use
+    a full-screen question card before the answer.
+ 4. Full cut: emotional arc (why ADU → process → living in it → would recommend).
+    Whole sentences, measured silence. Angle changes to hide jump cuts.
+ 5. Shorts: 20–30 s, one idea each. Mid-clip full-frame plan card allowed (kicker = model,
+    title with gold payoff word, rendering, gold sq ft figure). Tiled rendering grid as
+    B-roll — never blurred fill. Captions keep running over cards.
+ 6. Logo, captions (template 01 step 6), ADU Journey end card on every version.
+ 7. QA (99). STOP for proof-watch.
+
+DELIVERY
+--------
+  Short NN - Title Case.mp4 + .txt (+ .srt)        QA workflow: interview_clip
