@@ -1,0 +1,27 @@
+TEMPLATE 04 — BUZ REACTION (short or longform)
+==============================================
+
+BRIEF
+-----
+Studio session .............. <path>  cameras: ______  mic tracks: ______
+Clips being reacted to ...... <paths / URLs>  (download with the ytdlp skill)
+Credit handle(s) ............ @______
+Output ...................... longform (target __ min) / shorts (__)
+Cameras to avoid ............ ______
+
+RECIPE
+------
+ 1. Studio mic map: confirm which track is BUZ (Combo tracks bleed — don't double-open).
+ 2. Sync the third-party clip to Buz by audio fingerprint on a camera track.
+ 3. Structure: clip plays (overlay ONLY while the clip plays, original on-screen text left
+    in, small "via @handle" tag top-left) → cut to Buz's response with angle cuts.
+ 4. Shorts: open on the TikTok/clip, then Buz's teaching answer. 25–45 s. Educational
+    only. Frame-0 cover: Buz still + condensed white/gold headline + Buz byline (exact text in private video-formats.md).
+ 5. Longform 16:9: NOW hook → custom title card → body (no BuildX Intro at the front);
+    clean the outro; logo top-right; ADU Journey 16x9 end card.
+ 6. Captions, QA (99). STOP for proof-watch.
+
+DELIVERY
+--------
+  shorts + transcripts in the project's Exports folder next to the source
+  QA workflow: social_vertical (shorts) / youtube_landscape (longform)

@@ -1,0 +1,46 @@
+TEMPLATE 01 — TOUR / WALKTHROUGH EDUCATIONAL SHORTS (9:16)
+==========================================================
+Buz (or a PM) on site at an ADU, cut into single-topic answers. Typical batch: 10–30 shorts.
+
+BRIEF
+-----
+Project / job number ........ X____  (client surname only in private/)
+Source footage .............. <absolute path(s)>   cameras: ______
+Audio ....................... lav tracks: ______   camera bed: ______
+Premiere project ............ <path to .prproj>    bin for shorts: ______
+Speakers on camera .......... BUZ / PM name (confirm against people.md)
+How many shorts ............. target __ (Claude proposes a ranked list first)
+Topics to favour / avoid .... ______
+B-roll available ............ renderings / drone / timelapse / JobTread photos / plans
+Delivery folder ............. ______  (ask if unknown)
+
+RECIPE
+------
+ 1. Read: knowledge/buildx/editorial.md, broll.md, captions.md, safe-zones.md.
+ 2. Inspect footage: ffprobe rate/rotation; check log (Osmo/DJI → D-21 LUT + ~+0.6 exp,
+    then white balance — interiors run warm); check mirroring.
+ 3. Transcribe with scripts/transcribe-x.mjs (WhisperX, CPU int8, silero VAD) using a
+    domain prompt (ADU, GFA, HERS, thin coat plaster...).
+ 4. Rank candidates (find_short_candidates + editorial.md). Each short = ONE question or
+    topic, a hook in the first line, a complete answer. Length 20–45 s.
+    → Present the ranked list (title, in/out, hook line, length). WAIT for approval.
+ 5. Build each approved short:
+      - build_short_sequences from the master (1080x1920, 29.97).
+      - Cuts from plan-cut.mjs / measured silence only; never hand-compute frames.
+      - Frame 0 cover card (1 frame), then hook.
+      - Fill the frame: punch-in/reframe; never a blurred pad, never black bars.
+      - Logo V3 upper-right (see README). Info chips for figures (verified-facts.md).
+      - B-roll over jump cuts and anything Buz points at; stacked/tiled, on-topic.
+      - Audio: lavs open (no per-word mic switching), camera as a bed; swap in the backup
+        track wherever the main track peaks/clips; linear loudnorm.
+      - End card: 9:16 ADU Journey ig-v3.
+ 6. Captions: Thomas Default style, single line, chunked by measured pixel width
+    (745 px), 1.2 s minimum, middle band y≥909. Re-transcribe to fix STT vocabulary.
+    Keep cue 1 off the frame-0 cover.
+ 7. Run 99-qa-checklist.txt. Write a STATE.md handoff in the working folder.
+ 8. STOP — proof-watch by Thomas. Export only when told.
+
+DELIVERY
+--------
+  Short NN - Title Case.mp4  (+ .txt transcript, timecoded "[hh:mm:ss] line")
+  QA workflow: home_tour

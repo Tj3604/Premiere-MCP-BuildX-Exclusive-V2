@@ -1,0 +1,30 @@
+TEMPLATE 05 — PM JOBSITE UPDATE (9:16 educational)
+==================================================
+Use the jobsite-update skill (/buildx-jobsite-update) — this is its fill-in brief.
+
+BRIEF
+-----
+Job ......................... X____   town (confirmed): ______
+PM on camera ................ name (confirm on-camera identity in people.md)
+Narration ................... <path to .m4a>     phone clips: <folder>
+Phase / topic ............... e.g. slab prep, insulation, framing, septic
+Plan set .................... <path>  (building section / floor plan sheets)
+JobTread "before" photos .... yes / no
+Target length ............... 60–90 s (a tight cut may be asked separately)
+
+RECIPE
+------
+ 1. Phone footage is ~30.000 fps; check rotation and mirroring.
+ 2. Transcribe narration; tighten to whole sentences.
+ 3. Order: PM on-camera intro with 📍 TOWN pin → narration over walk footage matched shot
+    by shot to what is said → plan-sheet explainer card(s) → one teaching card / diagram →
+    JobTread "before" photo cards → PM's on-camera buildx.com / home-tours line (phone
+    mockup) → ADU Journey 9:16 end card.
+ 4. PM name lower third with X box. Size chip only from verified figures.
+ 5. Positive-only: cut any exposed/unfinished work, redos, crew in a trench.
+ 6. Gold captions (template 01 step 6). QA (99). STOP for proof-watch.
+
+DELIVERY
+--------
+  to be posted/<X#### Client> Jobsite Update/  mp4 + timecoded .txt transcript
+  Name: X#### Client Jobsite Update - Phase.mp4    QA workflow: social_vertical

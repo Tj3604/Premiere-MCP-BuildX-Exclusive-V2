@@ -1,0 +1,30 @@
+TEMPLATE 07 — WALKTHROUGH / HOME TOUR LONGFORM (16:9)
+=====================================================
+
+BRIEF
+-----
+Job ......................... X____
+Footage ..................... <paths>  cameras: ______  lavs: ______
+Who is on camera ............ BUZ / PM / homeowner (confirmed)
+Target length ............... __ min
+Notes from Buz/Thomas ....... ______
+Thumbnail needed? ........... yes / no
+
+RECIPE
+------
+ 1. Prep: probe, LUT + exposure + white balance for log footage, stabilise handheld
+    (steady is part of the quality bar).
+ 2. Opening: NOW hook (strongest 5–10 s line) → custom title card → body.
+    No BuildX Intro at the front.
+ 3. Body in chapters (room by room / topic by topic). Graphics on every spot that is
+    pointed at; build B-roll over explanations; nothing unflattering.
+ 4. Audio: one lav open per speaker at a time (no dual-open lavs bleeding), no per-word
+    switching, linear loudnorm. Backup track over peaks.
+ 5. Punch in on wide two-shots. Logo top-right [0.86927, 0.10602] s31.
+ 6. End on ADU Journey 16x9 v3.
+ 7. Thumbnail: dark studio feel, Buz right, gold kicker + white/gold Anton headline left.
+ 8. QA (99, youtube_landscape). STOP for proof-watch.
+
+DELIVERY
+--------
+  NN_Title.mp4 + .txt + _timecoded.txt + _words.json + " - Thumbnail.jpg"
